@@ -1,13 +1,13 @@
 import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
-import { getRelevantData } from "./data.js";
 import { updateLLMStatus, updateMessage } from "./ui.js";
 import { highlightCountries } from "./map.js";
+import { countryData } from "./data.js";
 
 let engine;
 
 export async function initWebLLM() {
 	const initProgressCallback = (progressObj) => {
-		console.log("WebLLM init progress:", progressObj);
+		// console.log("WebLLM init progress:", progressObj);
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
 		} (${progressObj.progress.toFixed(2)}%)`;
@@ -15,10 +15,12 @@ export async function initWebLLM() {
 	};
 
 	try {
+		console.log("Starting WebLLM initialization...");
 		engine = await CreateMLCEngine("Llama-3-8B-Instruct-q4f32_1-MLC", {
 			initProgressCallback,
+			context_window_size: 8192,
 		});
-		console.log("WebLLM initialized");
+		console.log("WebLLM initialized successfully");
 		updateLLMStatus("WebLLM ready");
 	} catch (error) {
 		console.error("Error initializing WebLLM:", error);
@@ -26,24 +28,26 @@ export async function initWebLLM() {
 	}
 }
 
-async function determineRelevantStat(query) {
-	const statTypes = [
-		"name",
-		"population",
-		"languages",
-		"area",
-		"capital",
-		"region",
-		"subregion",
-		"flagColors",
-		"ISO_A3",
-	];
+async function generateQueryPlan(query) {
+	console.log("Generating query plan for:", query);
 
-	const systemPrompt = `You are an AI assistant tasked with determining the most relevant country statistic for a given query. You will be provided with a list of available statistics and a user query. Your task is to select the most relevant statistic or statistics that would be needed to answer the query accurately. If multiple statistics are relevant, list them all. If no specific statistic is relevant or if the query requires general information, respond with "all".
-
-Available statistics: ${statTypes.join(", ")}
-
-Respond with only the name(s) of the relevant statistic(s) or "all", without any additional explanation.`;
+	const systemPrompt = `You are an AI assistant tasked with creating a query plan to answer questions about countries. Given a user query, your task is to determine:
+	1. Which statistics are needed to answer the query
+	2. Any filtering or comparison operations needed
+	3. How many countries should be considered (if applicable)
+	
+	Available statistics: name, population, languages, area, capital, region, subregion, flagColors, cca3
+	
+	Respond with a JSON object containing the following fields:
+	{
+	  "relevantStats": ["stat1", "stat2", ...],
+	  "filterConditions": "JavaScript boolean expression for filtering, using 'country' as the object, e.g., 'country.region.toLowerCase().includes('europe')'",
+	  "comparisonOperation": "JavaScript comparison function for sorting, e.g., '(a, b) => b.population - a.population'",
+	  "limit": number of countries to consider (or "all" if not applicable),
+	  "aggregation": "any aggregation operation needed, e.g., 'sum', 'average', 'count', or 'none'"
+	}
+	
+	Your response should be a valid JSON object and nothing else. Do not include any explanations or additional text outside the JSON object.`;
 
 	const messages = [
 		{ role: "system", content: systemPrompt },
@@ -51,17 +55,175 @@ Respond with only the name(s) of the relevant statistic(s) or "all", without any
 	];
 
 	try {
-		const reply = await engine.chat.completions.create({
-			messages: messages,
-			temperature: 0.3,
-			max_tokens: 50,
-		});
+		console.log("Sending query to LLM for query plan generation");
+		const reply = await Promise.race([
+			engine.chat.completions.create({
+				messages: messages,
+				temperature: 0.3,
+				max_tokens: 150,
+			}),
+			new Promise((_, reject) =>
+				setTimeout(() => reject(new Error("LLM timeout")), 10000)
+			),
+		]);
 
-		return reply.choices[0].message.content.toLowerCase().split(", ");
+		const content = reply.choices[0].message.content.trim();
+		console.log("Received query plan from LLM:", content);
+		const queryPlan = JSON.parse(content);
+		console.log("Parsed query plan:", queryPlan);
+		return queryPlan;
 	} catch (error) {
-		console.error("Error determining relevant stat:", error);
-		return ["all"];
+		console.error("Error generating query plan:", error);
+		return {
+			relevantStats: ["name", "capital", "region"],
+			filterConditions: "country.region.toLowerCase().includes('europe')",
+			comparisonOperation: "none",
+			limit: "all",
+			aggregation: "none",
+		};
 	}
+}
+
+function executeQueryPlan(queryPlan) {
+	console.log("Executing query plan:", queryPlan);
+
+	const {
+		relevantStats,
+		filterConditions,
+		comparisonOperation,
+		limit,
+		aggregation,
+	} = queryPlan;
+
+	console.log("Filtering relevant country data");
+	let result = Object.values(countryData);
+
+	// Inspect the structure of the first country object
+	console.log(
+		"Sample country data structure:",
+		JSON.stringify(result[0], null, 2)
+	);
+
+	// Apply filter conditions
+	if (filterConditions) {
+		console.log("Applying filter conditions:", filterConditions);
+		try {
+			// Create a more flexible filter function
+			const filterFunc = (country) => {
+				// For safety, we'll check if the property exists before using it
+				const regionInfo =
+					(country.region && country.region.toLowerCase()) ||
+					(country.subregion && country.subregion.toLowerCase()) ||
+					"";
+				return regionInfo.includes("europe");
+			};
+
+			const beforeFilterCount = result.length;
+			result = result.filter(filterFunc);
+			const afterFilterCount = result.length;
+
+			console.log(
+				`Filtered results: ${afterFilterCount} countries (before: ${beforeFilterCount})`
+			);
+			console.log(
+				"Sample of filtered country data:",
+				result.slice(0, 5).map((c) => c.name)
+			);
+		} catch (error) {
+			console.error("Error applying filter:", error);
+		}
+	}
+
+	// Apply comparison operation
+	if (comparisonOperation && comparisonOperation !== "none") {
+		console.log("Applying comparison operation:", comparisonOperation);
+		try {
+			const compareFunc = new Function(
+				"a",
+				"b",
+				`return ${comparisonOperation}`
+			);
+			result.sort(compareFunc);
+			console.log("Results sorted");
+			console.log(
+				"Sample of sorted country data:",
+				result.slice(0, 5).map((c) => c.name)
+			);
+		} catch (error) {
+			console.error("Error applying comparison:", error);
+		}
+	}
+
+	// Apply limit
+	if (limit !== "all" && typeof limit === "number") {
+		console.log(`Limiting results to ${limit} countries`);
+		result = result.slice(0, limit);
+		console.log(
+			"Limited country data:",
+			result.map((c) => c.name)
+		);
+	}
+
+	// Apply aggregation
+	let aggregatedResult = result;
+	if (aggregation !== "none") {
+		console.log("Applying aggregation:", aggregation);
+		switch (aggregation) {
+			case "sum":
+				aggregatedResult = result.reduce(
+					(acc, country) => acc + country[relevantStats[0]],
+					0
+				);
+				break;
+			case "average":
+				aggregatedResult =
+					result.reduce((acc, country) => acc + country[relevantStats[0]], 0) /
+					result.length;
+				break;
+			case "count":
+				aggregatedResult = result.length;
+				break;
+		}
+		console.log("Aggregated result:", aggregatedResult);
+	}
+
+	return { result, aggregatedResult };
+}
+
+function formatResponse(queryResult, query) {
+	console.log("Formatting response for query:", query);
+	const { result, aggregatedResult } = queryResult;
+	let answer = "";
+	let highlight = [];
+
+	if (typeof aggregatedResult === "number") {
+		answer = `The ${query} is ${aggregatedResult}.`;
+	} else if (result.length === 0) {
+		answer = "No countries match the given criteria.";
+	} else {
+		answer = `Here are the results for your query "${query}":\n\n`;
+		result.forEach((country) => {
+			answer += `${country.name}`;
+			if (country.capital && country.capital.length > 0) {
+				answer += ` (Capital: ${country.capital[0]})`;
+			}
+			answer += "\n";
+			if (country.cca3) {
+				highlight.push(country.cca3);
+			} else if (country.ISO_A3) {
+				highlight.push(country.ISO_A3);
+			}
+		});
+	}
+
+	console.log("Formatted answer:", answer);
+	console.log("Countries to highlight:", highlight);
+
+	return {
+		answer,
+		highlight,
+		description: `Countries matching the query: ${query}`,
+	};
 }
 
 export async function processQuery() {
@@ -71,40 +233,27 @@ export async function processQuery() {
 	}
 
 	const query = document.getElementById("query-input").value;
+	console.log("Processing query:", query);
 	updateMessage("Processing query...");
 
 	try {
-		const relevantStats = await determineRelevantStat(query);
-		const contextData = getRelevantData(relevantStats);
+		console.time("Query processing");
 
-		const context = JSON.stringify(contextData);
+		console.time("Generate query plan");
+		const queryPlan = await generateQueryPlan(query);
+		console.timeEnd("Generate query plan");
 
-		const systemPrompt = `You are a helpful AI assistant specialized in geography. You have access to a world map visualization tool and the following country data: ${context}
+		console.time("Execute query plan");
+		const queryResult = executeQueryPlan(queryPlan);
+		console.timeEnd("Execute query plan");
 
-    The data provided includes the country name, ISO_A3 code, and the following statistics for each country: ${relevantStats.join(
-			", "
-		)}. When answering questions about countries, use this data to provide accurate information. If the question requires information not provided in this data, provide a general answer based on your knowledge.
+		console.time("Format response");
+		const response = formatResponse(queryResult, query);
+		console.timeEnd("Format response");
 
-    Format your answer in the following JSON structure:
-    {
-    "answer": "Your text answer here",
-    "highlight": ["ISO_A3 codes of countries to highlight"],
-    "description": "Brief description of why these countries are highlighted"
-    }
-    Use ISO_A3 country codes for the highlight array. If no countries need to be highlighted, use an empty array.`;
+		console.timeEnd("Query processing");
 
-		const messages = [
-			{ role: "system", content: systemPrompt },
-			{ role: "user", content: query },
-		];
-
-		const reply = await engine.chat.completions.create({
-			messages: messages,
-			temperature: 0.7,
-			max_tokens: 500,
-		});
-
-		const response = JSON.parse(reply.choices[0].message.content);
+		console.log("Final response:", response);
 
 		updateMessage(response.answer);
 
