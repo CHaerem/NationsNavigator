@@ -4,6 +4,7 @@ import { highlightCountries } from "./map.js";
 import { countryData } from "./data.js";
 
 let engine;
+let availableStats;
 
 export async function initWebLLM() {
 	const initProgressCallback = (progressObj) => {
@@ -21,35 +22,64 @@ export async function initWebLLM() {
 		});
 		console.log("WebLLM initialized successfully");
 		updateLLMStatus("WebLLM ready");
+
+		// Extract available stats from the data
+		extractAvailableStats();
 	} catch (error) {
 		console.error("Error initializing WebLLM:", error);
 		updateLLMStatus("Failed to initialize WebLLM");
 	}
 }
 
+function extractAvailableStats() {
+	const sampleCountry = Object.values(countryData)[0];
+	availableStats = Object.keys(sampleCountry).filter(
+		(key) => typeof sampleCountry[key] !== "object" && key !== "ISO_A3"
+	);
+	console.log("Available stats:", availableStats);
+}
+
+function getFieldDescription(field) {
+	const descriptions = {
+		name: "The country's common name",
+		population: "Total population of the country",
+		languages: "Array of languages spoken in the country",
+		area: "Total area of the country in square kilometers",
+		capital: "Capital city of the country",
+		region: "Broad geographical region (e.g., Europe, Africa, Asia)",
+		subregion: "More specific geographical region",
+		flagColors: "Array of colors present in the country's flag",
+		// Add descriptions for other fields as necessary
+	};
+	return descriptions[field] || "Information about the country's " + field;
+}
+
 async function generateQueryPlan(query) {
 	console.log("Generating query plan for:", query);
 
-	const prompt = `You are working with a dataset of country information from restcountries.com. This dataset contains various statistics and details about the world's countries. 
+	const prompt = `You are an AI assistant specializing in geographical data analysis. You're working with a comprehensive dataset of country information from restcountries.com. Your task is to create a precise query plan to answer questions about countries.
 
-Some key fields include:
-- name: The country's name
-- region: The world region the country is in (e.g., Europe, Africa, Asia)
-- flagColors: Colors present in the country's flag (array)
+Available fields in the dataset:
+${availableStats
+	.map((stat) => `- ${stat}: ${getFieldDescription(stat)}`)
+	.join("\n")}
 
-Other fields may include population, languages, area, capital, subregion, and various other country-specific attributes.
+User Query: "${query}"
 
-Create a precise query plan to answer this question about countries: "${query}"
+Create a query plan that includes:
+1. Relevant statistics: Choose fields from the available list that are necessary to answer the query.
+2. Filters: Specify conditions to narrow down the countries based on the query. Include ALL relevant aspects, such as geographical constraints, numerical comparisons, and text searches.
+3. Sorting: If the query implies an order, specify how to sort the results.
+4. Limit: Determine if a specific number of results is required.
 
-The plan should include:
-1. Relevant statistics needed to answer the query
-2. Filters to apply (consider ALL aspects of the query, including geographical constraints)
-3. Any sorting required
-4. Number of results to return (limit)
+Guidelines:
+- Use 'region' or 'subregion' for continental or geographical area filters.
+- Use 'flagColors' for queries about flag characteristics.
+- For population or area queries, use numerical comparisons (greaterThan, lessThan).
+- For language queries, use the 'contains' operation on the 'languages' field.
+- Be precise with filter values, matching them exactly to the data format (e.g., "North America" for region, not just "America").
 
-IMPORTANT: Make sure to include filters for ALL relevant aspects of the query, including both geographical constraints and other criteria. Use the 'region' field for continental filters and 'flagColors' for flag-related queries.
-
-Respond ONLY with a single JSON object in this format, without any additional text or multiple responses:
+Respond ONLY with a single JSON object in this format:
 {
   "relevantStats": ["stat1", "stat2", ...],
   "filters": [
@@ -60,6 +90,8 @@ Respond ONLY with a single JSON object in this format, without any additional te
 }
 
 If you cannot generate a valid query plan, respond with: { "error": "Unable to generate query plan" }`;
+
+	console.log("Prompt being sent to LLM:", prompt);
 
 	try {
 		console.log("Sending query to WebLLM for query plan generation");
@@ -92,8 +124,12 @@ If you cannot generate a valid query plan, respond with: { "error": "Unable to g
 			throw new Error(queryPlan.error);
 		}
 
-		if (!queryPlan.relevantStats || !queryPlan.filters) {
-			throw new Error("Invalid query plan structure");
+		if (!queryPlan.relevantStats || !Array.isArray(queryPlan.relevantStats)) {
+			throw new Error("Invalid query plan: missing or invalid relevantStats");
+		}
+
+		if (!queryPlan.filters || !Array.isArray(queryPlan.filters)) {
+			throw new Error("Invalid query plan: missing or invalid filters");
 		}
 
 		return queryPlan;
@@ -105,6 +141,11 @@ If you cannot generate a valid query plan, respond with: { "error": "Unable to g
 
 function executeQueryPlan(queryPlan) {
 	console.log("Executing query plan:", queryPlan);
+
+	if (!queryPlan.filters || !Array.isArray(queryPlan.filters)) {
+		console.warn("Query plan has no filters, returning all countries");
+		return Object.values(countryData);
+	}
 
 	let result = Object.values(countryData);
 
@@ -254,7 +295,7 @@ export async function processQuery() {
 	} catch (error) {
 		console.error("Error processing query:", error);
 		updateMessage(
-			`An error occurred while processing your query: ${error.message}. Please try rephrasing your question.`
+			`An error occurred while processing your query: ${error.message}. Please try rephrasing your question or check the console for more details.`
 		);
 	}
 }
