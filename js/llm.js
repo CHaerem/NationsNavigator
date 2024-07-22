@@ -183,7 +183,7 @@ function executeQueryPlan(queryPlan) {
 	});
 
 	// Apply sort
-	if (queryPlan.sort && queryPlan.sort.field) {
+	if (queryPlan.sort?.field) {
 		if (result.length > 0 && result[0].hasOwnProperty(queryPlan.sort.field)) {
 			const { field, order } = queryPlan.sort;
 			result.sort((a, b) => {
