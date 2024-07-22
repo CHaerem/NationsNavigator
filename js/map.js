@@ -69,7 +69,6 @@ export function highlightCountries(condition, filterCriteria) {
 		if (props && condition(layer)) {
 			layer.setStyle({ fillColor: "#9b59b6", fillOpacity: 0.7 });
 			highlightedCount++;
-			console.log(`Highlighted: ${props.name}`);
 		} else if (layer !== selectedCountryLayer) {
 			layer.setStyle({ fillColor: "#ccc", fillOpacity: 0.7 });
 		}

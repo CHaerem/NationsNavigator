@@ -7,7 +7,6 @@ let engine;
 
 export async function initWebLLM() {
 	const initProgressCallback = (progressObj) => {
-		// console.log("WebLLM init progress:", progressObj);
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
 		} (${progressObj.progress.toFixed(2)}%)`;
@@ -16,9 +15,9 @@ export async function initWebLLM() {
 
 	try {
 		console.log("Starting WebLLM initialization...");
-		engine = await CreateMLCEngine("Llama-3-8B-Instruct-q4f32_1-MLC", {
+		engine = await CreateMLCEngine("Phi-3-mini-4k-instruct-q4f16_1-MLC-1k", {
 			initProgressCallback,
-			context_window_size: 8192,
+			context_window_size: 1024,
 		});
 		console.log("WebLLM initialized successfully");
 		updateLLMStatus("WebLLM ready");
@@ -31,198 +30,178 @@ export async function initWebLLM() {
 async function generateQueryPlan(query) {
 	console.log("Generating query plan for:", query);
 
-	const systemPrompt = `You are an AI assistant tasked with creating a query plan to answer questions about countries. Given a user query, your task is to determine:
-	1. Which statistics are needed to answer the query
-	2. Any filtering or comparison operations needed
-	3. How many countries should be considered (if applicable)
-	
-	Available statistics: name, population, languages, area, capital, region, subregion, flagColors, cca3
-	
-	Respond with a JSON object containing the following fields:
-	{
-	  "relevantStats": ["stat1", "stat2", ...],
-	  "filterConditions": "JavaScript boolean expression for filtering, using 'country' as the object, e.g., 'country.region.toLowerCase().includes('europe')'",
-	  "comparisonOperation": "JavaScript comparison function for sorting, e.g., '(a, b) => b.population - a.population'",
-	  "limit": number of countries to consider (or "all" if not applicable),
-	  "aggregation": "any aggregation operation needed, e.g., 'sum', 'average', 'count', or 'none'"
-	}
-	
-	Your response should be a valid JSON object and nothing else. Do not include any explanations or additional text outside the JSON object.`;
+	const prompt = `You are working with a dataset of country information from restcountries.com. This dataset contains various statistics and details about the world's countries. 
 
-	const messages = [
-		{ role: "system", content: systemPrompt },
-		{ role: "user", content: query },
-	];
+Some key fields include:
+- name: The country's name
+- region: The world region the country is in (e.g., Europe, Africa, Asia)
+- flagColors: Colors present in the country's flag (array)
+
+Other fields may include population, languages, area, capital, subregion, and various other country-specific attributes.
+
+Create a precise query plan to answer this question about countries: "${query}"
+
+The plan should include:
+1. Relevant statistics needed to answer the query
+2. Filters to apply (consider ALL aspects of the query, including geographical constraints)
+3. Any sorting required
+4. Number of results to return (limit)
+
+IMPORTANT: Make sure to include filters for ALL relevant aspects of the query, including both geographical constraints and other criteria. Use the 'region' field for continental filters and 'flagColors' for flag-related queries.
+
+Respond ONLY with a single JSON object in this format, without any additional text or multiple responses:
+{
+  "relevantStats": ["stat1", "stat2", ...],
+  "filters": [
+    { "field": "statName", "operation": "equals|contains|greaterThan|lessThan", "value": "filterValue" }
+  ],
+  "sort": { "field": "statName", "order": "asc|desc" } or null,
+  "limit": number or null
+}
+
+If you cannot generate a valid query plan, respond with: { "error": "Unable to generate query plan" }`;
 
 	try {
-		console.log("Sending query to LLM for query plan generation");
-		const reply = await Promise.race([
-			engine.chat.completions.create({
-				messages: messages,
-				temperature: 0.3,
-				max_tokens: 150,
-			}),
-			new Promise((_, reject) =>
-				setTimeout(() => reject(new Error("LLM timeout")), 10000)
-			),
-		]);
+		console.log("Sending query to WebLLM for query plan generation");
+		const reply = await engine.chat.completions.create({
+			messages: [{ role: "user", content: prompt }],
+			temperature: 0.3,
+			max_tokens: 300,
+		});
 
 		const content = reply.choices[0].message.content.trim();
-		console.log("Received query plan from LLM:", content);
-		const queryPlan = JSON.parse(content);
+		console.log("Received raw response from WebLLM:", content);
+
+		// Extract the first JSON object from the response
+		const jsonRegex = /\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/;
+		const jsonMatch = content.match(jsonRegex);
+		if (!jsonMatch) {
+			throw new Error("No valid JSON found in the response");
+		}
+
+		let jsonContent = jsonMatch[0];
+		console.log("Extracted JSON content:", jsonContent);
+
+		// Remove trailing commas
+		jsonContent = jsonContent.replace(/,\s*([\]}])/g, "$1");
+
+		const queryPlan = JSON.parse(jsonContent);
 		console.log("Parsed query plan:", queryPlan);
+
+		if (queryPlan.error) {
+			throw new Error(queryPlan.error);
+		}
+
+		if (!queryPlan.relevantStats || !queryPlan.filters) {
+			throw new Error("Invalid query plan structure");
+		}
+
 		return queryPlan;
 	} catch (error) {
 		console.error("Error generating query plan:", error);
-		return {
-			relevantStats: ["name", "capital", "region"],
-			filterConditions: "country.region.toLowerCase().includes('europe')",
-			comparisonOperation: "none",
-			limit: "all",
-			aggregation: "none",
-		};
+		throw new Error(`Failed to generate query plan: ${error.message}`);
 	}
 }
 
 function executeQueryPlan(queryPlan) {
 	console.log("Executing query plan:", queryPlan);
 
-	const {
-		relevantStats,
-		filterConditions,
-		comparisonOperation,
-		limit,
-		aggregation,
-	} = queryPlan;
-
-	console.log("Filtering relevant country data");
 	let result = Object.values(countryData);
 
-	// Inspect the structure of the first country object
-	console.log(
-		"Sample country data structure:",
-		JSON.stringify(result[0], null, 2)
-	);
+	// Apply filters
+	queryPlan.filters.forEach((filter) => {
+		result = result.filter((country) => {
+			if (!country.hasOwnProperty(filter.field)) {
+				console.warn(`Field "${filter.field}" not found in country data`);
+				return true; // Skip this filter if the field doesn't exist
+			}
+			const value = country[filter.field];
+			switch (filter.operation) {
+				case "equals":
+					return value === filter.value;
+				case "contains":
+					if (Array.isArray(value)) {
+						return value.some((v) =>
+							v.toLowerCase().includes(filter.value.toLowerCase())
+						);
+					} else if (typeof value === "string") {
+						return value.toLowerCase().includes(filter.value.toLowerCase());
+					}
+					return false;
+				case "greaterThan":
+					return value > filter.value;
+				case "lessThan":
+					return value < filter.value;
+				default:
+					console.warn(
+						`Unknown operation "${filter.operation}" for field "${filter.field}"`
+					);
+					return true;
+			}
+		});
+	});
 
-	// Apply filter conditions
-	if (filterConditions) {
-		console.log("Applying filter conditions:", filterConditions);
-		try {
-			// Create a more flexible filter function
-			const filterFunc = (country) => {
-				// For safety, we'll check if the property exists before using it
-				const regionInfo =
-					(country.region && country.region.toLowerCase()) ||
-					(country.subregion && country.subregion.toLowerCase()) ||
-					"";
-				return regionInfo.includes("europe");
-			};
-
-			const beforeFilterCount = result.length;
-			result = result.filter(filterFunc);
-			const afterFilterCount = result.length;
-
-			console.log(
-				`Filtered results: ${afterFilterCount} countries (before: ${beforeFilterCount})`
+	// Apply sort
+	if (queryPlan.sort && queryPlan.sort.field) {
+		if (result.length > 0 && result[0].hasOwnProperty(queryPlan.sort.field)) {
+			const { field, order } = queryPlan.sort;
+			result.sort((a, b) => {
+				if (order === "asc") {
+					return a[field] > b[field] ? 1 : -1;
+				} else {
+					return a[field] < b[field] ? 1 : -1;
+				}
+			});
+		} else {
+			console.warn(
+				`Sort field "${queryPlan.sort.field}" not found in country data`
 			);
-			console.log(
-				"Sample of filtered country data:",
-				result.slice(0, 5).map((c) => c.name)
-			);
-		} catch (error) {
-			console.error("Error applying filter:", error);
-		}
-	}
-
-	// Apply comparison operation
-	if (comparisonOperation && comparisonOperation !== "none") {
-		console.log("Applying comparison operation:", comparisonOperation);
-		try {
-			const compareFunc = new Function(
-				"a",
-				"b",
-				`return ${comparisonOperation}`
-			);
-			result.sort(compareFunc);
-			console.log("Results sorted");
-			console.log(
-				"Sample of sorted country data:",
-				result.slice(0, 5).map((c) => c.name)
-			);
-		} catch (error) {
-			console.error("Error applying comparison:", error);
 		}
 	}
 
 	// Apply limit
-	if (limit !== "all" && typeof limit === "number") {
-		console.log(`Limiting results to ${limit} countries`);
-		result = result.slice(0, limit);
-		console.log(
-			"Limited country data:",
-			result.map((c) => c.name)
-		);
+	if (queryPlan.limit) {
+		result = result.slice(0, queryPlan.limit);
 	}
 
-	// Apply aggregation
-	let aggregatedResult = result;
-	if (aggregation !== "none") {
-		console.log("Applying aggregation:", aggregation);
-		switch (aggregation) {
-			case "sum":
-				aggregatedResult = result.reduce(
-					(acc, country) => acc + country[relevantStats[0]],
-					0
-				);
-				break;
-			case "average":
-				aggregatedResult =
-					result.reduce((acc, country) => acc + country[relevantStats[0]], 0) /
-					result.length;
-				break;
-			case "count":
-				aggregatedResult = result.length;
-				break;
-		}
-		console.log("Aggregated result:", aggregatedResult);
-	}
-
-	return { result, aggregatedResult };
-}
-
-function formatResponse(queryResult, query) {
-	console.log("Formatting response for query:", query);
-	const { result, aggregatedResult } = queryResult;
-	let answer = "";
-	let highlight = [];
-
-	if (typeof aggregatedResult === "number") {
-		answer = `The ${query} is ${aggregatedResult}.`;
-	} else if (result.length === 0) {
-		answer = "No countries match the given criteria.";
-	} else {
-		answer = `Here are the results for your query "${query}":\n\n`;
-		result.forEach((country) => {
-			answer += `${country.name}`;
-			if (country.capital && country.capital.length > 0) {
-				answer += ` (Capital: ${country.capital[0]})`;
-			}
-			answer += "\n";
-			if (country.cca3) {
-				highlight.push(country.cca3);
-			} else if (country.ISO_A3) {
-				highlight.push(country.ISO_A3);
+	return result.map((country) => {
+		const relevantData = { name: country.name, ISO_A3: country.ISO_A3 };
+		queryPlan.relevantStats.forEach((stat) => {
+			if (country.hasOwnProperty(stat)) {
+				relevantData[stat] = country[stat];
+			} else {
+				console.warn(`Relevant stat "${stat}" not found in country data`);
 			}
 		});
-	}
+		return relevantData;
+	});
+}
 
-	console.log("Formatted answer:", answer);
-	console.log("Countries to highlight:", highlight);
+function formatResponse(queryResult, query, queryPlan, processingTime) {
+	console.log("Formatting response for query:", query);
+
+	const countryCount = queryResult.length;
+
+	// Create a concise description of the filters
+	const filterDescription = queryPlan.filters
+		.map((filter) => `${filter.field} ${filter.operation} ${filter.value}`)
+		.join(", ");
+
+	// Create the concise result message
+	const resultMessage = `${filterDescription}. ${countryCount} ${
+		countryCount === 1 ? "country" : "countries"
+	} found. Time: ${processingTime}ms`;
+
+	console.log("Formatted result message:", resultMessage);
+	console.log(
+		"Countries to highlight:",
+		queryResult.map((country) => country.ISO_A3)
+	);
 
 	return {
-		answer,
-		highlight,
-		description: `Countries matching the query: ${query}`,
+		answer: resultMessage,
+		highlight: queryResult.map((country) => country.ISO_A3),
+		description: resultMessage,
 	};
 }
 
@@ -236,6 +215,8 @@ export async function processQuery() {
 	console.log("Processing query:", query);
 	updateMessage("Processing query...");
 
+	const startTime = performance.now();
+
 	try {
 		console.time("Query processing");
 
@@ -247,8 +228,16 @@ export async function processQuery() {
 		const queryResult = executeQueryPlan(queryPlan);
 		console.timeEnd("Execute query plan");
 
+		const endTime = performance.now();
+		const processingTime = (endTime - startTime).toFixed(2);
+
 		console.time("Format response");
-		const response = formatResponse(queryResult, query);
+		const response = formatResponse(
+			queryResult,
+			query,
+			queryPlan,
+			processingTime
+		);
 		console.timeEnd("Format response");
 
 		console.timeEnd("Query processing");
@@ -265,7 +254,7 @@ export async function processQuery() {
 	} catch (error) {
 		console.error("Error processing query:", error);
 		updateMessage(
-			"An error occurred while processing your query. Please try again."
+			`An error occurred while processing your query: ${error.message}. Please try rephrasing your question.`
 		);
 	}
 }
