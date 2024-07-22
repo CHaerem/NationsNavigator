@@ -5,6 +5,7 @@ import { countryData } from "./data.js";
 
 let engine;
 let availableStats;
+let exampleCountry;
 
 export async function initWebLLM() {
 	const initProgressCallback = (progressObj) => {
@@ -23,35 +24,21 @@ export async function initWebLLM() {
 		console.log("WebLLM initialized successfully");
 		updateLLMStatus("WebLLM ready");
 
-		// Extract available stats from the data
-		extractAvailableStats();
+		// Extract available stats and example country data
+		extractAvailableStatsAndExampleCountry();
 	} catch (error) {
 		console.error("Error initializing WebLLM:", error);
 		updateLLMStatus("Failed to initialize WebLLM");
 	}
 }
 
-function extractAvailableStats() {
-	const sampleCountry = Object.values(countryData)[0];
-	availableStats = Object.keys(sampleCountry).filter(
-		(key) => typeof sampleCountry[key] !== "object" && key !== "ISO_A3"
+function extractAvailableStatsAndExampleCountry() {
+	exampleCountry = Object.values(countryData)[0];
+	availableStats = Object.keys(exampleCountry).filter(
+		(key) => typeof exampleCountry[key] !== "object" && key !== "ISO_A3"
 	);
 	console.log("Available stats:", availableStats);
-}
-
-function getFieldDescription(field) {
-	const descriptions = {
-		name: "The country's common name",
-		population: "Total population of the country",
-		languages: "Array of languages spoken in the country",
-		area: "Total area of the country in square kilometers",
-		capital: "Capital city of the country",
-		region: "Broad geographical region (e.g., Europe, Africa, Asia)",
-		subregion: "More specific geographical region",
-		flagColors: "Array of colors present in the country's flag",
-		// Add descriptions for other fields as necessary
-	};
-	return descriptions[field] || "Information about the country's " + field;
+	console.log("Example country data:", exampleCountry);
 }
 
 async function generateQueryPlan(query) {
@@ -59,37 +46,38 @@ async function generateQueryPlan(query) {
 
 	const prompt = `You are an AI assistant specializing in geographical data analysis. You're working with a comprehensive dataset of country information from restcountries.com. Your task is to create a precise query plan to answer questions about countries.
 
-Available fields in the dataset:
-${availableStats
-	.map((stat) => `- ${stat}: ${getFieldDescription(stat)}`)
-	.join("\n")}
+	Available fields in the dataset:
+	${availableStats.join(", ")}
 
-User Query: "${query}"
+	Example country data:
+	${JSON.stringify(exampleCountry, null, 2)}
 
-Create a query plan that includes:
-1. Relevant statistics: Choose fields from the available list that are necessary to answer the query.
-2. Filters: Specify conditions to narrow down the countries based on the query. Include ALL relevant aspects, such as geographical constraints, numerical comparisons, and text searches.
-3. Sorting: If the query implies an order, specify how to sort the results.
-4. Limit: Determine if a specific number of results is required.
+	User Query: "${query}"
 
-Guidelines:
-- Use 'region' or 'subregion' for continental or geographical area filters.
-- Use 'flagColors' for queries about flag characteristics.
-- For population or area queries, use numerical comparisons (greaterThan, lessThan).
-- For language queries, use the 'contains' operation on the 'languages' field.
-- Be precise with filter values, matching them exactly to the data format (e.g., "North America" for region, not just "America").
+	Create a query plan that includes:
+	1. Relevant statistics: Choose fields from the available list that are necessary to answer the query.
+	2. Filters: Specify conditions to narrow down the countries based on the query. Include ALL relevant aspects, such as geographical constraints, numerical comparisons, and text searches.
+	3. Sorting: If the query implies an order, specify how to sort the results.
+	4. Limit: Determine if a specific number of results is required.
 
-Respond ONLY with a single JSON object in this format:
-{
-  "relevantStats": ["stat1", "stat2", ...],
-  "filters": [
-    { "field": "statName", "operation": "equals|contains|greaterThan|lessThan", "value": "filterValue" }
-  ],
-  "sort": { "field": "statName", "order": "asc|desc" } or null,
-  "limit": number or null
-}
+	Guidelines:
+	- Use 'region' or 'subregion' for continental or geographical area filters.
+	- Use 'flagColors' for queries about flag characteristics.
+	- For population or area queries, use numerical comparisons (greaterThan, lessThan).
+	- For language queries, use the 'contains' operation on the 'languages' field.
+	- Be precise with filter values, matching them exactly to the data format (e.g., "North America" for region, not just "America").
 
-If you cannot generate a valid query plan, respond with: { "error": "Unable to generate query plan" }`;
+	Respond ONLY with a single JSON object in this format:
+	{
+	"relevantStats": ["stat1", "stat2", ...],
+	"filters": [
+		{ "field": "statName", "operation": "equals|contains|greaterThan|lessThan", "value": "filterValue" }
+	],
+	"sort": { "field": "statName", "order": "asc|desc" } or null,
+	"limit": number or null
+	}
+
+	If you cannot generate a valid query plan, respond with: { "error": "Unable to generate query plan" }`;
 
 	console.log("Prompt being sent to LLM:", prompt);
 
