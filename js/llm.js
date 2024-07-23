@@ -1,11 +1,9 @@
 import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { updateLLMStatus, updateMessage } from "./ui.js";
 import { highlightCountries } from "./map.js";
-import { countryData } from "./data.js";
+import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 
 let engine;
-let availableStats;
-let exampleCountry;
 
 export async function initWebLLM() {
 	const initProgressCallback = (progressObj) => {
@@ -23,267 +21,193 @@ export async function initWebLLM() {
 		});
 		console.log("WebLLM initialized successfully");
 		updateLLMStatus("WebLLM ready");
-
-		// Extract available stats and example country data
-		extractAvailableStatsAndExampleCountry();
 	} catch (error) {
 		console.error("Error initializing WebLLM:", error);
 		updateLLMStatus("Failed to initialize WebLLM");
 	}
 }
 
-function extractAvailableStatsAndExampleCountry() {
-	exampleCountry = Object.values(countryData)[0];
-	availableStats = Object.keys(exampleCountry).filter(
-		(key) => typeof exampleCountry[key] !== "object" && key !== "ISO_A3"
-	);
-	console.log("Available stats:", availableStats);
-	console.log("Example country data:", exampleCountry);
-}
+async function generateSQLQuery(query) {
+	const availableStats = getAvailableStats();
+	const exampleCountry = getExampleCountry();
 
-async function generateQueryPlan(query) {
-	console.log("Generating query plan for:", query);
-
-	const prompt = `You are an AI assistant specializing in geographical data analysis. You're working with a comprehensive dataset of country information from restcountries.com. Your task is to create a precise query plan to answer questions about countries.
-
-	Available fields in the dataset:
-	${availableStats.join(", ")}
-
-	Example country data:
-	${JSON.stringify(exampleCountry, null, 2)}
-
-	User Query: "${query}"
-
-	Create a query plan that includes:
-	1. Relevant statistics: Choose fields from the available list that are necessary to answer the query.
-	2. Filters: Specify conditions to narrow down the countries based on the query. Include ALL relevant aspects, such as geographical constraints, numerical comparisons, and text searches.
-	3. Sorting: If the query implies an order, specify how to sort the results.
-	4. Limit: Determine if a specific number of results is required.
-
-	Guidelines:
-	- Use 'region' or 'subregion' for continental or geographical area filters.
-	- Use 'flagColors' for queries about flag characteristics.
-	- For population or area queries, use numerical comparisons (greaterThan, lessThan).
-	- For language queries, use the 'contains' operation on the 'languages' field.
-	- Be precise with filter values, matching them exactly to the data format (e.g., "North America" for region, not just "America").
-
-	Respond ONLY with a single JSON object in this format:
-	{
-	"relevantStats": ["stat1", "stat2", ...],
-	"filters": [
-		{ "field": "statName", "operation": "equals|contains|greaterThan|lessThan", "value": "filterValue" }
-	],
-	"sort": { "field": "statName", "order": "asc|desc" } or null,
-	"limit": number or null
-	}
-
-	If you cannot generate a valid query plan, respond with: { "error": "Unable to generate query plan" }`;
+	const prompt = `Generate a SQL query for the countries table based on the user's request.
+  
+  Available fields: ${availableStats.join(", ")}
+  
+  Example row:
+  ${JSON.stringify(exampleCountry, null, 2)}
+  
+  Guidelines:
+  1. Always include 'name' and 'ISO_A3' in SELECT
+  2. Use LIKE '%value%' for partial string matches
+  3. 'languages' and 'flagColors' are comma-separated strings
+  4. Exact matches for region/subregion (e.g., 'Europe')
+  
+  User Query: "${query}"
+  
+  Respond with only the SQL query.`;
 
 	console.log("Prompt being sent to LLM:", prompt);
 
 	try {
-		console.log("Sending query to WebLLM for query plan generation");
+		console.log("Sending query to WebLLM for SQL query generation");
 		const reply = await engine.chat.completions.create({
 			messages: [{ role: "user", content: prompt }],
 			temperature: 0.3,
 			max_tokens: 300,
 		});
 
-		const content = reply.choices[0].message.content.trim();
-		console.log("Received raw response from WebLLM:", content);
+		const sqlQuery = reply.choices[0].message.content.trim();
+		console.log("Received SQL query from WebLLM:", sqlQuery);
 
-		// Extract the first JSON object from the response
-		const jsonRegex = /\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/;
-		const jsonMatch = content.match(jsonRegex);
-		if (!jsonMatch) {
-			throw new Error("No valid JSON found in the response");
+		if (!sqlQuery.toLowerCase().startsWith("select")) {
+			throw new Error(`Failed to generate SQL query: ${sqlQuery}`);
 		}
 
-		let jsonContent = jsonMatch[0];
-		console.log("Extracted JSON content:", jsonContent);
-
-		// Remove trailing commas
-		jsonContent = jsonContent.replace(/,\s*([\]}])/g, "$1");
-
-		const queryPlan = JSON.parse(jsonContent);
-		console.log("Parsed query plan:", queryPlan);
-
-		if (queryPlan.error) {
-			throw new Error(queryPlan.error);
-		}
-
-		if (!queryPlan.relevantStats || !Array.isArray(queryPlan.relevantStats)) {
-			throw new Error("Invalid query plan: missing or invalid relevantStats");
-		}
-
-		if (!queryPlan.filters || !Array.isArray(queryPlan.filters)) {
-			throw new Error("Invalid query plan: missing or invalid filters");
-		}
-
-		return queryPlan;
+		return sqlQuery;
 	} catch (error) {
-		console.error("Error generating query plan:", error);
-		throw new Error(`Failed to generate query plan: ${error.message}`);
+		console.error("Error generating SQL query:", error);
+		throw new Error(`Failed to generate SQL query: ${error.message}`);
 	}
-}
-
-function executeQueryPlan(queryPlan) {
-	console.log("Executing query plan:", queryPlan);
-
-	if (!queryPlan.filters || !Array.isArray(queryPlan.filters)) {
-		console.warn("Query plan has no filters, returning all countries");
-		return Object.values(countryData);
-	}
-
-	let result = Object.values(countryData);
-
-	// Apply filters
-	queryPlan.filters.forEach((filter) => {
-		result = result.filter((country) => {
-			if (!country.hasOwnProperty(filter.field)) {
-				console.warn(`Field "${filter.field}" not found in country data`);
-				return true; // Skip this filter if the field doesn't exist
-			}
-			const value = country[filter.field];
-			switch (filter.operation) {
-				case "equals":
-					return value === filter.value;
-				case "contains":
-					if (Array.isArray(value)) {
-						return value.some((v) =>
-							v.toLowerCase().includes(filter.value.toLowerCase())
-						);
-					} else if (typeof value === "string") {
-						return value.toLowerCase().includes(filter.value.toLowerCase());
-					}
-					return false;
-				case "greaterThan":
-					return value > filter.value;
-				case "lessThan":
-					return value < filter.value;
-				default:
-					console.warn(
-						`Unknown operation "${filter.operation}" for field "${filter.field}"`
-					);
-					return true;
-			}
-		});
-	});
-
-	// Apply sort
-	if (queryPlan.sort?.field) {
-		if (result.length > 0 && result[0].hasOwnProperty(queryPlan.sort.field)) {
-			const { field, order } = queryPlan.sort;
-			result.sort((a, b) => {
-				if (order === "asc") {
-					return a[field] > b[field] ? 1 : -1;
-				} else {
-					return a[field] < b[field] ? 1 : -1;
-				}
-			});
-		} else {
-			console.warn(
-				`Sort field "${queryPlan.sort.field}" not found in country data`
-			);
-		}
-	}
-
-	// Apply limit
-	if (queryPlan.limit) {
-		result = result.slice(0, queryPlan.limit);
-	}
-
-	return result.map((country) => {
-		const relevantData = { name: country.name, ISO_A3: country.ISO_A3 };
-		queryPlan.relevantStats.forEach((stat) => {
-			if (country.hasOwnProperty(stat)) {
-				relevantData[stat] = country[stat];
-			} else {
-				console.warn(`Relevant stat "${stat}" not found in country data`);
-			}
-		});
-		return relevantData;
-	});
-}
-
-function formatResponse(queryResult, query, queryPlan, processingTime) {
-	console.log("Formatting response for query:", query);
-
-	const countryCount = queryResult.length;
-
-	// Create a concise description of the filters
-	const filterDescription = queryPlan.filters
-		.map((filter) => `${filter.field} ${filter.operation} ${filter.value}`)
-		.join(", ");
-
-	// Create the concise result message
-	const resultMessage = `${filterDescription}. ${countryCount} ${
-		countryCount === 1 ? "country" : "countries"
-	} found. Time: ${processingTime}ms`;
-
-	console.log("Formatted result message:", resultMessage);
-	console.log(
-		"Countries to highlight:",
-		queryResult.map((country) => country.ISO_A3)
-	);
-
-	return {
-		answer: resultMessage,
-		highlight: queryResult.map((country) => country.ISO_A3),
-		description: resultMessage,
-	};
 }
 
 export async function processQuery() {
 	if (!engine) {
-		updateMessage("WebLLM is not initialized. Please initialize it first.");
+		updateMessage(
+			"<div class='error'>WebLLM is not initialized. Please initialize it first.</div>"
+		);
 		return;
 	}
 
 	const query = document.getElementById("query-input").value;
 	console.log("Processing query:", query);
-	updateMessage("Processing query...");
+	updateMessage("<div class='processing'>Processing query...</div>");
 
 	const startTime = performance.now();
 
 	try {
 		console.time("Query processing");
 
-		console.time("Generate query plan");
-		const queryPlan = await generateQueryPlan(query);
-		console.timeEnd("Generate query plan");
+		console.time("Generate SQL query");
+		const sqlQuery = await generateSQLQuery(query);
+		console.timeEnd("Generate SQL query");
 
-		console.time("Execute query plan");
-		const queryResult = executeQueryPlan(queryPlan);
-		console.timeEnd("Execute query plan");
+		console.time("Execute SQL query");
+		const queryResult = executeQuery(sqlQuery);
+		console.timeEnd("Execute SQL query");
 
 		const endTime = performance.now();
-		const processingTime = (endTime - startTime).toFixed(2);
+		const processingTime = endTime - startTime;
 
-		console.time("Format response");
-		const response = formatResponse(
+		const countryCount = queryResult.length;
+		let highlightedCount = 0;
+
+		highlightCountries((country) => {
+			const isHighlighted = queryResult.some(
+				(result) => result.ISO_A3 === country.feature.properties.ISO_A3
+			);
+			if (isHighlighted) highlightedCount++;
+			return isHighlighted;
+		}, "");
+
+		const highlightInfo =
+			highlightedCount === 0
+				? "No countries highlighted."
+				: `${highlightedCount} ${
+						highlightedCount === 1 ? "country" : "countries"
+				  } highlighted.`;
+
+		const resultMessage = createResultMessage(
+			sqlQuery,
 			queryResult,
-			query,
-			queryPlan,
-			processingTime
+			processingTime,
+			highlightInfo
 		);
-		console.timeEnd("Format response");
+		console.log("Query result:", queryResult);
+		updateMessage(resultMessage);
 
 		console.timeEnd("Query processing");
-
-		console.log("Final response:", response);
-
-		updateMessage(response.answer);
-
-		highlightCountries(
-			(country) =>
-				response.highlight.includes(country.feature.properties.ISO_A3),
-			response.description
-		);
 	} catch (error) {
 		console.error("Error processing query:", error);
-		updateMessage(
-			`An error occurred while processing your query: ${error.message}. Please try rephrasing your question or check the console for more details.`
-		);
+		let errorMessage = "<div class='error'>";
+		if (error.message.startsWith("Failed to generate SQL query")) {
+			errorMessage +=
+				"I couldn't understand how to create a query for that request. Could you try rephrasing it?<br><br>";
+			errorMessage += `LLM response: ${error.message.split(": ")[1]}`;
+		} else if (error.message.startsWith("Error executing query")) {
+			errorMessage +=
+				"There was an error executing the SQL query. This might be due to an invalid query structure.<br><br>";
+			errorMessage += `SQL Query: ${error.sqlQuery}<br>`;
+			errorMessage += `Error details: ${error.message.split(": ")[1]}`;
+		} else {
+			errorMessage += `An unexpected error occurred: ${error.message}<br><br>`;
+			if (error.sqlQuery) {
+				errorMessage += `SQL Query: ${error.sqlQuery}`;
+			}
+		}
+		errorMessage += "</div>";
+		updateMessage(errorMessage);
 	}
+}
+
+function createResultMessage(
+	sqlQuery,
+	queryResult,
+	processingTime,
+	highlightInfo
+) {
+	// Sort the queryResult array alphabetically by country name
+	queryResult.sort((a, b) => a.name.localeCompare(b.name));
+
+	const countryCount = queryResult.length;
+	const displayLimit = 5;
+	let countriesList = "";
+	let fullCountriesList = "";
+
+	if (countryCount > 0) {
+		const sampleCountries = queryResult
+			.slice(0, displayLimit)
+			.map((c) => c.name)
+			.join(", ");
+		fullCountriesList = queryResult.map((c) => c.name).join(", ");
+
+		if (countryCount > displayLimit) {
+			countriesList = `
+		  <span>${sampleCountries}, and ${countryCount - displayLimit} more</span>
+		  <a href="#" class="toggle-countries">(Show all)</a>
+		  <span class="full-countries-list" style="display: none;">${fullCountriesList}</span>
+		`;
+		} else {
+			countriesList = sampleCountries;
+		}
+	} else {
+		countriesList = "No countries found";
+	}
+
+	const message = `
+	  <div class="query-results">
+		<h4>Query Results</h4>
+		<div class="sql-query">
+		  <strong>SQL Query:</strong>
+		  <pre>${sqlQuery}</pre>
+		</div>
+		<div class="results-summary">
+		  <strong>Results:</strong> ${countryCount} ${
+		countryCount === 1 ? "country" : "countries"
+	} found
+		</div>
+		<div class="countries-list">
+		  <strong>Countries:</strong> ${countriesList}
+		</div>
+		<div class="processing-time">
+		  <strong>Processing time:</strong> ${processingTime.toFixed(2)}ms
+		</div>
+		<div class="highlight-info">
+		  ${highlightInfo}
+		</div>
+	  </div>
+	`;
+
+	return message;
 }

@@ -24,12 +24,13 @@ export function updateCountryInfo(props) {
 }
 
 export function updateMessage(message) {
-	if (typeof message === "function") {
-		const currentMessage = document.getElementById("message").textContent;
-		document.getElementById("message").textContent = message(currentMessage);
-	} else {
-		document.getElementById("message").textContent = message;
-	}
+	const messageElement = document.getElementById("message");
+	messageElement.innerHTML = message;
+
+	// Attach event listeners to any new toggle-countries links
+	messageElement.querySelectorAll(".toggle-countries").forEach((link) => {
+		link.addEventListener("click", toggleCountriesList);
+	});
 }
 
 export function updateLLMStatus(status) {
@@ -57,4 +58,17 @@ export function setupEventListeners() {
 				processQuery();
 			}
 		});
+}
+
+export function toggleCountriesList(event) {
+	event.preventDefault();
+	const fullList = event.target.nextElementSibling;
+	const linkText = event.target;
+	if (fullList.style.display === "none") {
+		fullList.style.display = "inline";
+		linkText.textContent = "(Hide)";
+	} else {
+		fullList.style.display = "none";
+		linkText.textContent = "(Show all)";
+	}
 }
