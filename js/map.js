@@ -2,6 +2,7 @@ import { countryData } from "./data.js";
 import { updateCountryInfo, updateMessage } from "./ui.js";
 
 let map, geojsonLayer, selectedCountryLayer;
+let filteredCountries = []; // Store filtered countries
 
 export async function initMap() {
 	try {
@@ -26,15 +27,38 @@ export async function initMap() {
 				layer.on("click", () => {
 					const props = countryData[feature.properties.ISO_A3];
 					if (props) {
-						if (selectedCountryLayer) {
-							selectedCountryLayer.setStyle({
-								fillColor: "#ccc",
-								fillOpacity: 0.7,
-							});
+						if (selectedCountryLayer === layer) {
+							// Deselect the country if it's clicked again
+							if (filteredCountries.includes(feature.properties.ISO_A3)) {
+								layer.setStyle({ fillColor: "#9b59b6", fillOpacity: 0.7 });
+							} else {
+								layer.setStyle({ fillColor: "#ccc", fillOpacity: 0.7 });
+							}
+							selectedCountryLayer = null;
+							updateCountryInfo(null);
+						} else {
+							// Select the new country
+							if (selectedCountryLayer) {
+								if (
+									filteredCountries.includes(
+										selectedCountryLayer.feature.properties.ISO_A3
+									)
+								) {
+									selectedCountryLayer.setStyle({
+										fillColor: "#9b59b6",
+										fillOpacity: 0.7,
+									});
+								} else {
+									selectedCountryLayer.setStyle({
+										fillColor: "#ccc",
+										fillOpacity: 0.7,
+									});
+								}
+							}
+							layer.setStyle({ fillColor: "#9b59b6", fillOpacity: 1 });
+							selectedCountryLayer = layer;
+							updateCountryInfo(props);
 						}
-						layer.setStyle({ fillColor: "#9b59b6", fillOpacity: 0.7 });
-						selectedCountryLayer = layer;
-						updateCountryInfo(props);
 					}
 				});
 			},
@@ -52,11 +76,18 @@ export function resetMap() {
 	);
 	closeDetails();
 	updateMessage("");
+	filteredCountries = []; // Reset filtered countries
 }
 
 export function closeDetails() {
 	if (selectedCountryLayer) {
-		selectedCountryLayer.setStyle({ fillColor: "#ccc", fillOpacity: 0.7 });
+		if (
+			filteredCountries.includes(selectedCountryLayer.feature.properties.ISO_A3)
+		) {
+			selectedCountryLayer.setStyle({ fillColor: "#9b59b6", fillOpacity: 0.7 });
+		} else {
+			selectedCountryLayer.setStyle({ fillColor: "#ccc", fillOpacity: 0.7 });
+		}
 	}
 	updateCountryInfo(null);
 	selectedCountryLayer = null;
@@ -64,15 +95,28 @@ export function closeDetails() {
 
 export function highlightCountries(condition, filterCriteria) {
 	let highlightedCount = 0;
+	filteredCountries = []; // Reset filtered countries
+
 	geojsonLayer.eachLayer(function (layer) {
 		const props = countryData[layer.feature.properties.ISO_A3];
 		if (props && condition(layer)) {
 			layer.setStyle({ fillColor: "#9b59b6", fillOpacity: 0.7 });
 			highlightedCount++;
+			filteredCountries.push(layer.feature.properties.ISO_A3); // Add to filtered countries
 		} else if (layer !== selectedCountryLayer) {
 			layer.setStyle({ fillColor: "#ccc", fillOpacity: 0.7 });
 		}
 	});
+
+	// If the selected country is not in the filtered list, deselect it
+	if (
+		selectedCountryLayer &&
+		!filteredCountries.includes(selectedCountryLayer.feature.properties.ISO_A3)
+	) {
+		selectedCountryLayer.setStyle({ fillColor: "#ccc", fillOpacity: 0.7 });
+		selectedCountryLayer = null;
+		updateCountryInfo(null);
+	}
 
 	updateMessage(
 		(prevMessage) =>
