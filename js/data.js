@@ -1,6 +1,11 @@
 export let countryData = {};
 
 export async function fetchCountryData() {
+	if (Object.keys(countryData).length > 0) {
+		console.log("Country data already loaded");
+		return;
+	}
+
 	try {
 		const response = await fetch("https://restcountries.com/v3.1/all");
 		const data = await response.json();
@@ -23,6 +28,15 @@ export async function fetchCountryData() {
 		console.error("Error fetching country data:", error);
 		throw error;
 	}
+}
+
+export function getCountryData(iso_a3) {
+	return countryData[iso_a3] || null;
+}
+
+export function getAvailableStats() {
+	const sampleCountry = Object.values(countryData)[0];
+	return sampleCountry ? Object.keys(sampleCountry) : [];
 }
 
 function extractColors(altText) {
