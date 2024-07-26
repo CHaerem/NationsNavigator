@@ -6,16 +6,16 @@ export function updateCountryInfo(props) {
 
 	if (props) {
 		countryInfoElement.innerHTML = `
-      <img src="${props.flagUrl}" alt="${props.name} flag" class="flag">
-      <h3>${props.name}</h3>
-      <p>Capital: ${props.capital}<br>
-      Population: ${props.population.toLocaleString()}<br>
-      Area: ${props.area.toLocaleString()} km²<br>
-      Region: ${props.region}<br>
-      Subregion: ${props.subregion || "N/A"}<br>
-      Languages: ${props.languages.join(", ")}<br>
-      Flag Colors: ${props.flagColors.join(", ") || "Not available"}</p>
-    `;
+            <img src="${props.flagUrl}" alt="${props.name} flag" class="flag">
+            <h3>${props.name}</h3>
+            <p>Capital: ${props.capital}<br>
+            Population: ${props.population.toLocaleString()}<br>
+            Area: ${props.area.toLocaleString()} km²<br>
+            Region: ${props.region}<br>
+            Subregion: ${props.subregion || "N/A"}<br>
+            Languages: ${props.languages || "N/A"}<br>
+            Flag Colors: ${props.flagColors || "Not available"}</p>
+        `;
 		closeBtnElement.style.display = "block";
 	} else {
 		countryInfoElement.innerHTML = "Click on a country to see its information.";
