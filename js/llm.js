@@ -5,6 +5,12 @@ import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 
 let engine;
 
+const modelConfig = {
+	model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
+	model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
+	context_window_size: 1024,
+};
+
 export async function initWebLLM() {
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
@@ -15,9 +21,9 @@ export async function initWebLLM() {
 
 	try {
 		console.log("Starting WebLLM initialization...");
-		engine = await CreateMLCEngine("Phi-3-mini-4k-instruct-q4f16_1-MLC-1k", {
+		engine = await CreateMLCEngine(modelConfig.model_id, {
 			initProgressCallback,
-			context_window_size: 1024,
+			context_window_size: modelConfig.context_window_size,
 		});
 		console.log("WebLLM initialized successfully");
 		updateLLMStatus("WebLLM ready");
