@@ -1,4 +1,5 @@
-import { processQuery, resetMap, closeDetails } from "./main.js";
+import { processQuery, resetMap } from "./main.js";
+import { highlightCountry } from "./map.js";
 
 export function updateCountryInfo(props) {
 	const countryInfoElement = document.getElementById("country-info");
@@ -31,6 +32,15 @@ export function updateMessage(message) {
 	messageElement.querySelectorAll(".toggle-countries").forEach((link) => {
 		link.addEventListener("click", toggleCountriesList);
 	});
+
+	// Attach event listeners to any new country links
+	messageElement.querySelectorAll(".country-link").forEach((link) => {
+		link.addEventListener("click", (event) => {
+			event.preventDefault();
+			const iso = event.target.getAttribute("data-iso");
+			highlightCountry(iso);
+		});
+	});
 }
 
 export function updateLLMStatus(status) {
@@ -47,7 +57,9 @@ export function setupEventListeners() {
 		}
 	});
 	document.getElementById("reset-btn").addEventListener("click", resetMap);
-	document.getElementById("close-btn").addEventListener("click", closeDetails);
+	document.getElementById("close-btn").addEventListener("click", () => {
+		updateCountryInfo(null);
+	});
 	document
 		.getElementById("query-input")
 		.addEventListener("keyup", function (event) {

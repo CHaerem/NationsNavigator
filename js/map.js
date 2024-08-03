@@ -1,12 +1,14 @@
 import { countryData } from "./data.js";
 import { updateCountryInfo, updateMessage } from "./ui.js";
 
-let map, geojsonLayer, selectedCountryLayer;
-let filteredCountries = []; // Store filtered countries
+let map, geojsonLayer;
+let filteredCountries = new Set(); // Use a Set for faster lookups
 
-const defaultColor = "#E8E8E8";
-const selectedColor = "#3498db";
-const highlightedColor = "#9b59b6";
+const COLORS = {
+	DEFAULT: "#E8E8E8",
+	SELECTED: "#3498db",
+	HIGHLIGHTED: "#9b59b6",
+};
 
 let isInitialized = false;
 
@@ -39,54 +41,8 @@ export async function initMap() {
 		);
 		const data = await response.json();
 
-		function onEachFeature(feature, layer) {
-			layer.on("click", () => {
-				const props = countryData[feature.properties.ISO_A3];
-				if (props) {
-					if (selectedCountryLayer === layer) {
-						// Deselect the country if it's clicked again
-						if (filteredCountries.includes(feature.properties.ISO_A3)) {
-							layer.setStyle({ fillColor: highlightedColor, fillOpacity: 0.7 });
-						} else {
-							layer.setStyle({ fillColor: defaultColor, fillOpacity: 0.7 });
-						}
-						selectedCountryLayer = null;
-						updateCountryInfo(null);
-					} else {
-						// Select the new country
-						if (selectedCountryLayer) {
-							if (
-								filteredCountries.includes(
-									selectedCountryLayer.feature.properties.ISO_A3
-								)
-							) {
-								selectedCountryLayer.setStyle({
-									fillColor: highlightedColor,
-									fillOpacity: 0.7,
-								});
-							} else {
-								selectedCountryLayer.setStyle({
-									fillColor: defaultColor,
-									fillOpacity: 0.7,
-								});
-							}
-						}
-						layer.setStyle({ fillColor: selectedColor, fillOpacity: 0.7 });
-						selectedCountryLayer = layer;
-						updateCountryInfo(props);
-					}
-				}
-			});
-		}
-
 		geojsonLayer = L.geoJSON(data, {
-			style: (feature) => ({
-				fillColor: defaultColor,
-				weight: 1,
-				opacity: 1,
-				color: "white",
-				fillOpacity: 0.7,
-			}),
+			style: getCountryStyle,
 			onEachFeature: onEachFeature,
 		}).addTo(map);
 
@@ -98,90 +54,113 @@ export async function initMap() {
 	}
 }
 
+function getCountryStyle(feature) {
+	return {
+		fillColor: COLORS.DEFAULT,
+		weight: 1,
+		opacity: 1,
+		color: "white",
+		fillOpacity: 0.7,
+	};
+}
+
+function onEachFeature(feature, layer) {
+	layer.on("click", () => handleCountryClick(feature.properties.ISO_A3, layer));
+}
+
+function handleCountryClick(iso, layer) {
+	const props = countryData[iso];
+	if (!props) return;
+
+	if (layer.options.fillColor === COLORS.SELECTED) {
+		// Deselect the country if it's clicked again
+		updateCountryStyle(layer, iso);
+		updateCountryInfo(null);
+	} else {
+		// Select the new country
+		geojsonLayer.eachLayer((l) => {
+			if (l.options.fillColor === COLORS.SELECTED) {
+				updateCountryStyle(l, l.feature.properties.ISO_A3);
+			}
+		});
+		layer.setStyle({ fillColor: COLORS.SELECTED, fillOpacity: 0.7 });
+		updateCountryInfo(props);
+	}
+}
+
+function updateCountryStyle(layer, iso) {
+	const color = filteredCountries.has(iso)
+		? COLORS.HIGHLIGHTED
+		: COLORS.DEFAULT;
+	layer.setStyle({ fillColor: color, fillOpacity: 0.7 });
+}
+
 export function resetMap() {
 	if (!geojsonLayer) {
 		console.error("geojsonLayer is not initialized");
 		return;
 	}
-	geojsonLayer.eachLayer((layer) => {
-		layer.setStyle({ fillColor: defaultColor, fillOpacity: 0.7 });
-	});
-	closeDetails();
-	updateMessage("");
-	filteredCountries = []; // Reset filtered countries
-}
-
-export function closeDetails() {
-	if (selectedCountryLayer) {
-		if (
-			filteredCountries.includes(selectedCountryLayer.feature.properties.ISO_A3)
-		) {
-			selectedCountryLayer.setStyle({
-				fillColor: highlightedColor,
-				fillOpacity: 0.7,
-			});
-		} else {
-			selectedCountryLayer.setStyle({
-				fillColor: defaultColor,
-				fillOpacity: 0.7,
-			});
-		}
-	}
+	geojsonLayer.eachLayer((layer) =>
+		updateCountryStyle(layer, layer.feature.properties.ISO_A3)
+	);
 	updateCountryInfo(null);
-	selectedCountryLayer = null;
+	updateMessage("");
+	filteredCountries.clear();
 }
 
-export function highlightCountries(condition, filterCriteria) {
+export function highlightCountries(condition) {
 	if (!geojsonLayer) {
 		console.error("geojsonLayer is not initialized");
 		return;
 	}
-	let highlightedCount = 0;
-	filteredCountries = []; // Reset filtered countries
 
-	geojsonLayer.eachLayer(function (layer) {
-		const props = countryData[layer.feature.properties.ISO_A3];
+	let highlightedCount = 0;
+	filteredCountries.clear();
+
+	geojsonLayer.eachLayer((layer) => {
+		const iso = layer.feature.properties.ISO_A3;
+		const props = countryData[iso];
 		if (props && condition(layer)) {
-			layer.setStyle({ fillColor: highlightedColor, fillOpacity: 0.7 });
+			layer.setStyle({ fillColor: COLORS.HIGHLIGHTED, fillOpacity: 0.7 });
+			filteredCountries.add(iso);
 			highlightedCount++;
-			filteredCountries.push(layer.feature.properties.ISO_A3); // Add to filtered countries
-		} else if (layer !== selectedCountryLayer) {
-			layer.setStyle({ fillColor: defaultColor, fillOpacity: 0.7 });
+		} else if (layer.options.fillColor !== COLORS.SELECTED) {
+			layer.setStyle({ fillColor: COLORS.DEFAULT, fillOpacity: 0.7 });
 		}
 	});
 
-	// If the selected country is not in the filtered list, deselect it
-	if (
-		selectedCountryLayer &&
-		!filteredCountries.includes(selectedCountryLayer.feature.properties.ISO_A3)
-	) {
-		selectedCountryLayer.setStyle({
-			fillColor: defaultColor,
-			fillOpacity: 0.7,
-		});
-		selectedCountryLayer = null;
-		updateCountryInfo(null);
-	}
-
-	updateMessage(
-		(prevMessage) =>
-			prevMessage +
-			(highlightedCount === 0
-				? "\n\nNo countries highlighted."
-				: `\n\n${highlightedCount} countries highlighted (${filterCriteria}).`)
-	);
+	const message =
+		highlightedCount === 0
+			? "\n\nNo countries highlighted."
+			: `\n\n${highlightedCount} countries highlighted.`;
+	updateMessage((prevMessage) => prevMessage + message);
 }
 
-// Initialize the map
+export function highlightCountry(iso) {
+	if (!geojsonLayer) {
+		console.error("geojsonLayer is not initialized");
+		return;
+	}
+
+	geojsonLayer.eachLayer((layer) => {
+		if (layer.feature.properties.ISO_A3 === iso) {
+			handleCountryClick(iso, layer);
+			layer.bringToFront();
+
+			const bounds = layer.getBounds();
+			map.fitBounds(bounds, {
+				padding: [50, 50],
+				maxZoom: 5,
+			});
+		}
+	});
+}
+
 export function initializeMap() {
 	if (!isInitialized) {
 		initMap()
-			.then(() => {
-				console.log("Map initialization complete");
-			})
-			.catch((error) => {
-				console.error("Error initializing map:", error);
-			});
+			.then(() => console.log("Map initialization complete"))
+			.catch((error) => console.error("Error initializing map:", error));
 	} else {
 		console.log("Map is already initialized");
 	}

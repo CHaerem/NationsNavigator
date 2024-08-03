@@ -1,4 +1,4 @@
-import { initMap, resetMap, closeDetails } from "./map.js";
+import { initMap, resetMap, highlightCountry } from "./map.js";
 import { fetchCountryData } from "./data.js";
 import { initWebLLM, processQuery } from "./llm.js";
 import { setupEventListeners, updateMessage } from "./ui.js";
@@ -23,4 +23,4 @@ async function init() {
 // Initialize the application
 init();
 
-export { processQuery, resetMap, closeDetails };
+export { processQuery, resetMap, highlightCountry };

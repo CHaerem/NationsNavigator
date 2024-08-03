@@ -153,3 +153,15 @@ h3 {
   display: none;
   margin-top: 5px;
 }
+
+.country-link {
+  color: #333;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px dotted #333;
+}
+
+.country-link:hover {
+  color: #3498db;
+  border-bottom-color: #3498db;
+}

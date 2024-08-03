@@ -163,7 +163,6 @@ function createResultMessage(
 	processingTime,
 	highlightInfo
 ) {
-	// Sort the queryResult array alphabetically by country name
 	queryResult.sort((a, b) => a.name.localeCompare(b.name));
 
 	const countryCount = queryResult.length;
@@ -172,11 +171,14 @@ function createResultMessage(
 	let fullCountriesList = "";
 
 	if (countryCount > 0) {
+		const createCountryLink = (country) =>
+			`<span class="country-link" data-iso="${country.ISO_A3}">${country.name}</span>`;
+
 		const sampleCountries = queryResult
 			.slice(0, displayLimit)
-			.map((c) => c.name)
+			.map(createCountryLink)
 			.join(", ");
-		fullCountriesList = queryResult.map((c) => c.name).join(", ");
+		fullCountriesList = queryResult.map(createCountryLink).join(", ");
 
 		if (countryCount > displayLimit) {
 			countriesList = `
