@@ -6,17 +6,35 @@ export function updateCountryInfo(props) {
 	const closeBtnElement = document.getElementById("close-btn");
 
 	if (props) {
+		const currencies = props.currencies.split(",").join(", ");
+		const languages = props.languages.split(",").join(", ");
+		const continents = props.continents.split(",").join(", ");
+		const borders = props.borders.split(",").join(", ");
+
 		countryInfoElement.innerHTML = `
-            <img src="${props.flagUrl}" alt="${props.name} flag" class="flag">
-            <h3>${props.name}</h3>
-            <p>Capital: ${props.capital}<br>
-            Population: ${props.population.toLocaleString()}<br>
-            Area: ${props.area.toLocaleString()} km²<br>
-            Region: ${props.region}<br>
-            Subregion: ${props.subregion || "N/A"}<br>
-            Languages: ${props.languages || "N/A"}<br>
-            Flag Colors: ${props.flagColors || "Not available"}</p>
-        `;
+      <img src="${props.flagUrl}" alt="${props.name} flag" class="flag">
+      <h3>${props.name}</h3>
+      <p><strong>Official Name:</strong> ${props.officialName}</p>
+      <p><strong>Capital:</strong> ${props.capital}</p>
+      <p><strong>Population:</strong> ${props.population.toLocaleString()}</p>
+      <p><strong>Area:</strong> ${
+				props.area ? props.area.toLocaleString() + " km²" : "N/A"
+			}</p>
+      <p><strong>Region:</strong> ${props.region}</p>
+      <p><strong>Subregion:</strong> ${props.subregion || "N/A"}</p>
+      <p><strong>Languages:</strong> ${languages || "N/A"}</p>
+      <p><strong>Currencies:</strong> ${currencies || "N/A"}</p>
+      <p><strong>Continents:</strong> ${continents || "N/A"}</p>
+      <p><strong>Borders:</strong> ${borders || "None"}</p>
+      <p><strong>Driving Side:</strong> ${props.drivingSide}</p>
+      <p><strong>UN Member:</strong> ${props.unMember ? "Yes" : "No"}</p>
+      <p><strong>Independence Status:</strong> ${props.independenceStatus}</p>
+      <h4>Flag Information</h4>
+      <p><strong>Description:</strong> ${
+				props.flagDescription || "No description available"
+			}</p>
+      <p><strong>Flag Emoji:</strong> ${props.flagEmoji || "N/A"}</p>
+    `;
 		closeBtnElement.style.display = "block";
 	} else {
 		countryInfoElement.innerHTML = "Click on a country to see its information.";

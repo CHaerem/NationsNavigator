@@ -47,8 +47,27 @@ async function generateSQLQuery(query) {
   Guidelines:
   1. Always include 'name' and 'ISO_A3' in SELECT
   2. Use LIKE '%value%' for partial string matches
-  3. 'languages' and 'flagColors' are comma-separated strings
-  4. Exact matches for region/subregion (e.g., 'Europe')
+  3. 'languages', 'currencies', 'timezones', 'continents', and 'borders' are comma-separated strings
+  4. For flag-related queries, use the 'flagDescription' field, which contains detailed text about the flag
+  5. Use complex string matching for advanced flag queries
+  
+  Example queries:
+  - "Countries with red in their flag": 
+    SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%red%'
+  - "Countries with stars on their flag":
+    SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%star%'
+  - "Countries with animals in their flag":
+    SELECT name, ISO_A3 FROM countries WHERE 
+      flagDescription LIKE '%animal%' 
+      OR flagDescription LIKE '%bird%' 
+      OR flagDescription LIKE '%eagle%' 
+      OR flagDescription LIKE '%lion%'
+  - "European countries with crosses in their flags":
+    SELECT name, ISO_A3 FROM countries 
+    WHERE region = 'Europe' AND flagDescription LIKE '%cross%'
+  - "Countries with sun symbols in their flags":
+    SELECT name, ISO_A3 FROM countries 
+    WHERE flagDescription LIKE '%sun%' OR flagDescription LIKE '%rays%'
   
   User Query: "${query}"
   
