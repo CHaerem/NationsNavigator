@@ -6,9 +6,7 @@ import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 let engine;
 
 const modelConfig = {
-	model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
-	model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
-	context_window_size: 1024,
+	model_id: "SmolLM-1.7B-Instruct-q4f16_1-MLC",
 };
 
 export async function initWebLLM() {
