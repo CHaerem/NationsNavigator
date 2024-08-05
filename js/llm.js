@@ -6,7 +6,7 @@ import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 let engine;
 
 const modelConfig = {
-	model_id: "SmolLM-360M-Instruct-q4f32_1-MLC",
+	model_id: "Llama-3-70B-Instruct-q3f16_1-MLC",
 };
 
 export async function initWebLLM() {
