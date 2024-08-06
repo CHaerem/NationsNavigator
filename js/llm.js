@@ -9,11 +9,30 @@ const modelConfig = {
 	model_id: "gemma-2-2b-it-q4f16_1-MLC-1k",
 };
 
+export function checkDeviceCompatibility() {
+	const compatibilityInfo = {
+		webGPU: !!navigator.gpu,
+		webAssembly: typeof WebAssembly === "object",
+		userAgent: navigator.userAgent,
+	};
+	console.log("Device compatibility:", compatibilityInfo);
+	return compatibilityInfo;
+}
+
 export async function initWebLLM() {
+	const compatibility = checkDeviceCompatibility();
+	if (!compatibility.webGPU) {
+		throw new Error("WebGPU is not supported on this device");
+	}
+	if (!compatibility.webAssembly) {
+		throw new Error("WebAssembly is not supported on this device");
+	}
+
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
 		} (${progressObj.progress.toFixed(2)}%)`;
+		console.log(progressText); // Log progress to console
 		updateLLMStatus(progressText);
 	};
 
@@ -27,7 +46,8 @@ export async function initWebLLM() {
 		updateLLMStatus("WebLLM ready");
 	} catch (error) {
 		console.error("Error initializing WebLLM:", error);
-		updateLLMStatus("Failed to initialize WebLLM");
+		updateLLMStatus(`Failed to initialize WebLLM: ${error.message}`);
+		throw error; // Re-throw the error for further handling
 	}
 }
 
