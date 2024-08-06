@@ -6,7 +6,7 @@ import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 let engine;
 
 const modelConfig = {
-	model_id: "TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC",
+	model_id: "gemma-2-2b-it-q4f16_1-MLC-1k",
 };
 
 export async function initWebLLM() {
