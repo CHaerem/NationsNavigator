@@ -87,3 +87,19 @@ Big high-fives to:
 - 🔍 [AlaSQL](https://github.com/agershun/alasql) for making data queries a breeze
 
 Now go forth and explore the world, one click at a time! 🌍🖱️
+
+## 🌐 Selecting LLM Models
+
+You can now select different LLM models to use with NationsNavigator. Follow these steps:
+
+1. Open `index.html` in your favorite code editor.
+2. Locate the dropdown menu with the label "Select LLM Model".
+3. Choose the desired LLM model from the dropdown options.
+4. Save the changes and refresh your browser to apply the selected model.
+
+Available LLM models:
+- Llama-3.1-8B-Instruct-q4f16_1-MLC
+- Llama-2.7B-Instruct-q4f16_1-MLC
+- Llama-1.3B-Instruct-q4f16_1-MLC
+
+Feel free to experiment with different models to see how they perform!

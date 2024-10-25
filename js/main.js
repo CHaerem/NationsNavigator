@@ -10,7 +10,8 @@ async function init() {
 		updateMessage(
 			"Map loaded successfully. You can now interact with the map while the model loads."
 		);
-		initWebLLM();
+		const selectedModel = document.getElementById("llm-select").value;
+		initWebLLM(selectedModel);
 		setupEventListeners();
 	} catch (error) {
 		console.error("Initialization error:", error);

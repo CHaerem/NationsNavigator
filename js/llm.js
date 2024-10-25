@@ -5,13 +5,31 @@ import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 
 let engine;
 
-const modelConfig = {
-	model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
-	model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
-	context_window_size: 1024,
+const modelConfigs = {
+	"Llama-3.1-8B-Instruct-q4f16_1-MLC": {
+		model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
+		model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
+		context_window_size: 1024,
+	},
+	"Llama-2.7B-Instruct-q4f16_1-MLC": {
+		model: "https://huggingface.co/mlc-ai/Llama-2.7B-Instruct-q4f16_1-MLC",
+		model_id: "Llama-2.7B-Instruct-q4f16_1-MLC-1k",
+		context_window_size: 1024,
+	},
+	"Llama-1.3B-Instruct-q4f16_1-MLC": {
+		model: "https://huggingface.co/mlc-ai/Llama-1.3B-Instruct-q4f16_1-MLC",
+		model_id: "Llama-1.3B-Instruct-q4f16_1-MLC-1k",
+		context_window_size: 1024,
+	},
+	"Llama-3.2-10B-Instruct-q4f16_1-MLC": {
+		model: "https://huggingface.co/mlc-ai/Llama-3.2-10B-Instruct-q4f16_1-MLC",
+		model_id: "Llama-3.2-10B-Instruct-q4f16_1-MLC-1k",
+		context_window_size: 1024,
+	},
 };
 
-export async function initWebLLM() {
+export async function initWebLLM(selectedModel) {
+	const modelConfig = modelConfigs[selectedModel];
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
