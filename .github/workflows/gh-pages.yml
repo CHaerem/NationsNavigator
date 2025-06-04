@@ -38,7 +38,10 @@ jobs:
       - name: Prepare static files
         run: |
           mkdir public
-          rsync -av --exclude=public ./ public/
+          rsync -av \
+            --exclude=public \
+            --exclude='.git' \
+            --exclude='.github' ./ public/
 
       - name: Deploy to production
         if: github.ref == 'refs/heads/main'
