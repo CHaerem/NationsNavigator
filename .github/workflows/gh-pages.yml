@@ -37,6 +37,7 @@ jobs:
 
       - name: Prepare static files
         run: |
+          rm -rf public
           mkdir public
           rsync -av \
             --exclude=public \
