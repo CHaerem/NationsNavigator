@@ -98,6 +98,7 @@ You can now select different LLM models to use with NationsNavigator. Follow the
 4. Save the changes and refresh your browser to apply the selected model.
 
 Available LLM models:
+- Llama-3.2-10B-Instruct-q4f16_1-MLC
 - Llama-3.1-8B-Instruct-q4f16_1-MLC
 - Llama-2.7B-Instruct-q4f16_1-MLC
 - Llama-1.3B-Instruct-q4f16_1-MLC
