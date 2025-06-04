@@ -108,4 +108,5 @@ This repository is configured to deploy automatically to **GitHub Pages**.
 Merges to `main` publish the production site. Each pull request is
 deployed as a temporary preview so you can verify your changes before
 they go live. The workflow posts a comment on the PR with the preview
-URL for convenience.
+URL for convenience. It relies on the `pull_request_target` event so the
+action has permission to create the comment.
