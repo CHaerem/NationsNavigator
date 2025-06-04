@@ -113,5 +113,3 @@ uses the `pull_request_target` event so it can push the preview and
 create the comment. Because `pull_request_target` runs the version of the
 workflow from the base branch, make sure `.github/workflows/pr-preview.yml`
 exists on `main` so forks can trigger it.
-
-The comment includes the preview link so you can quickly verify changes before merging.
