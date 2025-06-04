@@ -5,9 +5,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
   issues: write
   pull-requests: write
 
@@ -19,9 +17,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pages: write
-      id-token: write
+      contents: write
       issues: write
       pull-requests: write
     steps:
@@ -31,35 +27,28 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
           persist-credentials: false
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Prepare static files
+        run: |
+          mkdir public
+          cp -r * public/
+      - name: Deploy preview
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        with:
-          preview: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          destination_dir: pr-${{ github.event.pull_request.number }}
       - name: Comment preview URL
-        if: github.event_name == 'pull_request_target'
         uses: actions/github-script@v7
         env:
-          PREVIEW_URL: ${{ steps.deployment.outputs.page_url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const base = process.env.PREVIEW_URL.replace(/\/$/, '')
-            const prPath = `pr-${process.env.PR_NUMBER}`
-            const url = base.includes(prPath)
-              ? base
-              : `${base}/${prPath}/`
-            const body = `Preview URL: ${url}`
+            const url = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${process.env.PR_NUMBER}/`;
+            const body = `Preview URL: ${url}`;
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: Number(process.env.PR_NUMBER),
-              body
-            })
+              body,
+            });
