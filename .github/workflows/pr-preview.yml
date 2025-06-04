@@ -30,7 +30,7 @@ jobs:
       - name: Prepare static files
         run: |
           mkdir public
-          rsync -av --exclude=public ./ public/
+          rsync -av --exclude=public --exclude=.git ./ public/
       - name: Deploy preview
         uses: peaceiris/actions-gh-pages@v3
         with:
