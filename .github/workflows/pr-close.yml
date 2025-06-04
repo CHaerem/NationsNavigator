@@ -1,6 +1,7 @@
+---
 name: delete preview on PR close
 
-on:
+'on':
   pull_request_target:
     types: [closed]
 
@@ -13,6 +14,7 @@ jobs:
       pull-requests: write
     env:
       PR_PATH: pr-${{ github.event.pull_request.number }}
+      PREVIEW_REPO_URL: https://github.com/${{ github.repository }}/tree/gh-pages/pr-${{ github.event.pull_request.number }}/  # yamllint disable-line rule:line-length
     steps:
       - name: make empty dir
         run: mkdir public
@@ -32,5 +34,5 @@ jobs:
           number: ${{ github.event.pull_request.number }}
           id: deploy-preview
           message: |
-            🪓 PR closed, deleted preview at
-            https://github.com/${{ github.repository }}/tree/gh-pages/${{ env.PR_PATH }}/
+            🪓 PR closed, deleted preview:
+            ${{ env.PREVIEW_REPO_URL }}
