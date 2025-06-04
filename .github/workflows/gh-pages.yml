@@ -1,0 +1,73 @@
+---
+name: github pages
+
+'on':
+  push:
+    branches:
+      - main
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      PR_PATH: pr-${{ github.event.pull_request.number }}
+      DOMAIN: ${{ github.repository_owner }}.github.io
+      PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/  # yamllint disable-line rule:line-length
+    steps:
+      - name: Comment on PR start
+        if: github.event_name == 'pull_request'
+        uses: hasura/comment-progress@v2.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          number: ${{ github.event.pull_request.number }}
+          id: deploy-preview
+          message: "Starting deployment of preview ⏳..."
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Prepare static files
+        run: |
+          rm -rf public
+          mkdir public
+          rsync -av \
+            --exclude=public \
+            --exclude='.git' \
+            --exclude='.github' ./ public/
+
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+
+      - name: Deploy preview
+        if: github.event_name == 'pull_request'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          destination_dir: ${{ env.PR_PATH }}
+
+      - name: Update PR comment
+        if: github.event_name == 'pull_request'
+        uses: hasura/comment-progress@v2.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          number: ${{ github.event.pull_request.number }}
+          id: deploy-preview
+          message: |
+            Preview ready:
+            ${{ env.PREVIEW_URL }}
+            Changes may take a few minutes to propagate.
