@@ -104,4 +104,7 @@ Feel free to experiment with different models to see how they perform!
 
 ## 📦 GitHub Pages CI/CD
 
-This repository is configured to deploy automatically to **GitHub Pages**. Any merge to `main` publishes the site, and every pull request gets its own preview URL so you can test changes before merging.
+This repository is configured to deploy automatically to **GitHub Pages**.
+Merges to `main` publish the production site. Each pull request is
+deployed as a temporary preview so you can verify your changes before
+they go live.
