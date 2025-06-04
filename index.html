@@ -36,11 +36,12 @@
 			<div id="message"></div>
 		</div>
 
-		 <script>
-            document.getElementById("llm-select").addEventListener("change", function() {
-                const selectedModel = this.value;
+                <script type="module">
+            import { initWebLLM } from "./js/llm.js";
+            document.getElementById("llm-select").addEventListener("change", (event) => {
+                const selectedModel = event.target.value;
                 console.log("Selected LLM Model:", selectedModel);
-                // You can add more logic here to handle the selected model
+                initWebLLM(selectedModel);
             });
         </script>
 
