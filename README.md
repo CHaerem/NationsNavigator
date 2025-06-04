@@ -101,3 +101,7 @@ Available LLM models:
 - Llama-1.3B-Instruct-q4f16_1-MLC
 
 Feel free to experiment with different models to see how they perform!
+
+## 📦 GitHub Pages CI/CD
+
+This repository is configured to deploy automatically to **GitHub Pages**. Any merge to `main` publishes the site, and every pull request gets its own preview URL so you can test changes before merging.
