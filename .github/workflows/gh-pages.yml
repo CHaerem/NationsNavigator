@@ -4,13 +4,18 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     env:
-      PR_PATH: pr-${{ github.event.number }}
+      PR_PATH: pr-${{ github.event.pull_request.number }}
       DOMAIN: ${{ github.repository_owner }}.github.io
     steps:
       - name: Comment on PR start
@@ -19,7 +24,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          number: ${{ github.event.number }}
+          number: ${{ github.event.pull_request.number }}
           id: deploy-preview
           message: "Starting deployment of preview ⏳..."
 
@@ -54,7 +59,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          number: ${{ github.event.number }}
+          number: ${{ github.event.pull_request.number }}
           id: deploy-preview
           message: |
-            A preview of ${{ github.event.after }} is available at:\n\n ✨ https://${{ env.DOMAIN }}/${{ github.event.repository.name }}/${{ env.PR_PATH }}/ ✨\n\nChanges may take a few minutes to propagate.
+            A preview of ${{ github.event.pull_request.head.sha }} is available at:
+            ✨ https://${{ env.DOMAIN }}/${{ github.event.repository.name }}/${{ env.PR_PATH }}/ ✨
+            Changes may take a few minutes to propagate.

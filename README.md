@@ -105,9 +105,10 @@ Feel free to experiment with different models to see how they perform!
 ## 📦 GitHub Pages CI/CD
 
 This repository automatically deploys to **GitHub Pages**.
-Merges to `main` publish the production site. Pull requests build a
-preview under `gh-pages/pr-<number>` so you can verify changes before
-they go live. The preview workflow comments a link like
-`https://<user>.github.io/${repo}/pr-<number>/` and updates the comment on
-subsequent pushes. When a pull request is closed the preview folder is
-removed automatically.
+ Merges to `main` publish the production site. Pull requests build a
+ preview under `gh-pages/pr-<number>` so you can verify changes before
+ they go live. The preview workflow comments a link like
+ `https://<user>.github.io/${repo}/pr-<number>/` and updates the comment on
+ subsequent pushes. The workflow listens on the
+ `pull_request_target` event so forks can trigger it safely. When a pull
+ request is closed the preview folder is removed automatically.
