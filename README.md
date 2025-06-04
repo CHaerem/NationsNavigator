@@ -31,6 +31,13 @@ NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to an
 
 3. Blast off to `http://localhost:8000` in your favorite browser! 🚀
 
+4. Install Node dependencies and build the project:
+   ```bash
+   npm install
+   npm run build
+   ```
+   Run `npm test` to execute unit tests.
+
 ## 🎮 Usage
 
 - 🔍 Zoom and pan around the world map like a digital explorer

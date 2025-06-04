@@ -1,0 +1,13 @@
+{
+  "name": "nations-navigator",
+  "version": "1.0.0",
+  "description": "Interactive world map with AI-powered queries",
+  "type": "module",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "bash scripts/build.sh"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
