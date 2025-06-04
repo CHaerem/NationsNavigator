@@ -31,6 +31,13 @@ NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to an
 
 3. Blast off to `http://localhost:8000` in your favorite browser! 🚀
 
+4. Install Node dependencies and build the project:
+   ```bash
+   npm install
+   npm run build
+   ```
+   Run `npm test` to execute unit tests.
+
 ## 🎮 Usage
 
 - 🔍 Zoom and pan around the world map like a digital explorer
@@ -46,7 +53,7 @@ Keep your world knowledge fresh:
 1. Make sure you've got Python 3 on your ship 🚀
 2. Install the magic requests library:
    ```
-   pip install requests
+   pip install -r requirements.txt
    ```
 3. Navigate to the secret scripts chamber:
    ```
@@ -54,7 +61,7 @@ Keep your world knowledge fresh:
    ```
 4. Cast the update spell:
    ```
-   python update_country_data.py
+   python updateCountryData.py
    ```
 5. Watch as the latest country data flows into your app! 🌊
 

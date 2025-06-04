@@ -1,3 +1,4 @@
+// Renamed to .skip.js to skip heavy network-based tests
 import { initWebLLM } from "../js/llm.js";
 
 describe("LLM Model Selection and Initialization", () => {
