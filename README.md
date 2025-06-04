@@ -106,6 +106,12 @@ Feel free to experiment with different models to see how they perform!
 
 This repository is configured to deploy automatically to **GitHub Pages**.
 Merges to `main` publish the production site. Each pull request is
-deployed as a temporary preview so you can verify your changes before
-they go live. The workflow posts a comment on the PR with the preview
-URL for convenience.
+deployed to the `gh-pages` branch under `pr-<number>` so you can verify
+changes before they go live. The preview workflow posts a comment on the
+PR with a link like `https://<user>.github.io/${repo}/pr-<number>/` and
+uses the `pull_request_target` event so it can push the preview and
+create the comment. Because `pull_request_target` runs the version of the
+workflow from the base branch, make sure `.github/workflows/pr-preview.yml`
+exists on `main` so forks can trigger it.
+
+The comment includes the preview link so you can quickly verify changes before merging.

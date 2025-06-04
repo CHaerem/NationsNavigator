@@ -1,14 +1,13 @@
 name: Preview Pull Request on GitHub Pages
 
 on:
-  pull_request:
-    branches:
-      - main
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
+  issues: write
+  pull-requests: write
 
 concurrency:
   group: 'pr-preview-${{ github.event.pull_request.number }}'
@@ -17,32 +16,38 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
-      - name: Checkout
+      - name: Checkout PR code
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+      - name: Prepare static files
+        run: |
+          mkdir public
+          cp -r * public/
+      - name: Deploy preview
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          preview: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          destination_dir: pr-${{ github.event.pull_request.number }}
       - name: Comment preview URL
-        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
-        env:
-          PREVIEW_URL: ${{ steps.deployment.outputs.page_url }}
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const body = `Preview URL: ${process.env.PREVIEW_URL}`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            const pr = context.payload.pull_request.number;
+            const url = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr}/`;
+            const body = `Preview URL: ${url}`;
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body
+              issue_number: pr,
+              body,
             });
