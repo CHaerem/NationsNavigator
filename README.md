@@ -90,12 +90,9 @@ Now go forth and explore the world, one click at a time! 🌍🖱️
 
 ## 🌐 Selecting LLM Models
 
-You can now select different LLM models to use with NationsNavigator. Follow these steps:
-
-1. Open `index.html` in your favorite code editor.
-2. Locate the dropdown menu with the label "Select LLM Model".
-3. Choose the desired LLM model from the dropdown options.
-4. Save the changes and refresh your browser to apply the selected model.
+NationsNavigator lets you switch between different language models on the fly.
+Use the **Select LLM Model** dropdown in the sidebar while the app is running
+and a new model will load automatically.
 
 Available LLM models:
 - Llama-3.2-10B-Instruct-q4f16_1-MLC
