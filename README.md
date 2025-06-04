@@ -110,4 +110,6 @@ deployed to the `gh-pages` branch under `pr-<number>` so you can verify
 changes before they go live. The preview workflow posts a comment on the
 PR with a link like `https://<user>.github.io/${repo}/pr-<number>/` and
 uses the `pull_request_target` event so it can push the preview and
-create the comment.
+create the comment. Because `pull_request_target` runs the version of the
+workflow from the base branch, make sure `.github/workflows/pr-preview.yml`
+exists on `main` so forks can trigger it.
