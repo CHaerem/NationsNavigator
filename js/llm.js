@@ -7,24 +7,20 @@ let engine;
 
 const modelConfigs = {
 	"Llama-3.1-8B-Instruct-q4f16_1-MLC": {
-		model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
-		model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
-		context_window_size: 1024,
+		model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
+		context_window_size: 2048,
 	},
-	"Llama-2.7B-Instruct-q4f16_1-MLC": {
-		model: "https://huggingface.co/mlc-ai/Llama-2.7B-Instruct-q4f16_1-MLC",
-		model_id: "Llama-2.7B-Instruct-q4f16_1-MLC-1k",
-		context_window_size: 1024,
+	"Llama-3.2-3B-Instruct-q4f16_1-MLC": {
+		model_id: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+		context_window_size: 2048,
 	},
-	"Llama-1.3B-Instruct-q4f16_1-MLC": {
-		model: "https://huggingface.co/mlc-ai/Llama-1.3B-Instruct-q4f16_1-MLC",
-		model_id: "Llama-1.3B-Instruct-q4f16_1-MLC-1k",
-		context_window_size: 1024,
+	"Llama-3.2-1B-Instruct-q4f16_1-MLC": {
+		model_id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+		context_window_size: 2048,
 	},
-	"Llama-3.2-10B-Instruct-q4f16_1-MLC": {
-		model: "https://huggingface.co/mlc-ai/Llama-3.2-10B-Instruct-q4f16_1-MLC",
-		model_id: "Llama-3.2-10B-Instruct-q4f16_1-MLC-1k",
-		context_window_size: 1024,
+	"Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
+		model_id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+		context_window_size: 2048,
 	},
 };
 
