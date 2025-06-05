@@ -22,7 +22,7 @@ jobs:
       PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
     steps:
       - name: Comment on PR start
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
         uses: hasura/comment-progress@v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,6 +36,15 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           submodules: false
+
+      - name: Debug environment
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "PR number: ${{ github.event.pull_request.number }}"
+          echo "PR path: ${{ env.PR_PATH }}"
+          echo "Preview URL: ${{ env.PREVIEW_URL }}"
+          echo "Repository: ${{ github.repository }}"
 
       - name: Prepare static files
         run: |
@@ -52,30 +61,34 @@ jobs:
             echo "Error: index.html not found in public directory"
             exit 1
           fi
+          echo "Files prepared for deployment:"
+          ls -la public/
 
       - name: Deploy to production
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
 
       - name: Deploy preview
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          destination_dir: ${{ env.PR_PATH }}
+          destination_dir: "pr-${{ github.event.pull_request.number }}"
+          keep_files: true
 
       - name: Wait for GitHub Pages deployment
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
         run: |
           echo "Waiting for GitHub Pages to deploy..."
+          echo "Preview should be available at: ${{ env.PREVIEW_URL }}"
           sleep 30
 
       - name: Update PR comment
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
         uses: hasura/comment-progress@v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -89,7 +102,7 @@ jobs:
             Changes may take a few minutes to propagate.
 
       - name: Comment on failure
-        if: failure() && github.event_name == 'pull_request_target'
+        if: failure() && github.event_name == 'pull_request_target' && github.event.pull_request.number
         uses: hasura/comment-progress@v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
