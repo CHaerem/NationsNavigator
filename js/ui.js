@@ -207,16 +207,21 @@ export function updateMessage(message) {
 export function updateLLMStatus(status) {
 	document.getElementById("llm-status").textContent = status;
 	const searchBtn = document.getElementById("search-btn");
+	const btnIcon = searchBtn.querySelector(".btn-icon");
+	const btnText = searchBtn.querySelector(".btn-text");
 	
 	if (status.includes("✅") || status === "WebLLM ready") {
 		searchBtn.disabled = false;
-		searchBtn.textContent = "🔍 Ask AI";
+		if (btnIcon) btnIcon.textContent = "🔍";
+		if (btnText) btnText.textContent = "Ask AI";
 	} else if (status.includes("❌")) {
 		searchBtn.disabled = true;
-		searchBtn.textContent = "AI Unavailable";
+		if (btnIcon) btnIcon.textContent = "❌";
+		if (btnText) btnText.textContent = "AI Unavailable";
 	} else {
 		searchBtn.disabled = true;
-		searchBtn.textContent = "Loading AI...";
+		if (btnIcon) btnIcon.textContent = "⏳";
+		if (btnText) btnText.textContent = "Loading AI...";
 	}
 }
 
