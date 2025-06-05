@@ -13,10 +13,9 @@ const COLORS = {
 let isInitialized = false;
 
 export async function initMap() {
-	if (isInitialized) {
-		console.log("Map is already initialized");
-		return;
-	}
+        if (isInitialized) {
+                return;
+        }
 
 	try {
 		map = L.map("map", {
@@ -53,8 +52,7 @@ export async function initMap() {
 			onEachFeature: onEachFeature,
 		}).addTo(map);
 
-		console.log("Map and geojsonLayer loaded successfully");
-		isInitialized = true;
+                isInitialized = true;
 	} catch (error) {
 		console.error("Error loading map data:", error);
 		throw error;
@@ -175,13 +173,9 @@ export function highlightCountry(iso) {
 }
 
 export function initializeMap() {
-	if (!isInitialized) {
-		initMap()
-			.then(() => console.log("Map initialization complete"))
-			.catch((error) => console.error("Error initializing map:", error));
-	} else {
-		console.log("Map is already initialized");
-	}
+        if (!isInitialized) {
+                initMap().catch((error) => console.error("Error initializing map:", error));
+        }
 }
 
 // Test helper function - only for testing
