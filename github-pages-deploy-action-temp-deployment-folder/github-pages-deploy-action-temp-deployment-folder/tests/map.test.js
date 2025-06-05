@@ -1,10 +1,5 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
-import {
-	highlightCountries,
-	resetMap,
-	highlightCountry,
-	_setGeojsonLayerForTesting,
-} from "../js/map.js";
+import { highlightCountries, resetMap, highlightCountry } from "../js/map.js";
 
 // Mock the data module
 jest.mock("../js/data.js", () => ({
@@ -79,13 +74,9 @@ describe("Map Module", () => {
 			getLayers: jest.fn(() => mockLayers),
 		};
 
-		// Set up the geojsonLayer for testing
-		_setGeojsonLayerForTesting(mockGeojsonLayer);
-
-		// Also set global for compatibility
-		global.map = {
-			fitBounds: jest.fn(),
-		};
+		// Set up the global geojsonLayer mock
+		// We need to mock this at the module level
+		global.geojsonLayer = mockGeojsonLayer;
 	});
 
 	test("should highlight countries based on condition function", async () => {
@@ -147,13 +138,12 @@ describe("Map Module", () => {
 
 		const highlightedCount = highlightCountries(condition);
 
-		// Should be 0 because XXX has no country data (even though it exists in layer data)
+		// Should be 0 because XXX has no country data
 		expect(highlightedCount).toBe(0);
 	});
 
 	test("should not highlight if geojsonLayer is not initialized", async () => {
-		// Use the test helper to set geojsonLayer to null
-		_setGeojsonLayerForTesting(null);
+		global.geojsonLayer = null;
 
 		const { highlightCountries } = await import("../js/map.js");
 
@@ -161,8 +151,6 @@ describe("Map Module", () => {
 		const highlightedCount = highlightCountries(condition);
 
 		expect(highlightedCount).toBe(0);
-		// Restore geojsonLayer for other tests if necessary, or ensure beforeEach handles it
-		_setGeojsonLayerForTesting(mockGeojsonLayer);
 	});
 
 	test("should reset map by clearing all highlights", async () => {
