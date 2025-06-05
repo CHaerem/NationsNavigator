@@ -145,6 +145,8 @@ Available LLM models:
 - Llama-3.2-3B-Instruct-q4f16_1-MLC
 - Llama-3.2-1B-Instruct-q4f16_1-MLC
 - Qwen2.5-1.5B-Instruct-q4f16_1-MLC
+- Phi-3.5-mini-instruct-q4f16_1-MLC
+- Mistral-7B-Instruct-v0.3-q4f16_1-MLC
 
 Feel free to experiment with different models to see how they perform!
 

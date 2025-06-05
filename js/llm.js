@@ -22,10 +22,18 @@ const modelConfigs = {
 		model_id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
 		context_window_size: 2048,
 	},
-	"Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
-		model_id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-	},
+        "Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
+                model_id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+                context_window_size: 2048,
+        },
+        "Phi-3.5-mini-instruct-q4f16_1-MLC": {
+                model_id: "Phi-3.5-mini-instruct-q4f16_1-MLC",
+                context_window_size: 4096,
+        },
+        "Mistral-7B-Instruct-v0.3-q4f16_1-MLC": {
+                model_id: "Mistral-7B-Instruct-v0.3-q4f16_1-MLC",
+                context_window_size: 4096,
+        },
 };
 
 export async function initWebLLM(selectedModel) {
