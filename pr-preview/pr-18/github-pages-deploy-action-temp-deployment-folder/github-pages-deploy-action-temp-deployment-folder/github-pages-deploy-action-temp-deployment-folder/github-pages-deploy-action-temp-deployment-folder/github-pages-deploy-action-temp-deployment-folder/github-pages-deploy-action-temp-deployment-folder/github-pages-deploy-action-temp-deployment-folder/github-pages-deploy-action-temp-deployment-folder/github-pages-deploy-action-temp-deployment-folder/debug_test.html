@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Debug Test</title>
+		<script src="https://cdn.jsdelivr.net/npm/alasql@4.5.0/dist/alasql.min.js"></script>
+	</head>
+	<body>
+		<h1>Debug Test for Country Highlighting</h1>
+		<button onclick="testQuery()">
+			Test Query: "countries in europe with green flag"
+		</button>
+		<div id="results"></div>
+
+		<script>
+			let countryData = {};
+
+			// Load country data
+			fetch("./data/countryData.json")
+				.then((response) => response.json())
+				.then((data) => {
+					countryData = data;
+					console.log(
+						"Country data loaded, keys:",
+						Object.keys(countryData).length
+					);
+
+					// Create AlaSQL table
+					alasql("CREATE TABLE IF NOT EXISTS countries");
+					alasql("DELETE FROM countries");
+
+					const countries = Object.values(countryData);
+					alasql("INSERT INTO countries SELECT * FROM ?", [countries]);
+					console.log(
+						"AlaSQL table created with",
+						countries.length,
+						"countries"
+					);
+				});
+
+			function testQuery() {
+				console.log("=== TESTING QUERY ===");
+
+				// Test the SQL query that should be generated
+				const testQuery = `SELECT name, ISO_A3 FROM countries 
+                WHERE region = 'Europe' AND (
+                    flagDescription LIKE '%green%' 
+                    OR flagDescription LIKE '%emerald%'
+                )`;
+
+				console.log("Test SQL query:", testQuery);
+
+				try {
+					const result = alasql(testQuery);
+					console.log("Query result:", result);
+					console.log(
+						"Found countries:",
+						result.map((r) => `${r.name} (${r.ISO_A3})`)
+					);
+
+					// Test highlighting logic
+					let highlightCount = 0;
+					result.forEach((country) => {
+						const iso = country.ISO_A3;
+						console.log(
+							`Checking ISO ${iso} in countryData:`,
+							countryData[iso] ? "FOUND" : "NOT FOUND"
+						);
+						if (countryData[iso]) {
+							highlightCount++;
+							console.log(`Would highlight: ${country.name} (${iso})`);
+						}
+					});
+
+					console.log("Total would be highlighted:", highlightCount);
+
+					document.getElementById("results").innerHTML = `
+                    <h2>Results:</h2>
+                    <p>Query found ${result.length} countries</p>
+                    <p>Would highlight ${highlightCount} countries</p>
+                    <h3>Countries found:</h3>
+                    <ul>
+                        ${result
+													.map((r) => `<li>${r.name} (${r.ISO_A3})</li>`)
+													.join("")}
+                    </ul>
+                `;
+				} catch (error) {
+					console.error("Query error:", error);
+					document.getElementById(
+						"results"
+					).innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+				}
+			}
+		</script>
+	</body>
+</html>
