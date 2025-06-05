@@ -119,15 +119,42 @@ export function highlightCountries(condition) {
 	let highlightedCount = 0;
 	filteredCountries.clear();
 
+	console.log("Starting highlighting process...");
+	let debugCount = 0;
+
 	geojsonLayer.eachLayer((layer) => {
 		const iso = layer.feature.properties.ISO_A3;
 		const props = countryData[iso];
-		if (props && condition(layer)) {
+		// Ensure props exist before evaluating the condition for highlighting
+		const conditionResult = props && condition(layer);
+
+		// Debug first few layers to understand the structure
+		if (debugCount < 5) {
+			console.log(
+				`Layer ${debugCount}: ISO=${iso}, hasProps=${!!props}, conditionResult=${conditionResult}`
+			);
+			console.log(
+				"Available properties:",
+				Object.keys(layer.feature.properties)
+			);
+			debugCount++;
+		}
+
+		if (conditionResult) {
+			// props are implicitly checked here due to conditionResult
+			console.log(`Highlighting country: ${iso}`);
 			layer.setStyle({ fillColor: COLORS.HIGHLIGHTED, fillOpacity: 0.7 });
 			filteredCountries.add(iso);
 			highlightedCount++;
 		} else if (layer.options.fillColor !== COLORS.SELECTED) {
 			layer.setStyle({ fillColor: COLORS.DEFAULT, fillOpacity: 0.7 });
+
+			// Debug why highlighting failed
+			// if (condition(layer) && !props) { // This condition was problematic, simplified above
+			// console.log(
+			// \t`Condition met for ${iso} but no props found in countryData`
+			// );
+			// }
 		}
 	});
 
@@ -139,19 +166,27 @@ export function highlightCountry(iso) {
 		console.error("geojsonLayer is not initialized");
 		return;
 	}
-
+	let foundLayer = null;
 	geojsonLayer.eachLayer((layer) => {
 		if (layer.feature.properties.ISO_A3 === iso) {
-			handleCountryClick(iso, layer);
-			layer.bringToFront();
+			foundLayer = layer;
+		}
+	});
 
-			const bounds = layer.getBounds();
+	if (foundLayer) {
+		handleCountryClick(iso, foundLayer); // Call handleCountryClick to select and update info
+		foundLayer.bringToFront();
+		const bounds = foundLayer.getBounds();
+		if (map && typeof map.fitBounds === "function") {
+			// Ensure map and fitBounds are available
 			map.fitBounds(bounds, {
 				padding: [50, 50],
 				maxZoom: 5,
 			});
+		} else {
+			console.error("Map or fitBounds function is not available.");
 		}
-	});
+	}
 }
 
 export function initializeMap() {
@@ -162,4 +197,16 @@ export function initializeMap() {
 	} else {
 		console.log("Map is already initialized");
 	}
+}
+
+// Test helper function - only for testing
+export function _setGeojsonLayerForTesting(layer) {
+	geojsonLayer = layer;
+}
+
+// Test helper function to reset the module state
+export function _resetForTesting() {
+	geojsonLayer = null;
+	isInitialized = false;
+	filteredCountries.clear();
 }

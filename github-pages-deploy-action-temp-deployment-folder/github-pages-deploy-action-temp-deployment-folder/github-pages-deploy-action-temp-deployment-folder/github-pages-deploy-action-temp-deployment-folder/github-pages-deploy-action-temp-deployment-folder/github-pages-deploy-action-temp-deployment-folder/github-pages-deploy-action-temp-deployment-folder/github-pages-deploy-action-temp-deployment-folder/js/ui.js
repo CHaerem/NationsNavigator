@@ -6,17 +6,25 @@ export function updateCountryInfo(props) {
 	const closeBtnElement = document.getElementById("close-btn");
 
 	if (props) {
-		const currencies = props.currencies.split(",").join(", ");
-		const languages = props.languages.split(",").join(", ");
-		const continents = props.continents.split(",").join(", ");
-		const borders = props.borders.split(",").join(", ");
+		const currencies = props.currencies
+			? props.currencies.split(",").join(", ")
+			: "N/A";
+		const languages = props.languages
+			? props.languages.split(",").join(", ")
+			: "N/A";
+		const continents = props.continents
+			? props.continents.split(",").join(", ")
+			: "N/A";
+		const borders = props.borders ? props.borders.split(",").join(", ") : "N/A";
 
 		countryInfoElement.innerHTML = `
-      <img src="${props.flagUrl}" alt="${props.name} flag" class="flag">
-      <h3>${props.name}</h3>
-      <p><strong>Official Name:</strong> ${props.officialName}</p>
-      <p><strong>Capital:</strong> ${props.capital}</p>
-      <p><strong>Population:</strong> ${props.population.toLocaleString()}</p>
+      <img src="${props.flagUrl || ""}" alt="${props.name} flag" class="flag">
+      <h3>${props.name || "Unknown"}</h3>
+      <p><strong>Official Name:</strong> ${props.officialName || "N/A"}</p>
+      <p><strong>Capital:</strong> ${props.capital || "N/A"}</p>
+      <p><strong>Population:</strong> ${
+				props.population ? props.population.toLocaleString() : "N/A"
+			}</p>
       <p><strong>Area:</strong> ${
 				props.area ? props.area.toLocaleString() + " km²" : "N/A"
 			}</p>

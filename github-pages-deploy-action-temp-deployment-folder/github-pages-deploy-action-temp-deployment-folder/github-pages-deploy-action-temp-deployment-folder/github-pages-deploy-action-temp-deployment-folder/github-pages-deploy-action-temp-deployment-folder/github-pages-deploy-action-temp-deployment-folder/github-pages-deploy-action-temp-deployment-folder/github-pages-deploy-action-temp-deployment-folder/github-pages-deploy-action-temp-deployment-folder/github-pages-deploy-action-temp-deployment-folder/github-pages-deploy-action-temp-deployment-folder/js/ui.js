@@ -6,25 +6,17 @@ export function updateCountryInfo(props) {
 	const closeBtnElement = document.getElementById("close-btn");
 
 	if (props) {
-		const currencies = props.currencies
-			? props.currencies.split(",").join(", ")
-			: "N/A";
-		const languages = props.languages
-			? props.languages.split(",").join(", ")
-			: "N/A";
-		const continents = props.continents
-			? props.continents.split(",").join(", ")
-			: "N/A";
-		const borders = props.borders ? props.borders.split(",").join(", ") : "N/A";
+		const currencies = props.currencies.split(",").join(", ");
+		const languages = props.languages.split(",").join(", ");
+		const continents = props.continents.split(",").join(", ");
+		const borders = props.borders.split(",").join(", ");
 
 		countryInfoElement.innerHTML = `
-      <img src="${props.flagUrl || ""}" alt="${props.name} flag" class="flag">
-      <h3>${props.name || "Unknown"}</h3>
-      <p><strong>Official Name:</strong> ${props.officialName || "N/A"}</p>
-      <p><strong>Capital:</strong> ${props.capital || "N/A"}</p>
-      <p><strong>Population:</strong> ${
-				props.population ? props.population.toLocaleString() : "N/A"
-			}</p>
+      <img src="${props.flagUrl}" alt="${props.name} flag" class="flag">
+      <h3>${props.name}</h3>
+      <p><strong>Official Name:</strong> ${props.officialName}</p>
+      <p><strong>Capital:</strong> ${props.capital}</p>
+      <p><strong>Population:</strong> ${props.population.toLocaleString()}</p>
       <p><strong>Area:</strong> ${
 				props.area ? props.area.toLocaleString() + " km²" : "N/A"
 			}</p>
@@ -75,29 +67,27 @@ export function updateLLMStatus(status) {
 }
 
 export function setupEventListeners() {
-	const queryForm = document.getElementById("query-form");
-	queryForm.addEventListener("submit", (event) => {
-		event.preventDefault();
+	document.getElementById("search-btn").addEventListener("click", () => {
 		if (!document.getElementById("search-btn").disabled) {
 			processQuery();
 		} else {
 			updateMessage("WebLLM is still initializing. Please wait.");
 		}
 	});
-
-	document.getElementById("search-btn").addEventListener("click", (event) => {
-		event.preventDefault();
-		if (!document.getElementById("search-btn").disabled) {
-			processQuery();
-		} else {
-			updateMessage("WebLLM is still initializing. Please wait.");
-		}
-	});
-	
 	document.getElementById("reset-btn").addEventListener("click", resetMap);
 	document.getElementById("close-btn").addEventListener("click", () => {
 		updateCountryInfo(null);
 	});
+	document
+		.getElementById("query-input")
+		.addEventListener("keyup", function (event) {
+			if (
+				event.key === "Enter" &&
+				!document.getElementById("search-btn").disabled
+			) {
+				processQuery();
+			}
+		});
 }
 
 export function toggleCountriesList(event) {

@@ -2,10 +2,6 @@
 
 Embark on a global adventure with NationsNavigator! 🚀 This innovative web app combines the power of AI 🧠 with interactive maps 🗺️ to create a unique world exploration experience. Discover fascinating facts about countries, answer geographical queries, and watch as the world lights up with knowledge! 💡
 
-## 🌐 Live Demo
-
-Check out the deployed version of NationsNavigator here: [NationsNavigator Live](https://chaerem.github.io/NationsNavigator/)
-
 ## ✨ Features
 
 - 🗺️ Interactive world map powered by Leaflet.js
@@ -16,24 +12,7 @@ Check out the deployed version of NationsNavigator here: [NationsNavigator Live]
 
 ## 🛠️ How It Works
 
-
 NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to answer your questions about countries and geography. It's like having a genius globetrotter at your fingertips! The AI works hand in hand with our interactive map to create a fun and educational experience. Plus, all the country data lives right on your computer and can be updated with a magic Python spell! 🐍✨
-
-## 📂 Project Structure
-
-```
-.
-├── index.html       # Main HTML entry point
-├── styles.css       # Global styling
-├── js/              # JavaScript modules
-├── data/            # Country data JSON
-├── scripts/         # Python utilities
-├── tests/           # Jest test suite
-├── package.json     # npm configuration
-└── README.md        # Project overview
-```
-
-Each folder includes its own README with additional details about the contents.
 
 ## 🚀 Setup
 
@@ -44,27 +23,13 @@ Each folder includes its own README with additional details about the contents.
    cd NationsNavigator
    ```
 
-2. Install dependencies (required for tests):
+2. Fire up a local server (Python's got your back!):
 
    ```
-   npm install
+   python -m http.server 8000
    ```
 
-3. Fire up a local server (Python or npm both work!):
-
-   ```
-   npm run serve
-   ```
-
-   Or if you prefer plain Python:
-
-   ```
-   python3 -m http.server 8000
-   ```
-
-4. Blast off to `http://localhost:8000` in your favorite browser! 🚀
-
-See the READMEs inside `js`, `scripts`, `data` and `tests` for more information on each part of the project.
+3. Blast off to `http://localhost:8000` in your favorite browser! 🚀
 
 ## 🎮 Usage
 
@@ -89,21 +54,11 @@ Keep your world knowledge fresh:
    ```
 4. Cast the update spell:
    ```
-   python updateCountryData.py
+   python update_country_data.py
    ```
 5. Watch as the latest country data flows into your app! 🌊
 
 Remember to run this magical update regularly to keep your world data sparkling! ✨
-
-## 🧪 Running Tests
-
-NationsNavigator includes a Jest test suite. Install dependencies once with `npm install` and then run:
-
-```bash
-npm test
-```
-
-This will execute all tests in the `tests/` directory.
 
 ## 🛠️ Tech Magic
 
@@ -141,10 +96,10 @@ and a new model will load automatically.
 
 Available LLM models:
 
+- Llama-3.2-10B-Instruct-q4f16_1-MLC
 - Llama-3.1-8B-Instruct-q4f16_1-MLC
-- Llama-3.2-3B-Instruct-q4f16_1-MLC
-- Llama-3.2-1B-Instruct-q4f16_1-MLC
-- Qwen2.5-1.5B-Instruct-q4f16_1-MLC
+- Llama-2.7B-Instruct-q4f16_1-MLC
+- Llama-1.3B-Instruct-q4f16_1-MLC
 
 Feel free to experiment with different models to see how they perform!
 

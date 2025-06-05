@@ -4,7 +4,6 @@ import {
 	getCountryData,
 	executeQuery,
 	getAvailableStats,
-	clearCountryData,
 } from "../js/data.js";
 
 // Mock country data
@@ -118,10 +117,6 @@ describe("Data Module", () => {
 	});
 
 	test("should handle fetch errors gracefully", async () => {
-		// Clear any existing data first
-		const { clearCountryData } = await import("../js/data.js");
-		clearCountryData();
-
 		global.fetch.mockRejectedValue(new Error("Network error"));
 
 		await expect(fetchCountryData()).rejects.toThrow("Network error");
@@ -161,11 +156,8 @@ describe("Data Module", () => {
 		expect(stats).toContain("flagDescription");
 	});
 
-	test("should return empty array for stats when no data loaded", async () => {
-		// Clear data first to ensure empty state
-		const { clearCountryData } = await import("../js/data.js");
-		clearCountryData();
-
+	test("should return empty array for stats when no data loaded", () => {
+		// Don't load data first
 		const stats = getAvailableStats();
 		expect(stats).toEqual([]);
 	});
