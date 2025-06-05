@@ -25,7 +25,17 @@ const modelConfigs = {
 };
 
 export async function initWebLLM(selectedModel) {
-	const modelConfig = modelConfigs[selectedModel];
+	// Provide default model if none selected (important for testing)
+	const defaultModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+	const modelKey = selectedModel || defaultModel;
+	const modelConfig = modelConfigs[modelKey];
+
+	if (!modelConfig) {
+		console.error(`Unknown model: ${modelKey}`);
+		updateLLMStatus("Failed to initialize WebLLM - Unknown model");
+		return;
+	}
+
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
@@ -47,7 +57,7 @@ export async function initWebLLM(selectedModel) {
 	}
 }
 
-async function generateSQLQuery(query) {
+export async function generateSQLQuery(query) {
 	const availableStats = getAvailableStats();
 	const exampleCountry = getExampleCountry();
 
@@ -97,11 +107,31 @@ async function generateSQLQuery(query) {
 			max_tokens: 300,
 		});
 
-		const sqlQuery = reply.choices[0].message.content.trim();
-		console.log("Received SQL query from WebLLM:", sqlQuery);
+		const rawResponse = reply.choices[0].message.content.trim();
+		console.log("Received SQL query from WebLLM:", rawResponse);
+
+		// Extract SQL query from response (handle extra text)
+		let sqlQuery = rawResponse;
+
+		// Look for SELECT statement in the response
+		const selectMatch = rawResponse.match(/SELECT[\s\S]*?(?=\n\n|\n[A-Z]|$)/i);
+		if (selectMatch) {
+			sqlQuery = selectMatch[0].trim();
+		}
+
+		// Clean up common prefixes and suffixes
+		sqlQuery = sqlQuery.replace(
+			/^(Here's the SQL query you need:|SQL Query:|Query:)\s*/i,
+			""
+		);
+		sqlQuery = sqlQuery.replace(
+			/\s*(This will find.*|This query.*|The above query.*)$/i,
+			""
+		);
+		sqlQuery = sqlQuery.trim();
 
 		if (!sqlQuery.toLowerCase().startsWith("select")) {
-			throw new Error(`Failed to generate SQL query: ${sqlQuery}`);
+			throw new Error(`Failed to generate SQL query: ${rawResponse}`);
 		}
 
 		return sqlQuery;
@@ -146,7 +176,20 @@ export async function processQuery() {
 
 		const highlightedCount = highlightCountries((layer) => {
 			const layerIso = layer.feature.properties.ISO_A3;
-			return queryResult.some((result) => result.ISO_A3 === layerIso);
+			const layerName =
+				layer.feature.properties.NAME || layer.feature.properties.name;
+
+			// Debug: log first few properties to understand the structure
+			if (queryResult.length > 0 && layerIso === "HUN") {
+				console.log("Layer properties for Hungary:", layer.feature.properties);
+				console.log("Query result sample:", queryResult[0]);
+			}
+
+			const match = queryResult.some((result) => result.ISO_A3 === layerIso);
+			if (match) {
+				console.log(`Matching country found: ${layerName} (${layerIso})`);
+			}
+			return match;
 		});
 
 		let highlightInfo;
