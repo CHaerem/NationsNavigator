@@ -16,7 +16,24 @@ Check out the deployed version of NationsNavigator here: [NationsNavigator Live]
 
 ## 🛠️ How It Works
 
+
 NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to answer your questions about countries and geography. It's like having a genius globetrotter at your fingertips! The AI works hand in hand with our interactive map to create a fun and educational experience. Plus, all the country data lives right on your computer and can be updated with a magic Python spell! 🐍✨
+
+## 📂 Project Structure
+
+```
+.
+├── index.html       # Main HTML entry point
+├── styles.css       # Global styling
+├── js/              # JavaScript modules
+├── data/            # Country data JSON
+├── scripts/         # Python utilities
+├── tests/           # Jest test suite
+├── package.json     # npm configuration
+└── README.md        # Project overview
+```
+
+Each folder includes its own README with additional details about the contents.
 
 ## 🚀 Setup
 
@@ -47,7 +64,7 @@ NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to an
 
 4. Blast off to `http://localhost:8000` in your favorite browser! 🚀
 
-For details on the project structure check the additional README files inside the `js`, `scripts`, `data` and `tests` folders.
+See the READMEs inside `js`, `scripts`, `data` and `tests` for more information on each part of the project.
 
 ## 🎮 Usage
 
@@ -72,7 +89,7 @@ Keep your world knowledge fresh:
    ```
 4. Cast the update spell:
    ```
-   python update_country_data.py
+   python updateCountryData.py
    ```
 5. Watch as the latest country data flows into your app! 🌊
 
