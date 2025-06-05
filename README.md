@@ -95,6 +95,7 @@ Use the **Select LLM Model** dropdown in the sidebar while the app is running
 and a new model will load automatically.
 
 Available LLM models:
+
 - Llama-3.2-10B-Instruct-q4f16_1-MLC
 - Llama-3.1-8B-Instruct-q4f16_1-MLC
 - Llama-2.7B-Instruct-q4f16_1-MLC
@@ -104,11 +105,4 @@ Feel free to experiment with different models to see how they perform!
 
 ## 📦 GitHub Pages CI/CD
 
-This repository automatically deploys to **GitHub Pages**.
- Merges to `main` publish the production site. Pull requests build a
- preview under `gh-pages/pr-<number>` so you can verify changes before
- they go live. The preview workflow comments a link like
- `https://<user>.github.io/${repo}/pr-<number>/` and updates the comment on
- subsequent pushes. The workflow listens on the
- `pull_request_target` event so forks can trigger it safely. When a pull
- request is closed the preview folder is removed automatically.
+This repository automatically deploys to **GitHub Pages** when you push to the `main` branch. The workflow is simple and reliable - it takes your source code and publishes it directly to GitHub Pages without any complex build steps or preview deployments.
