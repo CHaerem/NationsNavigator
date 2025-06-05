@@ -2,7 +2,7 @@ import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { updateLLMStatus, updateMessage } from "./ui.js";
 import { highlightCountries } from "./map.js";
 import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
-import { debugLog } from "./debug.js";
+import { debugLog, debugTime, debugTimeEnd } from "./debug.js";
 
 let engine;
 
@@ -158,13 +158,13 @@ export async function processQuery() {
         debugLog("Query processing started at", startTime);
 
         try {
-                console.time("Query processing");
-                console.time("Generate SQL query");
+                debugTime("Query processing");
+                debugTime("Generate SQL query");
                 const sqlQuery = await generateSQLQuery(query);
-                console.timeEnd("Generate SQL query");
-                console.time("Execute SQL query");
+                debugTimeEnd("Generate SQL query");
+                debugTime("Execute SQL query");
                 const queryResult = executeQuery(sqlQuery);
-                console.timeEnd("Execute SQL query");
+                debugTimeEnd("Execute SQL query");
                 const execDuration = performance.now();
                 const processingTime = execDuration - startTime;
 
@@ -203,7 +203,7 @@ export async function processQuery() {
                 );
                 debugLog("Query result:", queryResult);
                 updateMessage(resultMessage);
-                console.timeEnd("Query processing");
+                debugTimeEnd("Query processing");
 
 	} catch (error) {
 		console.error("Error processing query:", error);
