@@ -15,7 +15,7 @@
 		<div id="map"></div>
 		<div id="info-box">
 			<h3>
-				Country Information
+				Country Information TEST
 				<button id="close-btn" style="display: none">×</button>
 			</h3>
 			<div id="country-info">Click on a country to see its information.</div>
@@ -25,26 +25,36 @@
 				id="query-input"
 				placeholder="Ask a question about countries"
 			/>
-			 <label for="llm-select">Select LLM Model:</label>
-            <select id="llm-select">
-                <option value="Llama-3.2-10B-Instruct-q4f16_1-MLC">Llama-3.2-10B-Instruct-q4f16_1-MLC</option>
-                <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1-8B-Instruct-q4f16_1-MLC</option>
-                <option value="Llama-2.7B-Instruct-q4f16_1-MLC">Llama-2.7B-Instruct-q4f16_1-MLC</option>
-                <option value="Llama-1.3B-Instruct-q4f16_1-MLC">Llama-1.3B-Instruct-q4f16_1-MLC</option>
-            </select>
+			<label for="llm-select">Select LLM Model:</label>
+			<select id="llm-select">
+				<option value="Llama-3.2-10B-Instruct-q4f16_1-MLC">
+					Llama-3.2-10B-Instruct-q4f16_1-MLC
+				</option>
+				<option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">
+					Llama-3.1-8B-Instruct-q4f16_1-MLC
+				</option>
+				<option value="Llama-2.7B-Instruct-q4f16_1-MLC">
+					Llama-2.7B-Instruct-q4f16_1-MLC
+				</option>
+				<option value="Llama-1.3B-Instruct-q4f16_1-MLC">
+					Llama-1.3B-Instruct-q4f16_1-MLC
+				</option>
+			</select>
 			<button id="search-btn" disabled>Ask</button>
 			<button id="reset-btn">Reset</button>
 			<div id="message"></div>
 		</div>
 
-                <script type="module">
-            import { initWebLLM } from "./js/llm.js";
-            document.getElementById("llm-select").addEventListener("change", (event) => {
-                const selectedModel = event.target.value;
-                console.log("Selected LLM Model:", selectedModel);
-                initWebLLM(selectedModel);
-            });
-        </script>
+		<script type="module">
+			import { initWebLLM } from "./js/llm.js";
+			document
+				.getElementById("llm-select")
+				.addEventListener("change", (event) => {
+					const selectedModel = event.target.value;
+					console.log("Selected LLM Model:", selectedModel);
+					initWebLLM(selectedModel);
+				});
+		</script>
 
 		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 		<script type="module" src="js/main.js"></script>
