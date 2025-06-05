@@ -64,6 +64,15 @@ jobs:
           echo "Files prepared for deployment:"
           ls -la public/
 
+      - name: Debug environment
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "PR number: ${{ github.event.pull_request.number }}"
+          echo "PR path: ${{ env.PR_PATH }}"
+          echo "Preview URL: ${{ env.PREVIEW_URL }}"
+          echo "Repository: ${{ github.repository }}"
+
       - name: Deploy to production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
@@ -77,7 +86,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          destination_dir: "pr-${{ github.event.pull_request.number }}"
+          destination_dir: ${{ env.PR_PATH }}
           keep_files: true
 
       - name: Wait for GitHub Pages deployment
