@@ -27,13 +27,27 @@ NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to an
    cd NationsNavigator
    ```
 
-2. Fire up a local server (Python's got your back!):
+2. Install dependencies (required for tests):
 
    ```
-   python -m http.server 8000
+   npm install
    ```
 
-3. Blast off to `http://localhost:8000` in your favorite browser! 🚀
+3. Fire up a local server (Python or npm both work!):
+
+   ```
+   npm run serve
+   ```
+
+   Or if you prefer plain Python:
+
+   ```
+   python3 -m http.server 8000
+   ```
+
+4. Blast off to `http://localhost:8000` in your favorite browser! 🚀
+
+For details on the project structure check the additional README files inside the `js`, `scripts`, `data` and `tests` folders.
 
 ## 🎮 Usage
 
@@ -63,6 +77,16 @@ Keep your world knowledge fresh:
 5. Watch as the latest country data flows into your app! 🌊
 
 Remember to run this magical update regularly to keep your world data sparkling! ✨
+
+## 🧪 Running Tests
+
+NationsNavigator includes a Jest test suite. Install dependencies once with `npm install` and then run:
+
+```bash
+npm test
+```
+
+This will execute all tests in the `tests/` directory.
 
 ## 🛠️ Tech Magic
 
@@ -100,10 +124,10 @@ and a new model will load automatically.
 
 Available LLM models:
 
-- Llama-3.2-10B-Instruct-q4f16_1-MLC
 - Llama-3.1-8B-Instruct-q4f16_1-MLC
-- Llama-2.7B-Instruct-q4f16_1-MLC
-- Llama-1.3B-Instruct-q4f16_1-MLC
+- Llama-3.2-3B-Instruct-q4f16_1-MLC
+- Llama-3.2-1B-Instruct-q4f16_1-MLC
+- Qwen2.5-1.5B-Instruct-q4f16_1-MLC
 
 Feel free to experiment with different models to see how they perform!
 
