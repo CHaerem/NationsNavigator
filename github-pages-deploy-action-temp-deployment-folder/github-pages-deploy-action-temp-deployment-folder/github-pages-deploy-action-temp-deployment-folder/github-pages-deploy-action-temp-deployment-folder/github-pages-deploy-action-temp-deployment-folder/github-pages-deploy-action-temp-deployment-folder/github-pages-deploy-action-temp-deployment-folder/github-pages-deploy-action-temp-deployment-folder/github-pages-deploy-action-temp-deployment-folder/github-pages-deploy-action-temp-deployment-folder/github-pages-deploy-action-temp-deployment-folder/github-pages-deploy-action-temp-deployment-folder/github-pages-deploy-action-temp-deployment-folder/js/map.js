@@ -1,4 +1,4 @@
-import { countryData } from "./data.js";
+import { getCountryData } from "./data.js";
 import { updateCountryInfo, updateMessage } from "./ui.js";
 
 let map, geojsonLayer;
@@ -69,6 +69,7 @@ function onEachFeature(feature, layer) {
 }
 
 function handleCountryClick(iso, layer) {
+	const countryData = getCountryData();
 	const props = countryData[iso];
 	if (!props) return;
 
@@ -111,9 +112,10 @@ export function resetMap() {
 export function highlightCountries(condition) {
 	if (!geojsonLayer) {
 		console.error("geojsonLayer is not initialized");
-		return;
+		return 0;
 	}
 
+	const countryData = getCountryData();
 	let highlightedCount = 0;
 	filteredCountries.clear();
 
@@ -129,11 +131,7 @@ export function highlightCountries(condition) {
 		}
 	});
 
-	const message =
-		highlightedCount === 0
-			? "\n\nNo countries highlighted."
-			: `\n\n${highlightedCount} countries highlighted.`;
-	updateMessage((prevMessage) => prevMessage + message);
+	return highlightedCount;
 }
 
 export function highlightCountry(iso) {

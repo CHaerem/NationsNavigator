@@ -2,6 +2,10 @@
 
 Embark on a global adventure with NationsNavigator! 🚀 This innovative web app combines the power of AI 🧠 with interactive maps 🗺️ to create a unique world exploration experience. Discover fascinating facts about countries, answer geographical queries, and watch as the world lights up with knowledge! 💡
 
+## 🌐 Live Demo
+
+Check out the deployed version of NationsNavigator here: [NationsNavigator Live](https://chaerem.github.io/NationsNavigator/)
+
 ## ✨ Features
 
 - 🗺️ Interactive world map powered by Leaflet.js
