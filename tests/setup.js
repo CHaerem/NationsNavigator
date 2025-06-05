@@ -3,28 +3,54 @@ import { jest } from "@jest/globals";
 
 // Mock fetch globally with proper responses
 global.fetch = jest.fn((url) => {
-        if (typeof url === "string" && url.includes("world.geojson")) {
-                return Promise.resolve({
-                        ok: true,
-                        json: () => Promise.resolve({ features: [] }),
-                });
-        }
-        return Promise.resolve({
-                ok: true,
-                json: () =>
-                        Promise.resolve({
-                                metadata: {
-                                        version: "1.0.0",
-                                        lastUpdated: "2024-01-01",
-                                },
-                                countries: [
-                                        { name: "United States", ISO_A3: "USA", region: "Americas" },
-                                        { name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
-                                        { name: "Ireland", ISO_A3: "IRL", region: "Europe" },
-                                        // Note: XXX is intentionally NOT included in country data to test graceful handling
-                                ],
-                        }),
-        });
+	if (typeof url === "string" && url.includes("world.geojson")) {
+		return Promise.resolve({
+			ok: true,
+			status: 200,
+			statusText: "OK",
+			json: () => Promise.resolve({ features: [] }),
+		});
+	}
+	return Promise.resolve({
+		ok: true,
+		status: 200,
+		statusText: "OK",
+		json: () =>
+			Promise.resolve({
+				metadata: {
+					version: "1.0.0",
+					lastUpdated: "2024-01-01",
+				},
+				countries: [
+					{
+						name: "United States",
+						ISO_A3: "USA",
+						region: "Americas",
+						population: 331000000,
+						area: 9833520.0,
+						flagDescription:
+							"Stars and stripes with red, white and blue colors",
+					},
+					{
+						name: "United Kingdom",
+						ISO_A3: "GBR",
+						region: "Europe",
+						population: 67000000,
+						area: 242495.0,
+						flagDescription: "Union Jack with red, white and blue colors",
+					},
+					{
+						name: "Ireland",
+						ISO_A3: "IRL",
+						region: "Europe",
+						population: 5000000,
+						area: 70273.0,
+						flagDescription: "Tricolor with green, white and orange stripes",
+					},
+					// Note: XXX is intentionally NOT included in country data to test graceful handling
+				],
+			}),
+	});
 });
 
 // Mock Leaflet with proper geojsonLayer behavior
@@ -184,38 +210,38 @@ global.createManualSpy = (returnValue) => {
 
 // Reset all mocks before each test
 beforeEach(() => {
-        jest.clearAllMocks();
+	jest.clearAllMocks();
 
-        // Reset mockLayers
-        mockLayers.forEach((layer) => {
-                layer.setStyle.mockClear();
-                layer.bringToFront.mockClear();
-                layer.getBounds.mockClear();
-        });
+	// Reset mockLayers
+	mockLayers.forEach((layer) => {
+		layer.setStyle.mockClear();
+		layer.bringToFront.mockClear();
+		layer.getBounds.mockClear();
+	});
 
-        // Reset fetch mock to default behavior
-        global.fetch.mockImplementation((url) => {
-                if (typeof url === "string" && url.includes("world.geojson")) {
-                        return Promise.resolve({
-                                ok: true,
-                                json: () => Promise.resolve({ features: [] }),
-                        });
-                }
-                return Promise.resolve({
-                        ok: true,
-                        json: () =>
-                                Promise.resolve({
-                                        metadata: {
-                                                version: "1.0.0",
-                                                lastUpdated: "2024-01-01",
-                                        },
-                                        countries: [
-                                                { name: "United States", ISO_A3: "USA", region: "Americas" },
-                                                { name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
-                                                { name: "Ireland", ISO_A3: "IRL", region: "Europe" },
-                                                { name: "Test Country", ISO_A3: "XXX", region: "Test" },
-                                        ],
-                                }),
-                });
-        });
+	// Reset fetch mock to default behavior
+	global.fetch.mockImplementation((url) => {
+		if (typeof url === "string" && url.includes("world.geojson")) {
+			return Promise.resolve({
+				ok: true,
+				json: () => Promise.resolve({ features: [] }),
+			});
+		}
+		return Promise.resolve({
+			ok: true,
+			json: () =>
+				Promise.resolve({
+					metadata: {
+						version: "1.0.0",
+						lastUpdated: "2024-01-01",
+					},
+					countries: [
+						{ name: "United States", ISO_A3: "USA", region: "Americas" },
+						{ name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
+						{ name: "Ireland", ISO_A3: "IRL", region: "Europe" },
+						{ name: "Test Country", ISO_A3: "XXX", region: "Test" },
+					],
+				}),
+		});
+	});
 });

@@ -18,7 +18,23 @@ export async function fetchCountryData() {
 
 	try {
 		const response = await fetch("data/countryData.json");
-                const data = await response.json();
+		
+		if (!response.ok) {
+			const status = response.status || 'Unknown';
+			const statusText = response.statusText || 'Unknown Error';
+			throw new Error(`HTTP Error: ${status} - ${statusText}`);
+		}
+		
+		const data = await response.json();
+		
+		if (!data.countries || !Array.isArray(data.countries)) {
+			throw new Error("Invalid data format: countries array not found");
+		}
+		
+		if (data.countries.length === 0) {
+			throw new Error("No country data available");
+		}
+		
                 data.countries.forEach((country) => {
                         countryData[country.ISO_A3] = country;
                 });
@@ -28,7 +44,15 @@ export async function fetchCountryData() {
                 initializeAlaSQLTable();
 	} catch (error) {
 		console.error("Error fetching country data:", error);
-		throw error;
+		
+		// Provide more specific error messages
+		if (error instanceof TypeError && error.message.includes('fetch')) {
+			throw new Error("Network error: Unable to load country data. Please check your internet connection.");
+		} else if (error.name === 'SyntaxError') {
+			throw new Error("Data format error: Country data file is corrupted or invalid.");
+		} else {
+			throw new Error(`Failed to load country data: ${error.message}`);
+		}
 	}
 }
 
