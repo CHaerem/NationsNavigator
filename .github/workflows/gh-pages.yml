@@ -22,7 +22,7 @@ jobs:
       PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
     steps:
       - name: Comment on PR start
-        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
         uses: hasura/comment-progress@v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,15 +36,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           submodules: false
-
-      - name: Debug environment
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "PR number: ${{ github.event.pull_request.number }}"
-          echo "PR path: ${{ env.PR_PATH }}"
-          echo "Preview URL: ${{ env.PREVIEW_URL }}"
-          echo "Repository: ${{ github.repository }}"
 
       - name: Prepare static files
         run: |
@@ -61,8 +52,13 @@ jobs:
             echo "Error: index.html not found in public directory"
             exit 1
           fi
+          # Set proper permissions
+          find public -type f -exec chmod 644 {} \;
+          find public -type d -exec chmod 755 {} \;
           echo "Files prepared for deployment:"
           ls -la public/
+          echo "Content of index.html:"
+          head -5 public/index.html
 
       - name: Debug environment
         run: |
@@ -72,6 +68,8 @@ jobs:
           echo "PR path: ${{ env.PR_PATH }}"
           echo "Preview URL: ${{ env.PREVIEW_URL }}"
           echo "Repository: ${{ github.repository }}"
+          echo "Will deploy to production: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}"
+          echo "Will deploy to preview: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number != '' }}"
 
       - name: Deploy to production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -79,25 +77,74 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
+          enable_jekyll: false
 
-      - name: Deploy preview
-        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          destination_dir: ${{ env.PR_PATH }}
-          keep_files: true
+      - name: Deploy preview (manual approach)
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
+        run: |
+          # Clone the gh-pages branch
+          git clone --single-branch --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages-repo || {
+            echo "gh-pages branch doesn't exist, creating it..."
+            git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages-repo
+            cd gh-pages-repo
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            echo "# GitHub Pages" > README.md
+            git add README.md
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Initial gh-pages commit"
+            git push origin gh-pages
+            cd ..
+          }
+
+          # Copy preview files to the correct subdirectory
+          cd gh-pages-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Create/update the PR directory
+          rm -rf ${{ env.PR_PATH }}
+          mkdir -p ${{ env.PR_PATH }}
+          cp -r ../public/* ${{ env.PR_PATH }}/
+
+          # Add and commit changes
+          git add .
+          git commit -m "Deploy preview for PR #${{ github.event.pull_request.number }}" || echo "No changes to commit"
+          git push origin gh-pages
+
+      - name: Test preview URL
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
+        run: |
+          echo "Preview deployed to: ${{ env.PREVIEW_URL }}"
+          echo "Files deployed to gh-pages branch under: ${{ env.PR_PATH }}/"
+          echo "GitHub Pages may take 2-5 minutes to update"
+
+      - name: Verify deployment structure
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
+        run: |
+          echo "Deployment completed. Structure should be:"
+          echo "  - Main site: /"
+          echo "  - This PR: /${{ env.PR_PATH }}/"
+          echo "Expected URL: ${{ env.PREVIEW_URL }}"
 
       - name: Wait for GitHub Pages deployment
-        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
         run: |
           echo "Waiting for GitHub Pages to deploy..."
           echo "Preview should be available at: ${{ env.PREVIEW_URL }}"
-          sleep 30
+          echo "If the preview shows 404, it may take 5-10 minutes to propagate"
+          echo "The gh-pages branch should contain a '${{ env.PR_PATH }}' directory"
+
+      - name: Check gh-pages branch structure
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
+        run: |
+          echo "Checking if gh-pages branch was updated..."
+          git ls-remote --heads origin gh-pages || echo "gh-pages branch not found"
+          echo "Expected structure: main site at root, PR preview at ${{ env.PR_PATH }}/"
 
       - name: Update PR comment
-        if: github.event_name == 'pull_request_target' && github.event.pull_request.number
+        if: github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
         uses: hasura/comment-progress@v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -111,7 +158,7 @@ jobs:
             Changes may take a few minutes to propagate.
 
       - name: Comment on failure
-        if: failure() && github.event_name == 'pull_request_target' && github.event.pull_request.number
+        if: failure() && github.event_name == 'pull_request_target' && github.event.pull_request.number != ''
         uses: hasura/comment-progress@v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
