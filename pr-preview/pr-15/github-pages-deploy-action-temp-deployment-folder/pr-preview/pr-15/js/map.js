@@ -1,6 +1,5 @@
 import { getCountryData } from "./data.js";
 import { updateCountryInfo, updateMessage } from "./ui.js";
-import { debugLog } from "./debug.js";
 
 let map, geojsonLayer;
 let filteredCountries = new Set(); // Use a Set for faster lookups
@@ -15,7 +14,6 @@ let isInitialized = false;
 
 export async function initMap() {
         if (isInitialized) {
-                debugLog("Map is already initialized");
                 return;
         }
 
@@ -49,12 +47,11 @@ export async function initMap() {
 			}
 		});
 
-                geojsonLayer = L.geoJSON(data, {
-                        style: getCountryStyle,
-                        onEachFeature: onEachFeature,
-                }).addTo(map);
+		geojsonLayer = L.geoJSON(data, {
+			style: getCountryStyle,
+			onEachFeature: onEachFeature,
+		}).addTo(map);
 
-                debugLog("Map and geojsonLayer loaded successfully");
                 isInitialized = true;
 	} catch (error) {
 		console.error("Error loading map data:", error);
@@ -118,86 +115,66 @@ export function resetMap() {
 }
 
 export function highlightCountries(condition) {
-        if (!geojsonLayer) {
-                console.error("geojsonLayer is not initialized");
-                return 0;
-        }
-
-        debugLog("Starting highlighting process...");
-        let debugCount = 0;
+	if (!geojsonLayer) {
+		console.error("geojsonLayer is not initialized");
+		return 0;
+	}
 
 	const countryData = getCountryData();
 	let highlightedCount = 0;
 	filteredCountries.clear();
 
-        geojsonLayer.eachLayer((layer) => {
-                const iso = layer.feature.properties.ISO_A3;
-                const props = countryData[iso];
-                // Ensure props exist before evaluating the condition for highlighting
-                const conditionResult = props && condition(layer);
+	geojsonLayer.eachLayer((layer) => {
+		const iso = layer.feature.properties.ISO_A3;
+		const props = countryData[iso];
+		// Ensure props exist before evaluating the condition for highlighting
+		const conditionResult = props && condition(layer);
 
-                if (debugCount < 5) {
-                        debugLog(
-                                `Layer ${debugCount}: ISO=${iso}, hasProps=${!!props}, conditionResult=${conditionResult}`
-                        );
-                        debugLog("Available properties:", Object.keys(layer.feature.properties));
-                        debugCount++;
-                }
+		if (conditionResult) {
+			layer.setStyle({ fillColor: COLORS.HIGHLIGHTED, fillOpacity: 0.7 });
+			filteredCountries.add(iso);
+			highlightedCount++;
+		} else if (layer.options.fillColor !== COLORS.SELECTED) {
+			layer.setStyle({ fillColor: COLORS.DEFAULT, fillOpacity: 0.7 });
+		}
+	});
 
-                if (conditionResult) {
-                        debugLog(`Highlighting country: ${iso}`);
-                        layer.setStyle({ fillColor: COLORS.HIGHLIGHTED, fillOpacity: 0.7 });
-                        filteredCountries.add(iso);
-                        highlightedCount++;
-                } else if (layer.options.fillColor !== COLORS.SELECTED) {
-                        layer.setStyle({ fillColor: COLORS.DEFAULT, fillOpacity: 0.7 });
-                }
-        });
-
-        debugLog(`Highlighted ${highlightedCount} countries`);
-        return highlightedCount;
+	return highlightedCount;
 }
 
 export function highlightCountry(iso) {
-        if (!geojsonLayer) {
-                console.error("geojsonLayer is not initialized");
-                return;
-        }
-        let foundLayer = null;
-        geojsonLayer.eachLayer((layer) => {
-                if (layer.feature.properties.ISO_A3 === iso) {
-                        foundLayer = layer;
-                }
-        });
+	if (!geojsonLayer) {
+		console.error("geojsonLayer is not initialized");
+		return;
+	}
+	let foundLayer = null;
+	geojsonLayer.eachLayer((layer) => {
+		if (layer.feature.properties.ISO_A3 === iso) {
+			foundLayer = layer;
+		}
+	});
 
-        if (foundLayer) {
-                debugLog(`Highlighting country: ${iso}`);
-                handleCountryClick(iso, foundLayer); // Call handleCountryClick to select and update info
-                foundLayer.bringToFront();
-                const bounds = foundLayer.getBounds();
-                // Check for both local map and global map (for testing)
-                const mapToUse = map || global.map;
+	if (foundLayer) {
+		handleCountryClick(iso, foundLayer); // Call handleCountryClick to select and update info
+		foundLayer.bringToFront();
+		const bounds = foundLayer.getBounds();
+		// Check for both local map and global map (for testing)
+		const mapToUse = map || global.map;
 		if (mapToUse && typeof mapToUse.fitBounds === "function") {
 			// Ensure map and fitBounds are available
 			mapToUse.fitBounds(bounds, {
 				padding: [50, 50],
 				maxZoom: 5,
 			});
-                } else {
-                        console.error("Map or fitBounds function is not available.");
-                }
-        } else {
-                debugLog(`Country layer not found for ISO: ${iso}`);
-        }
+		} else {
+			console.error("Map or fitBounds function is not available.");
+		}
+	}
 }
 
 export function initializeMap() {
         if (!isInitialized) {
-                initMap()
-                        .then(() => debugLog("Map initialization complete"))
-                        .catch((error) => console.error("Error initializing map:", error));
-        } else {
-                debugLog("Map is already initialized");
+                initMap().catch((error) => console.error("Error initializing map:", error));
         }
 }
 

@@ -2,7 +2,6 @@ import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { updateLLMStatus, updateMessage } from "./ui.js";
 import { highlightCountries } from "./map.js";
 import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
-import { debugLog, debugTime, debugTimeEnd } from "./debug.js";
 
 let engine;
 
@@ -45,24 +44,22 @@ export async function initWebLLM(selectedModel) {
 	};
 
         try {
-                debugLog("Starting WebLLM initialization...");
                 engine = await CreateMLCEngine(modelConfig.model_id, {
                         initProgressCallback,
                         context_window_size: modelConfig.context_window_size,
                 });
-                debugLog("WebLLM initialized successfully");
                 updateLLMStatus("WebLLM ready");
-        } catch (error) {
-                console.error("Error initializing WebLLM:", error);
-                updateLLMStatus("Failed to initialize WebLLM");
-        }
+	} catch (error) {
+		console.error("Error initializing WebLLM:", error);
+		updateLLMStatus("Failed to initialize WebLLM");
+	}
 }
 
 export async function generateSQLQuery(query) {
 	const availableStats = getAvailableStats();
 	const exampleCountry = getExampleCountry();
 
-        const prompt = `Generate a SQL query for the countries table based on the user's request.
+	const prompt = `Generate a SQL query for the countries table based on the user's request.
   
   Available fields: ${availableStats.join(", ")}
   
@@ -98,18 +95,14 @@ export async function generateSQLQuery(query) {
   
   Respond with only the SQL query.`;
 
-        debugLog("Prompt being sent to LLM:", prompt);
-
         try {
-                debugLog("Sending query to WebLLM for SQL query generation");
                 const reply = await engine.chat.completions.create({
-                        messages: [{ role: "user", content: prompt }],
-                        temperature: 0.3,
-                        max_tokens: 300,
-                });
+			messages: [{ role: "user", content: prompt }],
+			temperature: 0.3,
+			max_tokens: 300,
+		});
 
                 const rawResponse = reply.choices[0].message.content.trim();
-                debugLog("Received SQL query from WebLLM:", rawResponse);
 
 		// Extract SQL query from response (handle extra text)
 		let sqlQuery = rawResponse;
@@ -151,37 +144,29 @@ export async function processQuery() {
 	}
 
         const query = document.getElementById("query-input").value;
-        debugLog("Processing query:", query);
-        updateMessage("<div class='processing'>Processing query...</div>");
+	updateMessage("<div class='processing'>Processing query...</div>");
 
         const startTime = performance.now();
-        debugLog("Query processing started at", startTime);
 
         try {
-                debugTime("Query processing");
-                debugTime("Generate SQL query");
                 const sqlQuery = await generateSQLQuery(query);
-                debugTimeEnd("Generate SQL query");
-                debugTime("Execute SQL query");
                 const queryResult = executeQuery(sqlQuery);
-                debugTimeEnd("Execute SQL query");
                 const execDuration = performance.now();
                 const processingTime = execDuration - startTime;
 
 
 
-                const highlightedCount = highlightCountries((layer) => {
-                        const layerIso = layer.feature.properties.ISO_A3;
-                        const layerName =
-                                layer.feature.properties.NAME || layer.feature.properties.name;
+		const highlightedCount = highlightCountries((layer) => {
+			const layerIso = layer.feature.properties.ISO_A3;
+			const layerName =
+				layer.feature.properties.NAME || layer.feature.properties.name;
 
-                        debugLog("Evaluating layer", layerIso, layer.feature.properties);
+			// Debug: log first few properties to understand the structure
+
+
                         const match = queryResult.some((result) => result.ISO_A3 === layerIso);
-                        if (match) {
-                                debugLog(`Matching country found: ${layerName} (${layerIso})`);
-                        }
-                        return match;
-                });
+			return match;
+		});
 
 		let highlightInfo;
 		if (highlightedCount === 0) {
@@ -191,19 +176,13 @@ export async function processQuery() {
 			highlightInfo = `${highlightedCount} ${countryText} highlighted.`;
 		}
 
-                debugLog(
-                        "Query result countries:",
-                        queryResult.map((r) => `${r.name} (${r.ISO_A3})`)
-                );
                 const resultMessage = createResultMessage(
                         sqlQuery,
                         queryResult,
                         processingTime,
                         highlightInfo
                 );
-                debugLog("Query result:", queryResult);
                 updateMessage(resultMessage);
-                debugTimeEnd("Query processing");
 
 	} catch (error) {
 		console.error("Error processing query:", error);

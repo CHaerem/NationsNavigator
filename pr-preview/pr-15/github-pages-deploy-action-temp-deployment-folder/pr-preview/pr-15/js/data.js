@@ -1,5 +1,3 @@
-import { debugLog } from "./debug.js";
-
 let countryData = {};
 
 export function clearCountryData() {
@@ -12,19 +10,16 @@ export function getCountryData() {
 
 export async function fetchCountryData() {
         if (Object.keys(countryData).length > 0) {
-                debugLog("Country data already loaded");
                 return;
         }
 
 	try {
 		const response = await fetch("data/countryData.json");
-                const data = await response.json();
-                data.countries.forEach((country) => {
-                        countryData[country.ISO_A3] = country;
-                });
-                debugLog("Country data loaded successfully");
-                debugLog("Data version:", data.metadata.version);
-                debugLog("Last updated:", data.metadata.lastUpdated);
+		const data = await response.json();
+		data.countries.forEach((country) => {
+			countryData[country.ISO_A3] = country;
+		});
+                // Country data loaded
                 initializeAlaSQLTable();
 	} catch (error) {
 		console.error("Error fetching country data:", error);
@@ -33,11 +28,12 @@ export async function fetchCountryData() {
 }
 
 function initializeAlaSQLTable() {
-        const countryArray = Object.values(countryData);
+	const countryArray = Object.values(countryData);
 
-        alasql("CREATE TABLE IF NOT EXISTS countries");
-        alasql.tables.countries.data = countryArray;
-        debugLog("AlaSQL table 'countries' initialized with data");
+	alasql("CREATE TABLE IF NOT EXISTS countries");
+	alasql.tables.countries.data = countryArray;
+
+        // Table initialized with data
 }
 
 export function getAvailableStats() {
@@ -53,11 +49,9 @@ export function getExampleCountry() {
 }
 
 export function executeQuery(sqlQuery) {
-        debugLog("Executing query:", sqlQuery);
-
         try {
-                const result = alasql(sqlQuery);
-                return result;
+		const result = alasql(sqlQuery);
+		return result;
 	} catch (error) {
 		console.error("Error executing query:", error);
 		const customError = new Error(`Error executing query: ${error.message}`);
