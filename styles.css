@@ -120,6 +120,14 @@ button:disabled {
   background-color: #b45309;
 }
 
+#clear-cache-btn {
+  background-color: var(--danger-color);
+}
+
+#clear-cache-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
 #close-btn {
   background-color: var(--danger-color);
   float: right;
