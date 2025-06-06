@@ -177,3 +177,35 @@ Feel free to experiment with different models to see how they perform!
 ## 📦 GitHub Pages CI/CD
 
 This repository automatically deploys to **GitHub Pages** when you push to the `main` branch. The workflow is simple and reliable - it takes your source code and publishes it directly to GitHub Pages without any complex build steps or preview deployments.
+
+## 🚀 Future Enhancements
+
+### Conversational AI Interface
+- **Multi-turn Conversations**: Implement conversation history and context retention for back-and-forth dialogue with the LLM
+- **Chat Interface**: Replace single-query input with a full chat UI supporting conversation threads
+- **Follow-up Questions**: Enable the AI to ask clarifying questions and provide more nuanced responses
+
+### Model Integration Options
+- **Remote API Integration**: Add support for external LLM APIs (OpenAI, Anthropic, Google Gemini) for more powerful models
+- **Hybrid Processing**: Implement intelligent routing between local WebLLM and remote APIs based on query complexity
+- **Model Performance Analytics**: Track and display model response times, accuracy metrics, and user satisfaction
+
+### Advanced Tool Integration
+- **MCP (Model Context Protocol)**: Integrate MCP servers to provide the LLM with real-time data access and external tool capabilities
+- **Dynamic Data Sources**: Connect to live APIs for real-time country statistics, weather data, and economic indicators
+- **Custom Tool Creation**: Allow users to define custom data analysis tools and queries
+
+### Enhanced User Experience
+- **Voice Interface**: Add speech-to-text input and text-to-speech responses for hands-free interaction
+- **Mobile Optimization**: Improve responsive design and touch interactions for mobile devices
+- **Collaboration Features**: Multi-user sessions with shared map views and query history
+
+### Data and Analytics
+- **Advanced Visualizations**: Add charts, graphs, and statistical overlays to the map interface
+- **Export Capabilities**: Allow users to export query results, maps, and conversation history
+- **Usage Analytics**: Track popular queries and optimize the system based on user behavior patterns
+
+### Technical Improvements
+- **Progressive Web App**: Add service workers for offline functionality and app-like experience
+- **Performance Optimization**: Implement lazy loading, caching strategies, and WebAssembly for faster processing
+- **Accessibility Enhancements**: Improve screen reader support and keyboard navigation
