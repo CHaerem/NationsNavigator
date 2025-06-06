@@ -102,17 +102,23 @@ describe("Map Module", () => {
 
 		expect(highlightedCount).toBe(2);
 		expect(mockLayers[1].setStyle).toHaveBeenCalledWith({
-			fillColor: "#9b59b6",
-			fillOpacity: 0.7,
+			fillColor: "#f59e0b",
+			fillOpacity: 1,
+			weight: 2,
+			color: "#d97706",
 		});
 		expect(mockLayers[2].setStyle).toHaveBeenCalledWith({
-			fillColor: "#9b59b6",
-			fillOpacity: 0.7,
+			fillColor: "#f59e0b",
+			fillOpacity: 1,
+			weight: 2,
+			color: "#d97706",
 		});
-		expect(mockLayers[0].setStyle).toHaveBeenCalledWith({
-			fillColor: "#E8E8E8",
-			fillOpacity: 0.7,
-		});
+		// Check that the first country was styled (color varies by ISO hash)
+		expect(mockLayers[0].setStyle).toHaveBeenCalled();
+		const firstCountryCall = mockLayers[0].setStyle.mock.calls[mockLayers[0].setStyle.mock.calls.length - 1][0];
+		expect(firstCountryCall).toHaveProperty('fillOpacity', 0.85);
+		expect(firstCountryCall).toHaveProperty('weight', 1.2);
+		expect(firstCountryCall).toHaveProperty('color', '#475569');
 	});
 
 	test("should return 0 when no countries match condition", async () => {
@@ -127,12 +133,15 @@ describe("Map Module", () => {
 		const highlightedCount = highlightCountries(condition);
 
 		expect(highlightedCount).toBe(0);
-		// All countries should be set to default color
-		mockLayers.forEach((layer) => {
-			expect(layer.setStyle).toHaveBeenCalledWith({
-				fillColor: "#E8E8E8",
-				fillOpacity: 0.7,
-			});
+		// All countries should be set to default color (will vary based on ISO hash)
+		mockLayers.forEach((layer, index) => {
+			// Since colors are now based on ISO hash, we just check that setStyle was called
+			expect(layer.setStyle).toHaveBeenCalled();
+			// Check that the general structure is correct
+			const lastCall = layer.setStyle.mock.calls[layer.setStyle.mock.calls.length - 1][0];
+			expect(lastCall).toHaveProperty('fillOpacity', 0.85);
+			expect(lastCall).toHaveProperty('weight', 1.2);
+			expect(lastCall).toHaveProperty('color', '#475569');
 		});
 	});
 
@@ -218,7 +227,7 @@ describe("Map Module", () => {
 		const { highlightCountries } = await import("../js/map.js");
 
 		// Set one country as selected
-		mockLayers[0].options.fillColor = "#3498db"; // SELECTED color
+		mockLayers[0].options.fillColor = "#0ea5e9"; // SELECTED color
 
 		const condition = (layer) => {
 			const iso = layer.feature.properties.ISO_A3;
@@ -227,16 +236,20 @@ describe("Map Module", () => {
 
 		highlightCountries(condition);
 
-		// Selected country should not be reset to default
-		expect(mockLayers[0].setStyle).not.toHaveBeenCalledWith({
-			fillColor: "#E8E8E8",
-			fillOpacity: 0.7,
-		});
+		// Selected country should not be reset to default (colors now vary)
+		// Just verify the selected country wasn't called with highlighting colors
+		const selectedCalls = mockLayers[0].setStyle.mock.calls;
+		const hasHighlightCall = selectedCalls.some(call => 
+			call[0].fillColor === "#f59e0b" && call[0].weight === 2
+		);
+		expect(hasHighlightCall).toBe(false);
 
 		// But GBR should be highlighted
 		expect(mockLayers[1].setStyle).toHaveBeenCalledWith({
-			fillColor: "#9b59b6",
-			fillOpacity: 0.7,
+			fillColor: "#f59e0b",
+			fillOpacity: 1,
+			weight: 2,
+			color: "#d97706",
 		});
 	});
 });

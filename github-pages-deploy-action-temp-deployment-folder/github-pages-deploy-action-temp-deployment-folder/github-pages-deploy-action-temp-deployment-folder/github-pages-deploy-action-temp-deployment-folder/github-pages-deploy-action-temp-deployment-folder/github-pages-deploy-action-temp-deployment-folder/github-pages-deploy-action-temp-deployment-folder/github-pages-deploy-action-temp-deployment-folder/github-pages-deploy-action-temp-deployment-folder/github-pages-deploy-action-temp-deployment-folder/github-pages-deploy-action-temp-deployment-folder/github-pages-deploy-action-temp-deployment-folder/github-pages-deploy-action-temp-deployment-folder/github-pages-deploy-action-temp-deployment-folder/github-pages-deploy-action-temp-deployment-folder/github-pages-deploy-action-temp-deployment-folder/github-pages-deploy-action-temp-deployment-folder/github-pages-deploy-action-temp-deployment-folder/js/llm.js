@@ -143,23 +143,23 @@ export async function processQuery() {
 		const endTime = performance.now();
 		const processingTime = endTime - startTime;
 
-		const countryCount = queryResult.length;
-		let highlightedCount = 0;
+		console.log(
+			"Query result countries:",
+			queryResult.map((r) => `${r.name} (${r.ISO_A3})`)
+		);
 
-		highlightCountries((country) => {
-			const isHighlighted = queryResult.some(
-				(result) => result.ISO_A3 === country.feature.properties.ISO_A3
-			);
-			if (isHighlighted) highlightedCount++;
-			return isHighlighted;
-		}, "");
+		const highlightedCount = highlightCountries((layer) => {
+			const layerIso = layer.feature.properties.ISO_A3;
+			return queryResult.some((result) => result.ISO_A3 === layerIso);
+		});
 
-		const highlightInfo =
-			highlightedCount === 0
-				? "No countries highlighted."
-				: `${highlightedCount} ${
-						highlightedCount === 1 ? "country" : "countries"
-				  } highlighted.`;
+		let highlightInfo;
+		if (highlightedCount === 0) {
+			highlightInfo = "No countries highlighted.";
+		} else {
+			const countryText = highlightedCount === 1 ? "country" : "countries";
+			highlightInfo = `${highlightedCount} ${countryText} highlighted.`;
+		}
 
 		const resultMessage = createResultMessage(
 			sqlQuery,

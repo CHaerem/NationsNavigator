@@ -4,7 +4,7 @@ Embark on a global adventure with NationsNavigator! 🚀 This innovative web app
 
 ## 🌐 Live Demo
 
-Check out the deployed version of NationsNavigator here: [NationsNavigator Live](https://chaerem.github.io/NationsNavigator/)
+Check out the deployed version of NationsNavigator here: [NationsNavigator](https://chaerem.github.io/NationsNavigator/)
 
 ## ✨ Features
 

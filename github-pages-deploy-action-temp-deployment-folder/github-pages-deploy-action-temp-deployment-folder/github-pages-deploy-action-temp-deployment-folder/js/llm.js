@@ -1,4 +1,4 @@
-import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+import { CreateMLCEngine, deleteModelAllInfoInCache } from "https://esm.run/@mlc-ai/web-llm";
 import { updateLLMStatus, updateMessage } from "./ui.js";
 import { highlightCountries } from "./map.js";
 import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
@@ -375,5 +375,18 @@ function createResultMessage(
 	  </div>
 	`;
 
-	return message;
+        return message;
 }
+
+export async function clearAllModelCache() {
+        for (const key of Object.keys(modelConfigs)) {
+                const modelId = modelConfigs[key].model_id;
+                try {
+                        await deleteModelAllInfoInCache(modelId);
+                } catch (err) {
+                        console.error(`Failed to clear cache for ${modelId}:`, err);
+                }
+        }
+        updateMessage("<div>✅ Model cache cleared</div>");
+}
+

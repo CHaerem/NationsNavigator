@@ -75,27 +75,29 @@ export function updateLLMStatus(status) {
 }
 
 export function setupEventListeners() {
-	document.getElementById("search-btn").addEventListener("click", () => {
+	const queryForm = document.getElementById("query-form");
+	queryForm.addEventListener("submit", (event) => {
+		event.preventDefault();
 		if (!document.getElementById("search-btn").disabled) {
 			processQuery();
 		} else {
 			updateMessage("WebLLM is still initializing. Please wait.");
 		}
 	});
+
+	document.getElementById("search-btn").addEventListener("click", (event) => {
+		event.preventDefault();
+		if (!document.getElementById("search-btn").disabled) {
+			processQuery();
+		} else {
+			updateMessage("WebLLM is still initializing. Please wait.");
+		}
+	});
+	
 	document.getElementById("reset-btn").addEventListener("click", resetMap);
 	document.getElementById("close-btn").addEventListener("click", () => {
 		updateCountryInfo(null);
 	});
-	document
-		.getElementById("query-input")
-		.addEventListener("keyup", function (event) {
-			if (
-				event.key === "Enter" &&
-				!document.getElementById("search-btn").disabled
-			) {
-				processQuery();
-			}
-		});
 }
 
 export function toggleCountriesList(event) {
