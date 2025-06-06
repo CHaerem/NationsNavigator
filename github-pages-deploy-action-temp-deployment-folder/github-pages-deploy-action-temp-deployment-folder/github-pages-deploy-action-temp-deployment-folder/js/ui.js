@@ -127,8 +127,7 @@ export function updateCountryInfo(props) {
 		countryInfoElement.querySelectorAll('.tag-border').forEach(tag => {
 			tag.addEventListener('click', (e) => {
 				const countryCode = e.target.getAttribute('data-country');
-				// This would highlight the border country on the map
-				console.log('Clicked border country:', countryCode);
+				highlightCountry(countryCode);
 			});
 		});
 

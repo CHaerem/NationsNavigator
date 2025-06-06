@@ -16,8 +16,13 @@ Check out the deployed version of NationsNavigator here: [NationsNavigator Live]
 
 ## 🛠️ How It Works
 
+NationsNavigator leverages WebLLM for client-side AI processing, enabling natural language queries to be converted into SQL statements that query a local AlaSQL database. The application uses a modular ES6 architecture with clear separation of concerns:
 
-NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to answer your questions about countries and geography. It's like having a genius globetrotter at your fingertips! The AI works hand in hand with our interactive map to create a fun and educational experience. Plus, all the country data lives right on your computer and can be updated with a magic Python spell! 🐍✨
+1. **Query Processing**: User input → WebLLM generates SQL → AlaSQL executes against country dataset
+2. **Visualization**: Query results trigger map highlighting via Leaflet.js with GeoJSON country boundaries  
+3. **Data Management**: Local JSON storage with Python-based update utilities for fresh country data
+
+The entire AI processing happens in-browser without external API calls, ensuring privacy and offline capability! 🧠✨
 
 ## 📂 Project Structure
 
@@ -34,6 +39,26 @@ NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to an
 ```
 
 Each folder includes its own README with additional details about the contents.
+
+## 🏗️ Architecture
+
+### Module Design
+- **main.js**: Application orchestration and initialization flow
+- **map.js**: Leaflet integration with country highlighting and geospatial event handling
+- **llm.js**: WebLLM model management and natural language to SQL conversion
+- **data.js**: AlaSQL database operations and country data management
+- **ui.js**: DOM manipulation and user interaction event handling
+- **utils.js**: Shared utility functions and helper methods
+
+### Data Flow
+```
+User Query → WebLLM (NL→SQL) → AlaSQL Database → Map Highlighting → UI Updates
+```
+
+### Testing Strategy
+- Comprehensive Jest test suite with jsdom environment
+- Mock implementations for external dependencies (WebLLM, Leaflet, fetch)
+- Module isolation testing with dependency injection patterns
 
 ## 🚀 Setup
 
@@ -105,14 +130,15 @@ npm test
 
 This will execute all tests in the `tests/` directory.
 
-## 🛠️ Tech Magic
+## 🛠️ Tech Stack
 
-- 🎨 HTML5 and CSS3 for that sleek look
-- 🧙‍♂️ JavaScript (ES6+) for interactive wizardry
-- 🗺️ Leaflet.js for map-tastic experiences
-- 🤖 WebLLM for AI superpowers
-- 🔍 AlaSQL for data-querying magic
-- 🐍 Python with requests for data update sorcery
+- **Frontend**: HTML5, CSS3, ES6+ JavaScript modules
+- **Mapping**: Leaflet.js with GeoJSON for interactive world visualization
+- **AI/ML**: WebLLM for browser-based language model inference
+- **Database**: AlaSQL for client-side SQL query processing
+- **Testing**: Jest with jsdom for comprehensive unit testing
+- **Data Pipeline**: Python with requests library for API integration
+- **Deployment**: GitHub Pages with automated CI/CD
 
 ## 📚 Data Sources
 
