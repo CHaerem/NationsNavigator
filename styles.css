@@ -203,6 +203,14 @@ button:disabled {
   transform: translateY(-3px);
 }
 
+#clear-cache-btn {
+  background-color: var(--danger-color);
+}
+
+#clear-cache-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
 #close-btn {
   background: linear-gradient(145deg, #ef4444, #dc2626, #b91c1c);
   box-shadow: 

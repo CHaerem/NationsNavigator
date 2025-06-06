@@ -1,5 +1,6 @@
 import { processQuery, resetMap } from "./main.js";
 import { highlightCountry } from "./map.js";
+import { clearAllModelCache } from "./llm.js";
 
 export function updateCountryInfo(props) {
 	const countryInfoElement = document.getElementById("country-info");
@@ -241,10 +242,16 @@ export function setupEventListeners() {
 		handleQuerySubmit();
 	});
 	
-	document.getElementById("reset-btn").addEventListener("click", resetMap);
-	document.getElementById("close-btn").addEventListener("click", () => {
-		updateCountryInfo(null);
-	});
+        document.getElementById("reset-btn").addEventListener("click", resetMap);
+        const clearCacheBtn = document.getElementById("clear-cache-btn");
+        if (clearCacheBtn) {
+                clearCacheBtn.addEventListener("click", () => {
+                        clearAllModelCache();
+                });
+        }
+        document.getElementById("close-btn").addEventListener("click", () => {
+                updateCountryInfo(null);
+        });
 
 	// Add keyboard shortcuts
 	queryInput.addEventListener("keydown", (event) => {
