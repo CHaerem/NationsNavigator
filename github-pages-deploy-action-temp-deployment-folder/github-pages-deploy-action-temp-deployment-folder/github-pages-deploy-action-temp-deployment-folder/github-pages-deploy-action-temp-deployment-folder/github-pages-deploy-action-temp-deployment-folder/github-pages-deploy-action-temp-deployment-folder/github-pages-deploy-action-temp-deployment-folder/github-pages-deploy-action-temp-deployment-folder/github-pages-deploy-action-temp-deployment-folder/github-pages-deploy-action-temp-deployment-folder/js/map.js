@@ -41,6 +41,13 @@ export async function initMap() {
 		);
 		const data = await response.json();
 
+		// Map the `id` field to `ISO_A3` in the `properties` object
+		data.features.forEach((feature) => {
+			if (feature.id) {
+				feature.properties.ISO_A3 = feature.id;
+			}
+		});
+
 		geojsonLayer = L.geoJSON(data, {
 			style: getCountryStyle,
 			onEachFeature: onEachFeature,

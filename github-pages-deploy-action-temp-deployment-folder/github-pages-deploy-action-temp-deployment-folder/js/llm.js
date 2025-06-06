@@ -97,41 +97,55 @@ export async function generateSQLQuery(query) {
 	const availableStats = getAvailableStats();
 	const exampleCountry = getExampleCountry();
 
-        const prompt = `Generate a SQL query for the countries table based on the user's request.
-  
-  Available fields: ${availableStats.join(", ")}
-  
-  Example row:
-  ${JSON.stringify(exampleCountry, null, 2)}
-  
-  Guidelines:
-  1. Always include 'name' and 'ISO_A3' in SELECT
-  2. Use LIKE '%value%' for partial string matches
-  3. 'languages', 'currencies', 'timezones', 'continents', and 'borders' are comma-separated strings
-  4. For flag-related queries, use the 'flagDescription' field, which contains detailed text about the flag
-  5. Use complex string matching for advanced flag queries
-  
-  Example queries:
-  - "Countries with red in their flag": 
-    SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%red%'
-  - "Countries with stars on their flag":
-    SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%star%'
-  - "Countries with animals in their flag":
-    SELECT name, ISO_A3 FROM countries WHERE 
-      flagDescription LIKE '%animal%' 
-      OR flagDescription LIKE '%bird%' 
-      OR flagDescription LIKE '%eagle%' 
-      OR flagDescription LIKE '%lion%'
-  - "European countries with crosses in their flags":
-    SELECT name, ISO_A3 FROM countries 
-    WHERE region = 'Europe' AND flagDescription LIKE '%cross%'
-  - "Countries with sun symbols in their flags":
-    SELECT name, ISO_A3 FROM countries 
-    WHERE flagDescription LIKE '%sun%' OR flagDescription LIKE '%rays%'
-  
-  User Query: "${query}"
-  
-  Respond with only the SQL query.`;
+        // Enhanced prompt with better guidance and examples
+        const prompt = `You are a SQL expert helping users explore world countries data. Generate a SQL query for the countries table based on the user's request.
+
+DATABASE SCHEMA:
+Table: countries
+Available fields: ${availableStats.join(", ")}
+
+SAMPLE DATA:
+${JSON.stringify(exampleCountry, null, 2)}
+
+IMPORTANT GUIDELINES:
+1. ALWAYS include 'name' and 'ISO_A3' in SELECT clause
+2. Use LIKE '%value%' for partial string matches (case-insensitive)
+3. Fields like 'languages', 'currencies', 'borders' contain comma-separated values
+4. For flag queries, use 'flagDescription' field (contains detailed flag descriptions)
+5. Population and area are numeric fields - use comparison operators (>, <, =)
+6. Common regions: Europe, Asia, Africa, Americas, Oceania
+7. Add ORDER BY name for consistent results
+
+QUERY PATTERNS & EXAMPLES:
+
+Geographic Queries:
+- "Countries in Europe" → SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' ORDER BY name
+- "Largest countries by area" → SELECT name, ISO_A3 FROM countries ORDER BY area DESC LIMIT 10
+- "Most populated countries" → SELECT name, ISO_A3 FROM countries ORDER BY population DESC LIMIT 10
+
+Language & Culture:
+- "Spanish speaking countries" → SELECT name, ISO_A3 FROM countries WHERE languages LIKE '%Spanish%' ORDER BY name
+- "Countries using Euro" → SELECT name, ISO_A3 FROM countries WHERE currencies LIKE '%Euro%' ORDER BY name
+
+Flag Descriptions:
+- "Countries with red flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%red%' ORDER BY name
+- "Countries with stars on flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%star%' ORDER BY name
+- "Countries with crosses in flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%cross%' ORDER BY name
+
+Complex Combinations:
+- "European countries with crosses" → SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' AND flagDescription LIKE '%cross%' ORDER BY name
+- "Island nations in Pacific" → SELECT name, ISO_A3 FROM countries WHERE (name LIKE '%island%' OR flagDescription LIKE '%island%') AND region = 'Oceania' ORDER BY name
+
+Border Queries:
+- "Countries bordering France" → SELECT name, ISO_A3 FROM countries WHERE borders LIKE '%France%' ORDER BY name
+
+Size & Population:
+- "Countries larger than 1 million km²" → SELECT name, ISO_A3 FROM countries WHERE area > 1000000 ORDER BY area DESC
+- "Countries with population over 100M" → SELECT name, ISO_A3 FROM countries WHERE population > 100000000 ORDER BY population DESC
+
+USER QUERY: "${query}"
+
+Generate ONLY the SQL query (no explanations). Ensure it follows the guidelines above.`;
 
         debugLog("Prompt being sent to LLM:", prompt);
 
@@ -330,37 +344,32 @@ function createResultMessage(
 		countriesList = "No countries found";
 	}
 
-	let performanceDetails = "";
-	if (performanceMetrics.sqlGenTime && performanceMetrics.sqlExecTime) {
-		performanceDetails = `
-			<div class="performance-breakdown" style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-				<strong>Performance:</strong> 
-				SQL Generation: ${performanceMetrics.sqlGenTime.toFixed(1)}ms, 
-				SQL Execution: ${performanceMetrics.sqlExecTime.toFixed(1)}ms
-			</div>
-		`;
-	}
-
 	const message = `
-	  <div class="query-results">
-		<h4>Query Results</h4>
-		<div class="sql-query">
-		  <strong>SQL Query:</strong>
-		  <pre>${sqlQuery}</pre>
+	  <div class="query-results-simple">
+		<div class="results-header">
+			<span class="results-count">${countryCount} ${countryCount === 1 ? "country" : "countries"} found</span>
+			<span class="results-time">${processingTime.toFixed(0)}ms</span>
 		</div>
-		<div class="results-summary">
-		  <strong>Results:</strong> ${countryCount} ${
-		countryCount === 1 ? "country" : "countries"
-	} found
+		
+		<div class="countries-list-simple">
+		  ${countriesList}
 		</div>
-		<div class="countries-list">
-		  <strong>Countries:</strong> ${countriesList}
+		
+		<div class="results-actions">
+			<button class="show-sql-btn" data-target="sql-details">
+				<span>Show SQL</span>
+				<span class="sql-icon">▼</span>
+			</button>
+			<div class="sql-details" id="sql-details" style="display: none;">
+				<pre>${sqlQuery}</pre>
+				${performanceMetrics.sqlGenTime ? `<div class="perf-details">
+					SQL Gen: ${performanceMetrics.sqlGenTime.toFixed(1)}ms, 
+					Execution: ${performanceMetrics.sqlExecTime.toFixed(1)}ms
+				</div>` : ''}
+			</div>
 		</div>
-		<div class="processing-time">
-		  <strong>Total processing time:</strong> ${processingTime.toFixed(2)}ms
-		  ${performanceDetails}
-		</div>
-		<div class="highlight-info">
+		
+		<div class="highlight-status">
 		  ${highlightInfo}
 		</div>
 	  </div>
