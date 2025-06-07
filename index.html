@@ -34,12 +34,12 @@
 		<div id="settings-modal" class="modal-hidden">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h3>Settings</h3>
+					<h3>AI Model Settings</h3>
 					<button id="settings-close">×</button>
 				</div>
 				
 				<div class="setting-group">
-					<label for="llm-select">AI Model</label>
+					<label for="llm-select">Active Model</label>
 					<select id="llm-select" aria-label="Select AI model">
 						<option value="Llama-3.2-1B-Instruct-q4f16_1-MLC" selected>
 							Llama-3.2-1B ⚡ (Fastest)
@@ -54,15 +54,70 @@
 							Llama-3.1-8B 💪 (Most Powerful)
 						</option>
 					</select>
-					<small>Smaller models load faster but may be less accurate</small>
+					<small>Currently active model for AI queries</small>
 				</div>
 				
 				<div class="setting-group">
 					<div id="llm-status"></div>
 				</div>
+
+				<div class="setting-group">
+					<label>Model Management</label>
+					<div id="model-list">
+						<!-- Model items will be populated by JavaScript -->
+					</div>
+					<button type="button" id="refresh-models-btn">🔄 Refresh Status</button>
+				</div>
+
+				<div class="setting-group">
+					<label>Hardware Information</label>
+					<div id="hardware-info">
+						<!-- Hardware info will be populated by JavaScript -->
+					</div>
+				</div>
 				
 				<div class="modal-actions">
-					<button type="button" id="clear-cache-btn">🗑️ Clear Cache</button>
+					<button type="button" id="debug-storage-btn">🔍 Debug Storage</button>
+					<button type="button" id="clear-all-cache-btn">🗑️ Clear All Models</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Download Confirmation Modal -->
+		<div id="download-modal" class="modal-hidden">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Download AI Model</h3>
+					<button id="download-close">×</button>
+				</div>
+				
+				<div class="download-info">
+					<div class="model-card">
+						<div class="model-card-header">
+							<h4 id="download-model-name">Model Name</h4>
+							<span id="download-model-size" class="size-badge">Size</span>
+						</div>
+						<p id="download-model-description">Model description</p>
+					</div>
+
+					<div class="hardware-recommendation" id="hardware-recommendation">
+						<!-- Hardware recommendation will be populated -->
+					</div>
+
+					<div class="download-warning">
+						<strong>⚠️ Important:</strong>
+						<ul>
+							<li>This will download the model files to your browser</li>
+							<li>Download may take several minutes depending on your connection</li>
+							<li>You can continue using the app during download</li>
+							<li>Downloaded models are stored locally in your browser</li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="modal-actions">
+					<button type="button" id="download-cancel">Cancel</button>
+					<button type="button" id="download-confirm">Download Model</button>
 				</div>
 			</div>
 		</div>
@@ -88,11 +143,12 @@
 		</aside>
 
                 <script type="module">
-                        import { initWebLLM } from "./js/llm.js";
+                        import { initWebLLM, setCurrentActiveModel } from "./js/llm.js";
                         document
                                 .getElementById("llm-select")
                                 .addEventListener("change", (event) => {
                                         const selectedModel = event.target.value;
+                                        setCurrentActiveModel(selectedModel);
                                         initWebLLM(selectedModel);
                                 });
                 </script>

@@ -1,6 +1,6 @@
 import { processQuery, resetMap } from "./main.js";
 import { highlightCountry } from "./map.js";
-import { clearAllModelCache } from "./llm.js";
+import { clearAllModelCache, deleteModelCache, getModelConfigs, checkModelCacheStatus, getCurrentActiveModel, debugBrowserStorage, detectHardwareCapabilities, getModelRecommendation } from "./llm.js";
 
 export function updateCountryInfo(props) {
 	const countryInfoElement = document.getElementById("country-info");
@@ -257,32 +257,97 @@ export function setupEventListeners() {
 	});
 	
 	// Settings modal toggle
-	document.getElementById("settings-btn").addEventListener("click", () => {
-		showSettingsModal();
-	});
-
-	document.getElementById("settings-close").addEventListener("click", () => {
-		hideSettingsModal();
-	});
-
-	// Close settings modal when clicking backdrop
-	document.getElementById("settings-modal").addEventListener("click", (e) => {
-		if (e.target.id === "settings-modal") {
-			hideSettingsModal();
-		}
-	});
-	
-	document.getElementById("reset-btn").addEventListener("click", resetMap);
-	const clearCacheBtn = document.getElementById("clear-cache-btn");
-	if (clearCacheBtn) {
-		clearCacheBtn.addEventListener("click", () => {
-			clearAllModelCache();
+	const settingsBtn = document.getElementById("settings-btn");
+	if (settingsBtn) {
+		settingsBtn.addEventListener("click", () => {
+			showSettingsModal();
 		});
 	}
-	document.getElementById("close-btn").addEventListener("click", () => {
-		updateCountryInfo(null);
-		hideInfoPanel();
-	});
+
+	const settingsClose = document.getElementById("settings-close");
+	if (settingsClose) {
+		settingsClose.addEventListener("click", () => {
+			hideSettingsModal();
+		});
+	}
+
+	// Download modal event listeners (with null checks)
+	const downloadClose = document.getElementById("download-close");
+	if (downloadClose) {
+		downloadClose.addEventListener("click", () => {
+			hideDownloadModal();
+		});
+	}
+
+	const downloadCancel = document.getElementById("download-cancel");
+	if (downloadCancel) {
+		downloadCancel.addEventListener("click", () => {
+			hideDownloadModal();
+		});
+	}
+
+	const downloadConfirm = document.getElementById("download-confirm");
+	if (downloadConfirm) {
+		downloadConfirm.addEventListener("click", () => {
+			handleModelDownload();
+		});
+	}
+
+	// Close download modal when clicking backdrop
+	const downloadModal = document.getElementById("download-modal");
+	if (downloadModal) {
+		downloadModal.addEventListener("click", (e) => {
+			if (e.target.id === "download-modal") {
+				hideDownloadModal();
+			}
+		});
+	}
+
+	// Close settings modal when clicking backdrop
+	const settingsModal = document.getElementById("settings-modal");
+	if (settingsModal) {
+		settingsModal.addEventListener("click", (e) => {
+			if (e.target.id === "settings-modal") {
+				hideSettingsModal();
+			}
+		});
+	}
+	
+	const resetBtn = document.getElementById("reset-btn");
+	if (resetBtn) {
+		resetBtn.addEventListener("click", resetMap);
+	}
+	
+	// Model management buttons
+	const clearAllCacheBtn = document.getElementById("clear-all-cache-btn");
+	if (clearAllCacheBtn) {
+		clearAllCacheBtn.addEventListener("click", async () => {
+			await clearAllModelCache();
+			await refreshModelList();
+		});
+	}
+
+	const refreshModelsBtn = document.getElementById("refresh-models-btn");
+	if (refreshModelsBtn) {
+		refreshModelsBtn.addEventListener("click", () => {
+			refreshModelList();
+		});
+	}
+
+	const debugStorageBtn = document.getElementById("debug-storage-btn");
+	if (debugStorageBtn) {
+		debugStorageBtn.addEventListener("click", async () => {
+			await debugBrowserStorage();
+			alert("Debug info logged to console. Open Developer Tools (F12) to see the results.");
+		});
+	}
+	const closeBtn = document.getElementById("close-btn");
+	if (closeBtn) {
+		closeBtn.addEventListener("click", () => {
+			updateCountryInfo(null);
+			hideInfoPanel();
+		});
+	}
 
 	// Add keyboard shortcuts
 	queryInput.addEventListener("keydown", (event) => {
@@ -293,10 +358,13 @@ export function setupEventListeners() {
 		}
 	});
 
-	// Close settings modal on ESC key
+	// Close modals on ESC key
 	document.addEventListener("keydown", (event) => {
 		if (event.key === "Escape") {
 			hideSettingsModal();
+			if (document.getElementById('download-modal')) {
+				hideDownloadModal();
+			}
 		}
 	});
 }
@@ -447,6 +515,14 @@ export function toggleCountriesList(event) {
 function showSettingsModal() {
 	const settingsModal = document.getElementById("settings-modal");
 	settingsModal.classList.remove("modal-hidden");
+	
+	// Refresh model list when opening settings
+	refreshModelList();
+	
+	// Also try calling updateHardwareInfo directly with a delay
+	setTimeout(() => {
+		updateHardwareInfo();
+	}, 200);
 }
 
 function hideSettingsModal() {
@@ -456,15 +532,269 @@ function hideSettingsModal() {
 
 function updatePanelTitle(title) {
 	const panelTitle = document.getElementById("panel-title");
-	panelTitle.textContent = title;
+	if (panelTitle) {
+		panelTitle.textContent = title;
+	}
 }
 
 function showInfoPanel() {
 	const infoPanel = document.getElementById("info-panel");
-	infoPanel.style.display = "block";
+	if (infoPanel) {
+		infoPanel.style.display = "block";
+	}
 }
 
 function hideInfoPanel() {
 	const infoPanel = document.getElementById("info-panel");
-	infoPanel.style.display = "none";
+	if (infoPanel) {
+		infoPanel.style.display = "none";
+	}
+}
+
+function updateHardwareInfo() {
+	try {
+		const hardware = detectHardwareCapabilities();
+		const hardwareInfoEl = document.getElementById('hardware-info');
+		
+		if (hardwareInfoEl) {
+			// Count how many specs we could detect
+			const detected = Object.values(hardware).filter(val => val !== 'unknown').length;
+			const total = Object.keys(hardware).length;
+			
+			hardwareInfoEl.innerHTML = `
+				<div class="hardware-stats-header">
+					<small>Hardware Detection: ${detected}/${total} specs detected</small>
+				</div>
+				<div class="hardware-stat">
+					<span>RAM:</span>
+					<span>${hardware.ram !== 'unknown' ? hardware.ram + ' GB' : 'Unknown (Privacy Protected)'}</span>
+				</div>
+				<div class="hardware-stat">
+					<span>CPU Cores:</span>
+					<span>${hardware.cores !== 'unknown' ? hardware.cores : 'Unknown'}</span>
+				</div>
+				<div class="hardware-stat">
+					<span>Connection:</span>
+					<span>${hardware.connection !== 'unknown' ? hardware.connection.toUpperCase() : 'Unknown'}</span>
+				</div>
+				<div class="hardware-stat">
+					<span>GPU:</span>
+					<span>${hardware.gpu !== 'unknown' ? (hardware.gpu.length > 30 ? hardware.gpu.substring(0, 30) + '...' : hardware.gpu) : 'WebGL Protected'}</span>
+				</div>
+				${detected === 0 ? '<div class="hardware-note"><small>💡 Most browsers limit hardware detection for privacy. Model recommendations use safe defaults.</small></div>' : ''}
+			`;
+		}
+	} catch (error) {
+		console.error('Error updating hardware info:', error);
+	}
+}
+
+async function refreshModelList() {
+	const modelList = document.getElementById("model-list");
+	const modelConfigs = getModelConfigs();
+	const activeModel = getCurrentActiveModel();
+	
+	// Show loading state
+	modelList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">Checking model status...</div>';
+	
+	let modelItems = '';
+	
+	for (const config of Object.values(modelConfigs)) {
+		const modelId = config.model_id;
+		const isActive = modelId === activeModel;
+		const isCached = await checkModelCacheStatus(modelId);
+		
+		// Get display name and size from config
+		const displayName = config.description || modelId;
+		const sizeText = formatModelSize(config.size_mb);
+		
+		const statusBadges = [];
+		if (isActive) statusBadges.push('<span class="status-badge status-active">Active</span>');
+		if (isCached) {
+			statusBadges.push('<span class="status-badge status-cached">Downloaded</span>');
+		} else {
+			statusBadges.push('<span class="status-badge status-not-cached">Not Downloaded</span>');
+		}
+		
+		modelItems += `
+			<div class="model-item">
+				<div class="model-info">
+					<div class="model-name">${displayName}</div>
+					<div class="model-size">${sizeText}</div>
+					<div class="model-status">
+						${statusBadges.join('')}
+					</div>
+				</div>
+				<div class="model-actions">
+					${isCached ? `<button class="model-delete-btn" onclick="deleteIndividualModel('${modelId}')" ${isActive ? 'disabled title="Cannot delete active model"' : ''}>
+						🗑️ Delete
+					</button>` : `<button class="model-download-btn" onclick="showDownloadModal('${modelId}')">
+						📥 Download
+					</button>`}
+				</div>
+			</div>
+		`;
+	}
+	
+	modelList.innerHTML = modelItems || '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">No models found</div>';
+	
+	// Update hardware info in settings
+	// Add a small delay to ensure DOM is ready
+	setTimeout(() => {
+		updateHardwareInfo();
+	}, 100);
+}
+
+function formatModelSize(sizeMB) {
+	if (!sizeMB) return "Unknown size";
+	
+	if (sizeMB >= 1000) {
+		return `${(sizeMB / 1000).toFixed(1)} GB`;
+	} else {
+		return `${sizeMB} MB`;
+	}
+}
+
+window.deleteIndividualModel = async function(modelId) {
+	const modelConfigs = getModelConfigs();
+	const config = Object.values(modelConfigs).find(c => c.model_id === modelId);
+	const displayName = config ? config.description : modelId;
+	
+	if (confirm(`Are you sure you want to delete ${displayName}?\n\nThis will remove the downloaded model files and you'll need to re-download them to use this model again.`)) {
+		// Find the delete button and show loading state
+		const deleteBtn = document.querySelector(`button[onclick="deleteIndividualModel('${modelId}')"]`);
+		if (deleteBtn) {
+			deleteBtn.disabled = true;
+			deleteBtn.innerHTML = '⏳ Deleting...';
+		}
+		
+		const success = await deleteModelCache(modelId);
+		
+		if (success) {
+			// Refresh the model list to show updated status
+			await refreshModelList();
+		} else {
+			alert(`Failed to delete ${displayName}. Please try again.`);
+			if (deleteBtn) {
+				deleteBtn.disabled = false;
+				deleteBtn.innerHTML = '🗑️ Delete';
+			}
+		}
+	}
+
+// Download Modal Functions (moved outside to be globally accessible)
+function showDownloadModal(modelId) {
+	const modelConfigs = getModelConfigs();
+	const config = Object.values(modelConfigs).find(c => c.model_id === modelId);
+	
+	if (!config) {
+		console.error('Model config not found:', modelId);
+		return;
+	}
+	
+	// Check if modal elements exist
+	const downloadModal = document.getElementById('download-modal');
+	const nameEl = document.getElementById('download-model-name');
+	const sizeEl = document.getElementById('download-model-size');
+	const descEl = document.getElementById('download-model-description');
+	const recommendationEl = document.getElementById('hardware-recommendation');
+	const confirmBtn = document.getElementById('download-confirm');
+	
+	if (!downloadModal || !nameEl || !sizeEl || !descEl || !recommendationEl || !confirmBtn) {
+		console.error('Download modal elements not found');
+		return;
+	}
+	
+	// Update modal content
+	nameEl.textContent = config.description || modelId;
+	sizeEl.textContent = formatModelSize(config.size_mb);
+	descEl.textContent = `Download and use ${config.description} for AI-powered country queries.`;
+	
+	// Get hardware recommendation
+	const hardware = detectHardwareCapabilities();
+	const recommendation = getModelRecommendation(hardware);
+	
+	// Update hardware recommendation
+	let recommendationClass = 'optimal';
+	let recommendationIcon = '✅';
+	
+	if (recommendation.modelId !== modelId) {
+		if (config.size_mb > 3000) {
+			recommendationClass = 'warning';
+			recommendationIcon = '⚠️';
+		} else {
+			recommendationClass = 'optimal';
+			recommendationIcon = '💡';
+		}
+	}
+	
+	recommendationEl.className = `hardware-recommendation ${recommendationClass}`;
+	recommendationEl.innerHTML = `
+		<strong>${recommendationIcon} Hardware Assessment:</strong><br>
+		${recommendation.modelId === modelId ? recommendation.reason : `Recommended: ${modelConfigs[recommendation.modelId]?.description}. ${recommendation.reason}`}
+	`;
+	
+	// Store the model ID for download
+	confirmBtn.setAttribute('data-model-id', modelId);
+	
+	// Show the modal
+	downloadModal.classList.remove('modal-hidden');
+}
+
+function hideDownloadModal() {
+	const downloadModal = document.getElementById('download-modal');
+	if (downloadModal) {
+		downloadModal.classList.add('modal-hidden');
+	}
+}
+
+async function handleModelDownload() {
+	const confirmBtn = document.getElementById('download-confirm');
+	if (!confirmBtn) {
+		console.error('Download confirm button not found');
+		return;
+	}
+	
+	const modelId = confirmBtn.getAttribute('data-model-id');
+	if (!modelId) {
+		console.error('No model ID found for download');
+		return;
+	}
+	
+	// Update button state
+	const originalText = confirmBtn.textContent;
+	confirmBtn.disabled = true;
+	confirmBtn.textContent = 'Downloading...';
+	
+	try {
+		// Hide the download modal
+		hideDownloadModal();
+		
+		// Start the download by initializing WebLLM with the selected model
+		await initWebLLM(modelId);
+		
+		// Refresh the model list to show updated status
+		await refreshModelList();
+		
+	} catch (error) {
+		console.error('Download failed:', error);
+		alert(`Failed to download model: ${error.message}`);
+	} finally {
+		// Reset button state
+		confirmBtn.disabled = false;
+		confirmBtn.textContent = originalText;
+	}
+}
+
+
+// Make functions globally available
+if (typeof window !== 'undefined') {
+	window.showDownloadModal = showDownloadModal;
+	window.hideDownloadModal = hideDownloadModal;
+	window.handleModelDownload = handleModelDownload;
+	window.updateHardwareInfo = updateHardwareInfo; // For debugging
+}
+
+// Note: Functions are made available via window object for global access
+
 }
