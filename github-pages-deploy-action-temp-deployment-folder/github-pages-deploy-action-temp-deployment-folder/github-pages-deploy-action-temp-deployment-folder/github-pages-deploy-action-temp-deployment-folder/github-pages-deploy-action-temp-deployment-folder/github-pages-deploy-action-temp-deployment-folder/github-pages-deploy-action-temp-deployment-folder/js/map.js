@@ -6,10 +6,30 @@ let map, geojsonLayer;
 let filteredCountries = new Set(); // Use a Set for faster lookups
 
 const COLORS = {
-	DEFAULT: "#E8E8E8",
-	SELECTED: "#3498db",
-	HIGHLIGHTED: "#9b59b6",
+	DEFAULT: "#f8fafc",
+	HOVER: "#e0f2fe",
+	SELECTED: "#0ea5e9",
+	HIGHLIGHTED: "#f59e0b",
+	BORDER: "#475569",
+	BORDER_SELECTED: "#0284c7",
+	BORDER_HIGHLIGHTED: "#d97706",
 };
+
+// Array of sophisticated country colors for visual variety
+const COUNTRY_COLORS = [
+	"#f8fafc", // Light slate
+	"#f1f5f9", // Slate 50
+	"#e2e8f0", // Slate 200
+	"#f0fdf4", // Green 50
+	"#ecfdf5", // Green 100
+	"#fef3c7", // Amber 100
+	"#fef2f2", // Red 50
+	"#fff7ed", // Orange 50
+	"#f0f9ff", // Sky 50
+	"#faf5ff", // Purple 50
+	"#fefce8", // Yellow 50
+	"#f0fdfa", // Teal 50
+];
 
 let isInitialized = false;
 
@@ -30,10 +50,11 @@ export async function initMap() {
 		});
 
 		L.tileLayer(
-			"https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+			"https://{s}.basemaps.cartocdn.com/voyager_nolabels/{z}/{x}/{y}{r}.png",
 			{
 				attribution: "©OpenStreetMap, ©CartoDB",
 				noWrap: false,
+				maxZoom: 18,
 			}
 		).addTo(map);
 
@@ -63,17 +84,63 @@ export async function initMap() {
 }
 
 function getCountryStyle(feature) {
+	// Generate a consistent color based on country ISO code
+	const iso = feature.properties.ISO_A3 || feature.id;
+	let colorIndex = 0;
+	if (iso) {
+		// Simple hash function to get consistent color for each country
+		for (let i = 0; i < iso.length; i++) {
+			colorIndex += iso.charCodeAt(i);
+		}
+		colorIndex = colorIndex % COUNTRY_COLORS.length;
+	}
+	
 	return {
-		fillColor: COLORS.DEFAULT,
-		weight: 1,
+		fillColor: COUNTRY_COLORS[colorIndex],
+		weight: 1.2,
 		opacity: 1,
-		color: "white",
-		fillOpacity: 0.7,
+		color: COLORS.BORDER,
+		fillOpacity: 0.85,
+		smooth: true,
 	};
 }
 
 function onEachFeature(feature, layer) {
 	layer.on("click", () => handleCountryClick(feature.properties.ISO_A3, layer));
+	
+	// Add hover effects
+	layer.on("mouseover", () => {
+		// Don't hover if country is selected or highlighted
+		if (layer.options.fillColor !== COLORS.SELECTED && layer.options.fillColor !== COLORS.HIGHLIGHTED) {
+			layer.setStyle({
+				fillColor: COLORS.HOVER,
+				weight: 2,
+				color: "#1e293b",
+				fillOpacity: 1,
+			});
+			layer.bringToFront();
+		}
+	});
+	
+	layer.on("mouseout", () => {
+		if (layer.options.fillColor === COLORS.HOVER) {
+			// Restore original country color
+			const iso = layer.feature.properties.ISO_A3;
+			let colorIndex = 0;
+			if (iso) {
+				for (let i = 0; i < iso.length; i++) {
+					colorIndex += iso.charCodeAt(i);
+				}
+				colorIndex = colorIndex % COUNTRY_COLORS.length;
+			}
+			layer.setStyle({
+				fillColor: COUNTRY_COLORS[colorIndex],
+				weight: 1.2,
+				color: COLORS.BORDER,
+				fillOpacity: 0.85,
+			});
+		}
+	});
 }
 
 function handleCountryClick(iso, layer) {
@@ -92,16 +159,44 @@ function handleCountryClick(iso, layer) {
 				updateCountryStyle(l, l.feature.properties.ISO_A3);
 			}
 		});
-		layer.setStyle({ fillColor: COLORS.SELECTED, fillOpacity: 0.7 });
+		layer.setStyle({ 
+			fillColor: COLORS.SELECTED, 
+			fillOpacity: 1,
+			weight: 2.5,
+			color: COLORS.BORDER_SELECTED,
+		});
+		layer.bringToFront();
 		updateCountryInfo(props);
 	}
 }
 
 function updateCountryStyle(layer, iso) {
-	const color = filteredCountries.has(iso)
-		? COLORS.HIGHLIGHTED
-		: COLORS.DEFAULT;
-	layer.setStyle({ fillColor: color, fillOpacity: 0.7 });
+	const isHighlighted = filteredCountries.has(iso);
+	let fillColor;
+	
+	if (isHighlighted) {
+		fillColor = COLORS.HIGHLIGHTED;
+	} else {
+		// Restore original country color based on ISO
+		let colorIndex = 0;
+		if (iso) {
+			for (let i = 0; i < iso.length; i++) {
+				colorIndex += iso.charCodeAt(i);
+			}
+			colorIndex = colorIndex % COUNTRY_COLORS.length;
+		}
+		fillColor = COUNTRY_COLORS[colorIndex];
+	}
+	
+	const borderColor = isHighlighted ? COLORS.BORDER_HIGHLIGHTED : COLORS.BORDER;
+	const weight = isHighlighted ? 2 : 1.2;
+	
+	layer.setStyle({ 
+		fillColor: fillColor, 
+		fillOpacity: isHighlighted ? 1 : 0.85,
+		weight: weight,
+		color: borderColor,
+	});
 }
 
 export function resetMap() {
@@ -146,11 +241,29 @@ export function highlightCountries(condition) {
 
                 if (conditionResult) {
                         debugLog(`Highlighting country: ${iso}`);
-                        layer.setStyle({ fillColor: COLORS.HIGHLIGHTED, fillOpacity: 0.7 });
+                        layer.setStyle({ 
+                                fillColor: COLORS.HIGHLIGHTED, 
+                                fillOpacity: 1,
+                                weight: 2,
+                                color: COLORS.BORDER_HIGHLIGHTED,
+                        });
                         filteredCountries.add(iso);
                         highlightedCount++;
                 } else if (layer.options.fillColor !== COLORS.SELECTED) {
-                        layer.setStyle({ fillColor: COLORS.DEFAULT, fillOpacity: 0.7 });
+                        // Restore original country color
+                        let colorIndex = 0;
+                        if (iso) {
+                                for (let i = 0; i < iso.length; i++) {
+                                        colorIndex += iso.charCodeAt(i);
+                                }
+                                colorIndex = colorIndex % COUNTRY_COLORS.length;
+                        }
+                        layer.setStyle({ 
+                                fillColor: COUNTRY_COLORS[colorIndex], 
+                                fillOpacity: 0.85,
+                                weight: 1.2,
+                                color: COLORS.BORDER,
+                        });
                 }
         });
 

@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>World Map Explorer</title>
+		<title>🌍 NationsNavigator - Interactive World Map Explorer</title>
 		<link rel="stylesheet" href="styles.css" />
 		<link
 			rel="stylesheet"
@@ -12,38 +12,54 @@
 		<script src="https://cdn.jsdelivr.net/npm/alasql@3.1.0/dist/alasql.min.js"></script>
 	</head>
 	<body>
-		<div id="map"></div>
-		<div id="info-box">
-			<h3>
-				Country Information
-				<button id="close-btn" style="display: none">×</button>
-			</h3>
-			<div id="country-info">Click on a country to see its information.</div>
-			<div id="llm-status"></div>
-			<input
-				type="text"
-				id="query-input"
-				placeholder="Ask a question about countries"
-			/>
-			<label for="llm-select">Select LLM Model:</label>
-			<select id="llm-select">
-				<option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">
-					Llama-3.1-8B-Instruct (8B)
-				</option>
-				<option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">
-					Llama-3.2-3B-Instruct (3B)
-				</option>
-				<option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">
-					Llama-3.2-1B-Instruct (1B)
-				</option>
-				<option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC">
-					Qwen2.5-1.5B-Instruct (1.5B)
-				</option>
-			</select>
-			<button id="search-btn" disabled>Ask</button>
-			<button id="reset-btn">Reset</button>
-			<div id="message"></div>
-		</div>
+		<main id="map" role="main" aria-label="Interactive world map"></main>
+		<aside id="info-box" aria-label="Country information and controls">
+			<header>
+				<h3>
+					Country Information
+					<button id="close-btn" style="display: none" aria-label="Close country information">×</button>
+				</h3>
+			</header>
+			
+			<section id="country-info" aria-live="polite">
+				Click on a country to see its information.
+			</section>
+			
+			<section id="llm-status" aria-live="polite" aria-label="AI model status"></section>
+			
+			<form id="query-form" role="search">
+				<input
+					type="text"
+					id="query-input"
+					placeholder="Ask a question about countries..."
+					aria-label="Enter your question about countries"
+					autocomplete="off"
+				/>
+				
+				<label for="llm-select">AI Model:</label>
+				<select id="llm-select" aria-label="Select AI model">
+					<option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">
+						Llama-3.1-8B (Largest)
+					</option>
+					<option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">
+						Llama-3.2-3B (Medium)
+					</option>
+					<option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">
+						Llama-3.2-1B (Fast)
+					</option>
+					<option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC">
+						Qwen2.5-1.5B (Efficient)
+					</option>
+				</select>
+				
+				<div class="button-group">
+					<button type="submit" id="search-btn" disabled aria-describedby="llm-status">Ask AI</button>
+					<button type="button" id="reset-btn">Reset Map</button>
+				</div>
+			</form>
+			
+			<section id="message" aria-live="polite" aria-label="Query results"></section>
+		</aside>
 
 		<script type="module">
 			import { initWebLLM } from "./js/llm.js";
