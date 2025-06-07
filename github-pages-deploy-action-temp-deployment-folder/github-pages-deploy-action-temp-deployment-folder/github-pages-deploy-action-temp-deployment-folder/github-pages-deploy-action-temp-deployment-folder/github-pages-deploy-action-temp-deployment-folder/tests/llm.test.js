@@ -2,7 +2,7 @@ import { describe, test, expect, jest, beforeEach } from "@jest/globals";
 import { mockEngine } from "./__mocks__/webllm.js";
 
 describe("LLM Module", () => {
-	let generateSQLQuery, processQuery;
+        let generateSQLQuery, processQuery, clearAllModelCache;
 
 	beforeEach(async () => {
 		jest.clearAllMocks();
@@ -54,9 +54,10 @@ describe("LLM Module", () => {
 		});
 
 		// Import the functions we want to test
-		const llmModule = await import("../js/llm.js");
-		generateSQLQuery = llmModule.generateSQLQuery;
-		processQuery = llmModule.processQuery;
+                const llmModule = await import("../js/llm.js");
+                generateSQLQuery = llmModule.generateSQLQuery;
+                processQuery = llmModule.processQuery;
+                clearAllModelCache = llmModule.clearAllModelCache;
 	});
 
 	test("should generate valid SQL query from natural language", async () => {
@@ -154,8 +155,8 @@ describe("LLM Module", () => {
 		await expect(processQuery()).resolves.not.toThrow();
 	});
 
-	test("should handle missing engine", async () => {
-		global.engine = null;
+        test("should handle missing engine", async () => {
+                global.engine = null;
 
 		// Need to keep the full DOM mock for message element
 		global.document.getElementById = jest.fn((id) => {
@@ -181,6 +182,12 @@ describe("LLM Module", () => {
 		});
 
 		// The processQuery function should handle this gracefully
-		await expect(processQuery()).resolves.not.toThrow();
-	});
+                await expect(processQuery()).resolves.not.toThrow();
+        });
+
+        test("clearAllModelCache should delete caches for all models", async () => {
+                const webllm = await import("https://esm.run/@mlc-ai/web-llm");
+                await clearAllModelCache();
+                expect(webllm.deleteModelAllInfoInCache).toHaveBeenCalled();
+        });
 });
