@@ -227,6 +227,42 @@ describe("UI Module", () => {
 			expect(mockElements["country-info"].innerHTML).toContain("Spain");
 			expect(mockElements["country-info"].innerHTML).toContain("Italy");
 		});
+
+		test("should call highlightCountry when border country is clicked", async () => {
+			const { highlightCountry } = await import("../js/map.js");
+			
+			const props = {
+				name: "France",
+				borders: "Germany,Spain,Italy"
+			};
+
+			// Mock querySelectorAll to return border elements
+			const mockBorderElements = [
+				{ 
+					addEventListener: jest.fn(), 
+					getAttribute: jest.fn().mockReturnValue("Germany") 
+				},
+				{ 
+					addEventListener: jest.fn(), 
+					getAttribute: jest.fn().mockReturnValue("Spain") 
+				}
+			];
+			mockElements["country-info"].querySelectorAll.mockReturnValue(mockBorderElements);
+
+			updateCountryInfo(props);
+
+			// Verify addEventListener was called for border tags
+			expect(mockBorderElements[0].addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+			expect(mockBorderElements[1].addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+
+			// Simulate clicking on the first border tag (Germany)
+			const clickHandler = mockBorderElements[0].addEventListener.mock.calls[0][1];
+			const mockEvent = { target: mockBorderElements[0] };
+			clickHandler(mockEvent);
+
+			// Verify highlightCountry was called with the correct country code
+			expect(highlightCountry).toHaveBeenCalledWith("Germany");
+		});
 	});
 
 	describe("updateMessage", () => {

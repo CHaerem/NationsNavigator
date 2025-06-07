@@ -1,4 +1,8 @@
-export let countryData = {};
+let countryData = {};
+
+export function getCountryData() {
+	return countryData;
+}
 
 export async function fetchCountryData() {
 	if (Object.keys(countryData).length > 0) {

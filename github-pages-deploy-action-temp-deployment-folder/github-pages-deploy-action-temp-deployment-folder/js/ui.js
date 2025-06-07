@@ -153,6 +153,10 @@ export function updateCountryInfo(props) {
 		});
 
 		closeBtnElement.style.display = "block";
+		
+		// Update panel title and show panel when displaying country info
+		updatePanelTitle("Country Information");
+		showInfoPanel();
 	} else {
 		countryInfoElement.innerHTML = `
 			<div class="empty-state">
@@ -167,7 +171,17 @@ export function updateCountryInfo(props) {
 
 export function updateMessage(message) {
 	const messageElement = document.getElementById("message");
+	const panelActions = document.getElementById("panel-actions");
 	messageElement.innerHTML = message;
+
+	// Update panel title and show panel when displaying query results
+	if (message && message.trim() !== "") {
+		updatePanelTitle("Query Results");
+		showInfoPanel();
+		panelActions.style.display = "block";
+	} else {
+		panelActions.style.display = "none";
+	}
 
 	// Attach event listeners to any new toggle-countries links
 	messageElement.querySelectorAll(".toggle-countries").forEach((link) => {
@@ -242,22 +256,47 @@ export function setupEventListeners() {
 		handleQuerySubmit();
 	});
 	
-        document.getElementById("reset-btn").addEventListener("click", resetMap);
-        const clearCacheBtn = document.getElementById("clear-cache-btn");
-        if (clearCacheBtn) {
-                clearCacheBtn.addEventListener("click", () => {
-                        clearAllModelCache();
-                });
-        }
-        document.getElementById("close-btn").addEventListener("click", () => {
-                updateCountryInfo(null);
-        });
+	// Settings modal toggle
+	document.getElementById("settings-btn").addEventListener("click", () => {
+		showSettingsModal();
+	});
+
+	document.getElementById("settings-close").addEventListener("click", () => {
+		hideSettingsModal();
+	});
+
+	// Close settings modal when clicking backdrop
+	document.getElementById("settings-modal").addEventListener("click", (e) => {
+		if (e.target.id === "settings-modal") {
+			hideSettingsModal();
+		}
+	});
+	
+	document.getElementById("reset-btn").addEventListener("click", resetMap);
+	const clearCacheBtn = document.getElementById("clear-cache-btn");
+	if (clearCacheBtn) {
+		clearCacheBtn.addEventListener("click", () => {
+			clearAllModelCache();
+		});
+	}
+	document.getElementById("close-btn").addEventListener("click", () => {
+		updateCountryInfo(null);
+		hideInfoPanel();
+	});
 
 	// Add keyboard shortcuts
 	queryInput.addEventListener("keydown", (event) => {
 		if (event.key === "Escape") {
 			queryInput.blur();
 			resetMap();
+			hideSettingsModal();
+		}
+	});
+
+	// Close settings modal on ESC key
+	document.addEventListener("keydown", (event) => {
+		if (event.key === "Escape") {
+			hideSettingsModal();
 		}
 	});
 }
@@ -312,12 +351,20 @@ function addQuerySuggestions() {
 	// Show example queries when focused and empty
 	queryInput.addEventListener("focus", () => {
 		if (!queryInput.value) {
-			setTimeout(() => showQueryExamples(), 100); // Small delay to ensure proper positioning
+			setTimeout(() => showQueryExamples(), 100);
+		}
+	});
+
+	// Hide suggestions when user starts typing
+	queryInput.addEventListener("input", () => {
+		if (queryInput.value) {
+			hideQueryExamples();
+		} else {
+			setTimeout(() => showQueryExamples(), 100);
 		}
 	});
 
 	queryInput.addEventListener("blur", (e) => {
-		// Delay hiding to allow clicking on examples
 		setTimeout(() => {
 			if (!document.querySelector('.query-examples:hover')) {
 				hideQueryExamples();
@@ -352,8 +399,8 @@ function showQueryExamples() {
 		</div>
 	`;
 
-	const inputContainer = document.querySelector(".input-container");
-	inputContainer.appendChild(examplesDiv);
+	const searchBar = document.getElementById("search-bar");
+	searchBar.appendChild(examplesDiv);
 
 	// Add click handlers for examples
 	examplesDiv.querySelectorAll('.example-item').forEach(item => {
@@ -395,4 +442,29 @@ export function toggleCountriesList(event) {
 		fullList.style.display = "none";
 		linkText.textContent = "(Show all)";
 	}
+}
+
+function showSettingsModal() {
+	const settingsModal = document.getElementById("settings-modal");
+	settingsModal.classList.remove("modal-hidden");
+}
+
+function hideSettingsModal() {
+	const settingsModal = document.getElementById("settings-modal");
+	settingsModal.classList.add("modal-hidden");
+}
+
+function updatePanelTitle(title) {
+	const panelTitle = document.getElementById("panel-title");
+	panelTitle.textContent = title;
+}
+
+function showInfoPanel() {
+	const infoPanel = document.getElementById("info-panel");
+	infoPanel.style.display = "block";
+}
+
+function hideInfoPanel() {
+	const infoPanel = document.getElementById("info-panel");
+	infoPanel.style.display = "none";
 }

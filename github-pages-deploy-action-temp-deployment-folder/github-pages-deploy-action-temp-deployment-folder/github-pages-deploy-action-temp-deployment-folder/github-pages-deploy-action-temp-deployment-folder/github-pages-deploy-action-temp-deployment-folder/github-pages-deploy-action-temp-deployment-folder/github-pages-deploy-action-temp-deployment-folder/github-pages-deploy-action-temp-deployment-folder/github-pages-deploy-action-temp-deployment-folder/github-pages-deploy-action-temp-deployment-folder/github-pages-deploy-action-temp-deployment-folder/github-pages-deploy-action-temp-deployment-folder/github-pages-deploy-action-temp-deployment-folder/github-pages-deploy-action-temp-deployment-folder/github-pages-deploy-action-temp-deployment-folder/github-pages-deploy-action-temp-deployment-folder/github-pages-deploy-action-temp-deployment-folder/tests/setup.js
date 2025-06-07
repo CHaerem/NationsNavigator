@@ -2,24 +2,30 @@
 import { jest } from "@jest/globals";
 
 // Mock fetch globally with proper responses
-global.fetch = jest.fn(() =>
-	Promise.resolve({
-		ok: true,
-		json: () =>
-			Promise.resolve({
-				metadata: {
-					version: "1.0.0",
-					lastUpdated: "2024-01-01",
-				},
-				countries: [
-					{ name: "United States", ISO_A3: "USA", region: "Americas" },
-					{ name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
-					{ name: "Ireland", ISO_A3: "IRL", region: "Europe" },
-					// Note: XXX is intentionally NOT included in country data to test graceful handling
-				],
-			}),
-	})
-);
+global.fetch = jest.fn((url) => {
+        if (typeof url === "string" && url.includes("world.geojson")) {
+                return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({ features: [] }),
+                });
+        }
+        return Promise.resolve({
+                ok: true,
+                json: () =>
+                        Promise.resolve({
+                                metadata: {
+                                        version: "1.0.0",
+                                        lastUpdated: "2024-01-01",
+                                },
+                                countries: [
+                                        { name: "United States", ISO_A3: "USA", region: "Americas" },
+                                        { name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
+                                        { name: "Ireland", ISO_A3: "IRL", region: "Europe" },
+                                        // Note: XXX is intentionally NOT included in country data to test graceful handling
+                                ],
+                        }),
+        });
+});
 
 // Mock Leaflet with proper geojsonLayer behavior
 const mockLayers = [
@@ -178,32 +184,38 @@ global.createManualSpy = (returnValue) => {
 
 // Reset all mocks before each test
 beforeEach(() => {
-	jest.clearAllMocks();
+        jest.clearAllMocks();
 
-	// Reset mockLayers
-	mockLayers.forEach((layer) => {
-		layer.setStyle.mockClear();
-		layer.bringToFront.mockClear();
-		layer.getBounds.mockClear();
-	});
+        // Reset mockLayers
+        mockLayers.forEach((layer) => {
+                layer.setStyle.mockClear();
+                layer.bringToFront.mockClear();
+                layer.getBounds.mockClear();
+        });
 
-	// Reset fetch mock to default behavior
-	global.fetch.mockImplementation(() =>
-		Promise.resolve({
-			ok: true,
-			json: () =>
-				Promise.resolve({
-					metadata: {
-						version: "1.0.0",
-						lastUpdated: "2024-01-01",
-					},
-					countries: [
-						{ name: "United States", ISO_A3: "USA", region: "Americas" },
-						{ name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
-						{ name: "Ireland", ISO_A3: "IRL", region: "Europe" },
-						{ name: "Test Country", ISO_A3: "XXX", region: "Test" },
-					],
-				}),
-		})
-	);
+        // Reset fetch mock to default behavior
+        global.fetch.mockImplementation((url) => {
+                if (typeof url === "string" && url.includes("world.geojson")) {
+                        return Promise.resolve({
+                                ok: true,
+                                json: () => Promise.resolve({ features: [] }),
+                        });
+                }
+                return Promise.resolve({
+                        ok: true,
+                        json: () =>
+                                Promise.resolve({
+                                        metadata: {
+                                                version: "1.0.0",
+                                                lastUpdated: "2024-01-01",
+                                        },
+                                        countries: [
+                                                { name: "United States", ISO_A3: "USA", region: "Americas" },
+                                                { name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
+                                                { name: "Ireland", ISO_A3: "IRL", region: "Europe" },
+                                                { name: "Test Country", ISO_A3: "XXX", region: "Test" },
+                                        ],
+                                }),
+                });
+        });
 });

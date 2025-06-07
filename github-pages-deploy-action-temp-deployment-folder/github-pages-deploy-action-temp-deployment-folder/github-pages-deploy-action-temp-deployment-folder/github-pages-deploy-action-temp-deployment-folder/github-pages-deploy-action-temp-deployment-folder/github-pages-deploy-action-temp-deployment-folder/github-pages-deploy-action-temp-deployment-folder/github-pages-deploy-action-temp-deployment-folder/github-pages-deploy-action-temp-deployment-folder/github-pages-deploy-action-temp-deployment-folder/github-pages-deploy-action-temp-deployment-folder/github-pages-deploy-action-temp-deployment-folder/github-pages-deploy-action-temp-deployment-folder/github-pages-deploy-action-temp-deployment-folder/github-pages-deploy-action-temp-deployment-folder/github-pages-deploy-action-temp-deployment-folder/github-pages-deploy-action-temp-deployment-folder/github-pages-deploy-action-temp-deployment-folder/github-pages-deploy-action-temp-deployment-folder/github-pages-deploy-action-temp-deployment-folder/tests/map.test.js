@@ -178,18 +178,37 @@ describe("Map Module", () => {
 	});
 
 	test("should highlight specific country by ISO code", async () => {
-		// Mock the map object
-		global.map = {
+		// Reset the map state first
+		const { _resetForTesting, _setGeojsonLayerForTesting } = await import(
+			"../js/map.js"
+		);
+		_resetForTesting();
+
+		// Create a specific mock for the map instance with fitBounds
+		const mockMapInstance = {
+			center: jest.fn(),
+			zoom: jest.fn(),
+			setView: jest.fn(),
 			fitBounds: jest.fn(),
 		};
 
-		const { highlightCountry } = await import("../js/map.js");
+		// Override L.map to return our specific mock
+		global.L.map.mockReturnValue(mockMapInstance);
+
+		// Import and initialize map to get the mockMapInstance as the local map
+		const { initMap, highlightCountry } = await import("../js/map.js");
+		await initMap(); // This will create the map with our mock
+
+		// Set the geojsonLayer mock
+		_setGeojsonLayerForTesting(mockGeojsonLayer);
 
 		highlightCountry("GBR");
 
 		expect(mockGeojsonLayer.eachLayer).toHaveBeenCalled();
 		expect(mockLayers[1].bringToFront).toHaveBeenCalled();
-		expect(global.map.fitBounds).toHaveBeenCalledWith(
+
+		// Now check our specific mock
+		expect(mockMapInstance.fitBounds).toHaveBeenCalledWith(
 			mockLayers[1].getBounds(),
 			{ padding: [50, 50], maxZoom: 5 }
 		);

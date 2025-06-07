@@ -3,8 +3,11 @@ import { updateLLMStatus, updateMessage } from "./ui.js";
 import { highlightCountries } from "./map.js";
 import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 import { debugLog, debugTime, debugTimeEnd } from "./debug.js";
+import { retryOperation, createRetryButton, formatError, isOnline, QueryCache, PerformanceMonitor, debounce } from "./utils.js";
 
 let engine;
+const queryCache = new QueryCache();
+const performanceMonitor = new PerformanceMonitor();
 
 const modelConfigs = {
 	"Llama-3.1-8B-Instruct-q4f16_1-MLC": {
@@ -37,6 +40,12 @@ export async function initWebLLM(selectedModel) {
 		return;
 	}
 
+	// Check network status and warn if offline (but still try to initialize)
+	if (!isOnline()) {
+		updateLLMStatus("⚠️ Offline mode - trying to use cached model files");
+		updateMessage("<div class='processing'>⚠️ No internet connection. Attempting to load model from browser cache...</div>");
+	}
+
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
@@ -44,17 +53,43 @@ export async function initWebLLM(selectedModel) {
 		updateLLMStatus(progressText);
 	};
 
+	const initializeEngine = async () => {
+		debugLog("Starting WebLLM initialization...");
+		engine = await CreateMLCEngine(modelConfig.model_id, {
+			initProgressCallback,
+			context_window_size: modelConfig.context_window_size,
+		});
+		debugLog("WebLLM initialized successfully");
+		return engine;
+	};
+
         try {
-                debugLog("Starting WebLLM initialization...");
-                engine = await CreateMLCEngine(modelConfig.model_id, {
-                        initProgressCallback,
-                        context_window_size: modelConfig.context_window_size,
-                });
-                debugLog("WebLLM initialized successfully");
-                updateLLMStatus("WebLLM ready");
+                await retryOperation(initializeEngine, 2, 2000);
+                updateLLMStatus("✅ WebLLM ready");
+                if (!isOnline()) {
+                	updateMessage("✅ Model loaded successfully from cache! The app is fully functional offline.");
+                }
         } catch (error) {
                 console.error("Error initializing WebLLM:", error);
-                updateLLMStatus("Failed to initialize WebLLM");
+                
+                // Provide more specific error messages
+                const formattedError = formatError(error, "WebLLM initialization failed");
+                let errorMessage = `❌ ${formattedError}`;
+                
+                if (!isOnline() && (error.message.includes('fetch') || error.message.includes('network'))) {
+                	errorMessage += "<br>💡 Model not found in cache. Connect to internet to download it first.";
+                } else if (error.message.includes('memory') || error.message.includes('GPU')) {
+                	errorMessage += "<br>💡 Try selecting a smaller model from the dropdown.";
+                } else if (error.message.includes('unsupported')) {
+                	errorMessage += "<br>💡 Please use a modern browser like Chrome, Firefox, or Safari.";
+                }
+                
+                // Add retry button
+                const retryBtn = createRetryButton(() => initWebLLM(selectedModel), "🔄 Retry WebLLM");
+                errorMessage += `<br>${retryBtn}`;
+                
+                updateLLMStatus("❌ WebLLM initialization failed");
+                updateMessage(`<div class='error'>${errorMessage}</div>`);
         }
 }
 
@@ -142,6 +177,9 @@ export async function generateSQLQuery(query) {
 	}
 }
 
+// Create debounced version for input events
+export const debouncedProcessQuery = debounce(processQuery, 300);
+
 export async function processQuery() {
 	if (!engine) {
 		updateMessage(
@@ -150,27 +188,44 @@ export async function processQuery() {
 		return;
 	}
 
-        const query = document.getElementById("query-input").value;
+        const query = document.getElementById("query-input").value.trim();
+        
+        if (!query) {
+        	updateMessage("<div class='error'>Please enter a question about countries.</div>");
+        	return;
+        }
+        
         debugLog("Processing query:", query);
-        updateMessage("<div class='processing'>Processing query...</div>");
-
-        const startTime = performance.now();
-        debugLog("Query processing started at", startTime);
+        
+        // Check cache first
+        const cacheKey = query.toLowerCase();
+        const cachedResult = queryCache.get(cacheKey);
+        
+        if (cachedResult) {
+        	debugLog("Using cached result for query:", query);
+        	updateMessage(cachedResult.message);
+        	highlightCountries(cachedResult.highlightCondition);
+        	return;
+        }
+        
+        updateMessage("<div class='processing'>🔍 Processing query...</div>");
+        performanceMonitor.start('total-query-processing');
 
         try {
-                debugTime("Query processing");
-                debugTime("Generate SQL query");
+                performanceMonitor.start('sql-generation');
                 const sqlQuery = await generateSQLQuery(query);
-                debugTimeEnd("Generate SQL query");
-                debugTime("Execute SQL query");
+                const sqlGenTime = performanceMonitor.end('sql-generation');
+                
+                performanceMonitor.start('sql-execution');
                 const queryResult = executeQuery(sqlQuery);
-                debugTimeEnd("Execute SQL query");
-                const execDuration = performance.now();
-                const processingTime = execDuration - startTime;
+                const sqlExecTime = performanceMonitor.end('sql-execution');
+                
+                const totalProcessingTime = performanceMonitor.end('total-query-processing');
 
 
 
-                const highlightedCount = highlightCountries((layer) => {
+                // Create highlight condition function
+                const highlightCondition = (layer) => {
                         const layerIso = layer.feature.properties.ISO_A3;
                         const layerName =
                                 layer.feature.properties.NAME || layer.feature.properties.name;
@@ -181,7 +236,9 @@ export async function processQuery() {
                                 debugLog(`Matching country found: ${layerName} (${layerIso})`);
                         }
                         return match;
-                });
+                };
+                
+                const highlightedCount = highlightCountries(highlightCondition);
 
 		let highlightInfo;
 		if (highlightedCount === 0) {
@@ -195,15 +252,23 @@ export async function processQuery() {
                         "Query result countries:",
                         queryResult.map((r) => `${r.name} (${r.ISO_A3})`)
                 );
+                
                 const resultMessage = createResultMessage(
                         sqlQuery,
                         queryResult,
-                        processingTime,
-                        highlightInfo
+                        totalProcessingTime,
+                        highlightInfo,
+                        { sqlGenTime, sqlExecTime }
                 );
+                
+                // Cache the result
+                queryCache.set(cacheKey, {
+                	message: resultMessage,
+                	highlightCondition: highlightCondition
+                });
+                
                 debugLog("Query result:", queryResult);
                 updateMessage(resultMessage);
-                debugTimeEnd("Query processing");
 
 	} catch (error) {
 		console.error("Error processing query:", error);
@@ -232,7 +297,8 @@ function createResultMessage(
 	sqlQuery,
 	queryResult,
 	processingTime,
-	highlightInfo
+	highlightInfo,
+	performanceMetrics = {}
 ) {
 	queryResult.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -264,6 +330,17 @@ function createResultMessage(
 		countriesList = "No countries found";
 	}
 
+	let performanceDetails = "";
+	if (performanceMetrics.sqlGenTime && performanceMetrics.sqlExecTime) {
+		performanceDetails = `
+			<div class="performance-breakdown" style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+				<strong>Performance:</strong> 
+				SQL Generation: ${performanceMetrics.sqlGenTime.toFixed(1)}ms, 
+				SQL Execution: ${performanceMetrics.sqlExecTime.toFixed(1)}ms
+			</div>
+		`;
+	}
+
 	const message = `
 	  <div class="query-results">
 		<h4>Query Results</h4>
@@ -280,7 +357,8 @@ function createResultMessage(
 		  <strong>Countries:</strong> ${countriesList}
 		</div>
 		<div class="processing-time">
-		  <strong>Processing time:</strong> ${processingTime.toFixed(2)}ms
+		  <strong>Total processing time:</strong> ${processingTime.toFixed(2)}ms
+		  ${performanceDetails}
 		</div>
 		<div class="highlight-info">
 		  ${highlightInfo}

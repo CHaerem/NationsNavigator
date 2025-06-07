@@ -174,7 +174,8 @@ body, html {
 }
 
 /* Settings Modal */
-#settings-modal {
+#settings-modal,
+#download-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -189,7 +190,8 @@ body, html {
   transition: opacity 0.2s ease;
 }
 
-#settings-modal.modal-hidden {
+#settings-modal.modal-hidden,
+#download-modal.modal-hidden {
   opacity: 0;
   pointer-events: none;
 }
@@ -198,7 +200,7 @@ body, html {
   background: white;
   border-radius: 8px;
   padding: var(--spacing-lg);
-  max-width: 400px;
+  max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -267,10 +269,282 @@ body, html {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background: white;
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 13px;
+  font-weight: 500;
   margin: 0;
   min-height: auto;
+}
+
+.modal-actions button:hover {
+  background: var(--background-gray);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Model Management Styles */
+#model-list {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: var(--spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.model-item:last-child {
+  border-bottom: none;
+}
+
+.model-info {
+  flex: 1;
+}
+
+.model-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.model-size {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.model-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.status-badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-cached {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-not-cached {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.model-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.model-delete-btn {
+  padding: var(--spacing-xs);
+  border: 1px solid #dc2626;
+  border-radius: 4px;
+  background: white;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 11px;
+  min-height: auto;
+  width: auto;
+  height: auto;
+}
+
+.model-delete-btn:hover {
+  background: #dc2626;
+  color: white;
+  transform: none;
+  box-shadow: none;
+}
+
+.model-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.model-download-btn {
+  padding: var(--spacing-xs);
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  background: white;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 11px;
+  min-height: auto;
+  width: auto;
+  height: auto;
+}
+
+.model-download-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: none;
+  box-shadow: none;
+}
+
+#refresh-models-btn {
+  width: 100%;
+  padding: var(--spacing-xs);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--background-gray);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+  min-height: auto;
+}
+
+#refresh-models-btn:hover {
+  background: var(--border-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Download Modal Styles */
+.download-info {
+  margin-bottom: var(--spacing-lg);
+}
+
+.model-card {
+  background: var(--background-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.model-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.model-card h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.size-badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.hardware-recommendation {
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 6px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.hardware-recommendation.warning {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.hardware-recommendation.optimal {
+  background: #dcfce7;
+  border-color: #10b981;
+}
+
+.download-warning {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: var(--spacing-md);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.download-warning ul {
+  margin: var(--spacing-xs) 0 0 var(--spacing-md);
+  padding: 0;
+}
+
+.download-warning li {
+  margin-bottom: var(--spacing-xs);
+}
+
+#hardware-info {
+  background: var(--background-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: var(--spacing-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hardware-stat {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.hardware-stat:last-child {
+  margin-bottom: 0;
+}
+
+.hardware-stats-header {
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hardware-stats-header small {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.hardware-note {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  background: #f0f9ff;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--primary-color);
+}
+
+.hardware-note small {
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+#download-confirm {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+#download-confirm:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 /* Info Panel */

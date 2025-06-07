@@ -8,7 +8,8 @@ jest.unstable_mockModule("../js/main.js", () => ({
 }));
 
 jest.unstable_mockModule("../js/map.js", () => ({
-	highlightCountry: jest.fn()
+        highlightCountry: jest.fn(),
+        highlightCountries: jest.fn()
 }));
 
 const { updateLLMStatus, updateCountryInfo, updateMessage, setupEventListeners } = await import("../js/ui.js");
@@ -66,8 +67,9 @@ describe("UI Module", () => {
 			"message": createMockElement("message"),
 			"query-form": createMockElement("query-form"),
 			"query-input": createMockElement("query-input"),
-			"reset-btn": createMockElement("reset-btn"),
-		};
+                        "reset-btn": createMockElement("reset-btn"),
+                        "clear-cache-btn": createMockElement("clear-cache-btn"),
+                };
 
 		// Override the global document.getElementById mock for this test
 		global.document.getElementById = jest.fn((id) => mockElements[id] || null);
@@ -341,11 +343,17 @@ describe("UI Module", () => {
 			expect(mockElements["search-btn"].addEventListener).toHaveBeenCalledWith("click", expect.any(Function));
 		});
 
-		test("should setup reset button click event listener", () => {
-			setupEventListeners();
+                test("should setup reset button click event listener", () => {
+                        setupEventListeners();
 
-			expect(mockElements["reset-btn"].addEventListener).toHaveBeenCalledWith("click", expect.any(Function));
-		});
+                        expect(mockElements["reset-btn"].addEventListener).toHaveBeenCalledWith("click", expect.any(Function));
+                });
+
+                test("should setup clear cache button click event listener", () => {
+                        setupEventListeners();
+
+                        expect(mockElements["clear-cache-btn"].addEventListener).toHaveBeenCalledWith("click", expect.any(Function));
+                });
 
 		test("should setup close button click event listener", () => {
 			setupEventListeners();
