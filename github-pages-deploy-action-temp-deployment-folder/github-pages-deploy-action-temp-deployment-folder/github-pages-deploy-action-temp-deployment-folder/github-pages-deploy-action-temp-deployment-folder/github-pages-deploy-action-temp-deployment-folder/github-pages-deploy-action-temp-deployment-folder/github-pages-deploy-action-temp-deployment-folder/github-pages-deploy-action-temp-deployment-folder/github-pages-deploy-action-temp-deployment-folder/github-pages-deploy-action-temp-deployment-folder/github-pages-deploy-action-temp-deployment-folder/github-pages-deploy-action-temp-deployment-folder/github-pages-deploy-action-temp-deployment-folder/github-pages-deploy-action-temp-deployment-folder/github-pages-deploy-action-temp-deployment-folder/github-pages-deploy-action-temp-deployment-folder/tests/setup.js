@@ -15,7 +15,7 @@ global.fetch = jest.fn(() =>
 					{ name: "United States", ISO_A3: "USA", region: "Americas" },
 					{ name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
 					{ name: "Ireland", ISO_A3: "IRL", region: "Europe" },
-					{ name: "Test Country", ISO_A3: "XXX", region: "Test" },
+					// Note: XXX is intentionally NOT included in country data to test graceful handling
 				],
 			}),
 	})

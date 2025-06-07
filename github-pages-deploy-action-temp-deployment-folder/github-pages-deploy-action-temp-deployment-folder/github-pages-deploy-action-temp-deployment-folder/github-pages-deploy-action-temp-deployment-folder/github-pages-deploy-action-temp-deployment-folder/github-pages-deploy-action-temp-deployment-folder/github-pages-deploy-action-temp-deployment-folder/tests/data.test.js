@@ -69,6 +69,9 @@ describe("Data Module", () => {
 
 		// Mock successful fetch
 		global.fetch.mockResolvedValue({
+			ok: true,
+			status: 200,
+			statusText: "OK",
 			json: jest.fn().mockResolvedValue(mockCountryData),
 		});
 
