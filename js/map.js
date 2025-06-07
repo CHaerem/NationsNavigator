@@ -45,8 +45,14 @@ export async function initMap() {
 			zoom: 3,
 			minZoom: 2,
 			maxZoom: 18,
-			worldCopyJump: true,
-			maxBoundsViscosity: 1.0,
+			worldCopyJump: false,
+			maxBounds: [[-85, -200], [85, 200]],
+			maxBoundsViscosity: 0.0,
+			inertia: true,
+			inertiaDeceleration: 3000,
+			inertiaMaxSpeed: Infinity,
+			zoomControl: true,
+			attributionControl: true,
 		});
 
 		L.tileLayer(
@@ -55,6 +61,7 @@ export async function initMap() {
 				attribution: "©OpenStreetMap, ©CartoDB",
 				noWrap: false,
 				maxZoom: 18,
+				detectRetina: true,
 			}
 		).addTo(map);
 
