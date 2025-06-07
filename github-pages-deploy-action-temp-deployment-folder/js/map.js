@@ -305,14 +305,45 @@ export function resetMap() {
 		console.error("geojsonLayer is not initialized");
 		return;
 	}
+	
+	// Clear filtered countries first
+	filteredCountries.clear();
+	
+	// Reset all countries to their original style
 	geojsonLayer.eachLayer((layer) => {
 		const originalISO =
 			layer.feature.properties._originalISO || layer.feature.properties.ISO_A3;
-		updateCountryStyle(layer, originalISO);
+		
+		// Restore original country color based on ISO
+		let colorIndex = 0;
+		if (originalISO) {
+			for (let i = 0; i < originalISO.length; i++) {
+				colorIndex += originalISO.charCodeAt(i);
+			}
+			colorIndex = colorIndex % COUNTRY_COLORS.length;
+		}
+		
+		layer.setStyle({
+			fillColor: COUNTRY_COLORS[colorIndex],
+			fillOpacity: 0.85,
+			weight: 1.2,
+			color: COLORS.BORDER,
+		});
 	});
+	
 	updateCountryInfo(null);
 	updateMessage("");
-	filteredCountries.clear();
+	
+	// Clear search input
+	const queryInput = document.getElementById("query-input");
+	if (queryInput) {
+		queryInput.value = "";
+	}
+	
+	// Recenter map to world view with better zoom level
+	if (map) {
+		map.setView([20, 0], 3);
+	}
 }
 
 export function highlightCountries(condition) {

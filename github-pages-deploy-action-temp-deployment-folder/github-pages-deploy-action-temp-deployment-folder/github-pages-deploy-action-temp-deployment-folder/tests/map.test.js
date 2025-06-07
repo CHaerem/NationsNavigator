@@ -252,4 +252,45 @@ describe("Map Module", () => {
 			color: "#d97706",
 		});
 	});
+
+	test("should configure map with proper world wrapping settings", async () => {
+		const { _resetForTesting } = await import("../js/map.js");
+		_resetForTesting();
+
+		// Mock L.map to capture configuration
+		const mockMapInstance = {
+			center: jest.fn(),
+			zoom: jest.fn(),
+			setView: jest.fn(),
+			fitBounds: jest.fn(),
+		};
+		
+		let mapConfig;
+		global.L.map.mockImplementation((elementId, config) => {
+			mapConfig = config;
+			return mockMapInstance;
+		});
+
+		// Mock tile layer
+		const mockTileLayer = {
+			addTo: jest.fn(() => mockTileLayer),
+		};
+		global.L.tileLayer.mockReturnValue(mockTileLayer);
+
+		const { initMap } = await import("../js/map.js");
+		await initMap();
+
+		// Verify map configuration supports world wrapping
+		expect(mapConfig).toHaveProperty('worldCopyJump');
+		expect(mapConfig).toHaveProperty('maxBoundsViscosity');
+		expect(mapConfig).toHaveProperty('inertia', true);
+		
+		// Verify tile layer allows wrapping
+		expect(global.L.tileLayer).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.objectContaining({
+				noWrap: false
+			})
+		);
+	});
 });

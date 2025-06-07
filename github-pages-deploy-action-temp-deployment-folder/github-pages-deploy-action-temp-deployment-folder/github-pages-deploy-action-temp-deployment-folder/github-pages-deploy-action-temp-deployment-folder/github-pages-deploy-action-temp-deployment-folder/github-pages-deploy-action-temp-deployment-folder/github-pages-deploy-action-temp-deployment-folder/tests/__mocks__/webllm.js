@@ -22,9 +22,12 @@ const mockEngine = {
 };
 
 export const CreateMLCEngine = jest.fn((modelId, config) => {
-	// Store engine globally so it can be accessed in tests
-	global.mockEngine = mockEngine;
-	return Promise.resolve(mockEngine);
+        // Store engine globally so it can be accessed in tests
+        global.mockEngine = mockEngine;
+        return Promise.resolve(mockEngine);
 });
+
+export const deleteModelAllInfoInCache = jest.fn(() => Promise.resolve());
+export const hasModelInCache = jest.fn(() => Promise.resolve(true));
 
 export { mockEngine };

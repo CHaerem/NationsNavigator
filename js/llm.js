@@ -13,18 +13,26 @@ const modelConfigs = {
 	"Llama-3.1-8B-Instruct-q4f16_1-MLC": {
 		model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
 		context_window_size: 2048,
+		size_mb: 5100, // ~5.1 GB
+		description: "Llama-3.1-8B 💪 (Most Powerful)",
 	},
 	"Llama-3.2-3B-Instruct-q4f16_1-MLC": {
 		model_id: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
 		context_window_size: 2048,
+		size_mb: 1800, // ~1.8 GB
+		description: "Llama-3.2-3B 🧠 (Balanced)",
 	},
 	"Llama-3.2-1B-Instruct-q4f16_1-MLC": {
 		model_id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
 		context_window_size: 2048,
+		size_mb: 650, // ~650 MB
+		description: "Llama-3.2-1B ⚡ (Fastest)",
 	},
 	"Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
 		model_id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
 		context_window_size: 2048,
+		size_mb: 950, // ~950 MB
+		description: "Qwen2.5-1.5B 🚀 (Efficient)",
 	},
 };
 
@@ -387,6 +395,249 @@ export async function clearAllModelCache() {
                         console.error(`Failed to clear cache for ${modelId}:`, err);
                 }
         }
-        updateMessage("<div>✅ Model cache cleared</div>");
+        updateMessage("<div>✅ All model caches cleared</div>");
+}
+
+export async function deleteModelCache(modelId) {
+        try {
+                console.log(`Starting deletion of ${modelId}...`);
+                
+                // Step 1: Use WebLLM's built-in cache clearing
+                await deleteModelAllInfoInCache(modelId);
+                console.log(`WebLLM deleteModelAllInfoInCache completed for ${modelId}`);
+                
+                // Step 2: Manually clear Cache API entries (since WebLLM might not clear them all)
+                if ('caches' in window) {
+                        const cacheNames = ['webllm/model', 'webllm/config', 'webllm/wasm'];
+                        
+                        for (const cacheName of cacheNames) {
+                                try {
+                                        const cache = await caches.open(cacheName);
+                                        const requests = await cache.keys();
+                                        
+                                        // Find and delete all requests that contain this model ID
+                                        const deletedUrls = [];
+                                        for (const request of requests) {
+                                                if (request.url.includes(modelId) || 
+                                                    request.url.toLowerCase().includes(modelId.toLowerCase())) {
+                                                        await cache.delete(request);
+                                                        deletedUrls.push(request.url);
+                                                }
+                                        }
+                                        
+                                        if (deletedUrls.length > 0) {
+                                                console.log(`Deleted ${deletedUrls.length} entries from ${cacheName}:`, deletedUrls);
+                                        }
+                                } catch (err) {
+                                        console.warn(`Failed to clear ${cacheName} for ${modelId}:`, err);
+                                }
+                        }
+                }
+                
+                console.log(`✅ Successfully deleted ${modelId} from all caches`);
+                return true;
+        } catch (err) {
+                console.error(`Failed to clear cache for ${modelId}:`, err);
+                return false;
+        }
+}
+
+export function getModelConfigs() {
+        return modelConfigs;
+}
+
+export async function checkModelCacheStatus(modelId) {
+        try {
+                // Models are stored in Cache API under 'webllm/model'
+                if ('caches' in window) {
+                        try {
+                                const cache = await caches.open('webllm/model');
+                                const requests = await cache.keys();
+                                
+                                // Check if any cached request URL contains this model ID
+                                const hasModel = requests.some(request => {
+                                        const url = request.url;
+                                        return url.includes(modelId) || 
+                                               url.toLowerCase().includes(modelId.toLowerCase());
+                                });
+                                
+                                return hasModel;
+                        } catch (err) {
+                                console.warn(`Could not access webllm/model cache: ${err.message}`);
+                        }
+                }
+                
+                return false;
+        } catch (err) {
+                console.warn(`Could not check cache status for ${modelId}:`, err);
+                return false;
+        }
+}
+
+
+
+let currentActiveModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+
+export function getCurrentActiveModel() {
+        return currentActiveModel;
+}
+
+export function setCurrentActiveModel(modelId) {
+        currentActiveModel = modelId;
+}
+
+// Hardware detection for model recommendations
+export function detectHardwareCapabilities() {
+        const capabilities = {
+                ram: 'unknown',
+                cores: 'unknown', 
+                gpu: 'unknown',
+                connection: 'unknown'
+        };
+        
+        // RAM detection (only available in some browsers with certain flags)
+        if ('deviceMemory' in navigator) {
+                capabilities.ram = navigator.deviceMemory;
+        }
+        
+        // CPU cores detection
+        if ('hardwareConcurrency' in navigator) {
+                capabilities.cores = navigator.hardwareConcurrency;
+        }
+        
+        // Connection detection
+        if ('connection' in navigator && navigator.connection) {
+                capabilities.connection = navigator.connection.effectiveType || 'unknown';
+        }
+        
+        // Try to detect GPU capabilities
+        try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                                capabilities.gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                        }
+                }
+        } catch (e) {
+                // GPU detection failed, keep as 'unknown'
+        }
+        
+        return capabilities;
+}
+
+export function getModelRecommendation(hardware) {
+        const { ram, cores, connection } = hardware;
+        
+        // Default to fastest model
+        let recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+        let reason = "Fastest model, good for all devices";
+        
+        if (ram && ram >= 8) {
+                if (ram >= 16) {
+                        recommended = "Llama-3.1-8B-Instruct-q4f16_1-MLC";
+                        reason = "Your device has plenty of RAM (16GB+) for the most powerful model";
+                } else {
+                        recommended = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
+                        reason = "Good balance of performance and memory usage for 8GB+ RAM";
+                }
+        } else if (ram && ram >= 4) {
+                recommended = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
+                reason = "Efficient model suitable for 4-8GB RAM devices";
+        }
+        
+        // Adjust for slow connections
+        if (connection === '3g' || connection === 'slow-2g' || connection === '2g') {
+                recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+                reason = "Fastest download for slow connection";
+        }
+        
+        return { modelId: recommended, reason };
+}
+
+// Debug function to inspect browser storage
+export async function debugBrowserStorage() {
+        console.log('=== BROWSER STORAGE DEBUG ===');
+        
+        // Check localStorage
+        console.log('LocalStorage keys:', Object.keys(localStorage));
+        
+        // Check IndexedDB databases
+        if ('indexedDB' in window) {
+                try {
+                        // Try to list all databases (modern browsers)
+                        if (indexedDB.databases) {
+                                const databases = await indexedDB.databases();
+                                console.log('IndexedDB databases:', databases.map(db => db.name));
+                                
+                                // Check each database
+                                for (const dbInfo of databases) {
+                                        try {
+                                                const request = indexedDB.open(dbInfo.name);
+                                                request.onsuccess = (event) => {
+                                                        const db = event.target.result;
+                                                        console.log(`Database ${dbInfo.name} stores:`, Array.from(db.objectStoreNames));
+                                                        db.close();
+                                                };
+                                        } catch (err) {
+                                                console.log(`Could not inspect ${dbInfo.name}:`, err);
+                                        }
+                                }
+                        } else {
+                                console.log('indexedDB.databases() not supported, trying common names...');
+                                const commonNames = ['webllm-cache', 'mlc-cache', 'model-cache', 'huggingface-cache'];
+                                for (const name of commonNames) {
+                                        try {
+                                                const request = indexedDB.open(name);
+                                                request.onsuccess = (event) => {
+                                                        const db = event.target.result;
+                                                        console.log(`Database ${name} stores:`, Array.from(db.objectStoreNames));
+                                                        db.close();
+                                                };
+                                                request.onerror = () => {
+                                                        console.log(`Database ${name}: not found`);
+                                                };
+                                        } catch (err) {
+                                                console.log(`Could not check ${name}:`, err);
+                                        }
+                                }
+                        }
+                } catch (err) {
+                        console.log('Error checking IndexedDB:', err);
+                }
+        }
+        
+        // Check Cache API with detailed URL inspection
+        if ('caches' in window) {
+                try {
+                        const cacheNames = await caches.keys();
+                        console.log('Cache API caches:', cacheNames);
+                        
+                        // Inspect the webllm/model cache specifically
+                        for (const cacheName of cacheNames) {
+                                try {
+                                        const cache = await caches.open(cacheName);
+                                        const requests = await cache.keys();
+                                        console.log(`Cache "${cacheName}" contains ${requests.length} entries:`);
+                                        
+                                        // Log first 10 URLs to see the pattern
+                                        requests.slice(0, 10).forEach((request, index) => {
+                                                console.log(`  ${index + 1}. ${request.url}`);
+                                        });
+                                        
+                                        if (requests.length > 10) {
+                                                console.log(`  ... and ${requests.length - 10} more entries`);
+                                        }
+                                } catch (err) {
+                                        console.log(`Could not inspect cache "${cacheName}":`, err);
+                                }
+                        }
+                } catch (err) {
+                        console.log('Error checking Cache API:', err);
+                }
+        }
+        
+        console.log('=== END DEBUG ===');
 }
 

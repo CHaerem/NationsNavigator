@@ -1,5 +1,9 @@
 let countryData = {};
 
+export function clearCountryData() {
+	countryData = {};
+}
+
 export function getCountryData() {
 	return countryData;
 }
@@ -36,6 +40,9 @@ function initializeAlaSQLTable() {
 }
 
 export function getAvailableStats() {
+	if (Object.keys(countryData).length === 0) {
+		return [];
+	}
 	const sampleCountry = Object.values(countryData)[0];
 	return sampleCountry ? Object.keys(sampleCountry) : [];
 }

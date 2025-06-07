@@ -72,25 +72,29 @@
 						<span class="btn-icon">🔍</span>
 						<span class="btn-text">Ask AI</span>
 					</button>
-					<button type="button" id="reset-btn">
-						<span class="btn-icon">🔄</span>
-						<span class="btn-text">Reset Map</span>
-					</button>
-				</div>
-			</form>
+                                        <button type="button" id="reset-btn">
+                                                <span class="btn-icon">🔄</span>
+                                                <span class="btn-text">Reset Map</span>
+                                        </button>
+                                        <button type="button" id="clear-cache-btn">
+                                                <span class="btn-icon">🗑️</span>
+                                                <span class="btn-text">Clear Model Cache</span>
+                                        </button>
+                                </div>
+                        </form>
 			
 			<section id="message" aria-live="polite" aria-label="Query results"></section>
 		</aside>
 
-		<script type="module">
-			import { initWebLLM } from "./js/llm.js";
-			document
-				.getElementById("llm-select")
-				.addEventListener("change", (event) => {
-					const selectedModel = event.target.value;
+                <script type="module">
+                        import { initWebLLM } from "./js/llm.js";
+                        document
+                                .getElementById("llm-select")
+                                .addEventListener("change", (event) => {
+                                        const selectedModel = event.target.value;
                                         initWebLLM(selectedModel);
-				});
-		</script>
+                                });
+                </script>
 
 		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 		<script type="module" src="js/main.js"></script>

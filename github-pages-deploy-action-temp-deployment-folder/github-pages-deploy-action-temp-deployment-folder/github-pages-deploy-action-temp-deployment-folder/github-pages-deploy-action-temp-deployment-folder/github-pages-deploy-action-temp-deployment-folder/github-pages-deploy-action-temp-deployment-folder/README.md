@@ -16,8 +16,13 @@ Check out the deployed version of NationsNavigator here: [NationsNavigator Live]
 
 ## 🛠️ How It Works
 
+NationsNavigator leverages WebLLM for client-side AI processing, enabling natural language queries to be converted into SQL statements that query a local AlaSQL database. The application uses a modular ES6 architecture with clear separation of concerns:
 
-NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to answer your questions about countries and geography. It's like having a genius globetrotter at your fingertips! The AI works hand in hand with our interactive map to create a fun and educational experience. Plus, all the country data lives right on your computer and can be updated with a magic Python spell! 🐍✨
+1. **Query Processing**: User input → WebLLM generates SQL → AlaSQL executes against country dataset
+2. **Visualization**: Query results trigger map highlighting via Leaflet.js with GeoJSON country boundaries  
+3. **Data Management**: Local JSON storage with Python-based update utilities for fresh country data
+
+The entire AI processing happens in-browser without external API calls, ensuring privacy and offline capability! 🧠✨
 
 ## 📂 Project Structure
 
@@ -34,6 +39,26 @@ NationsNavigator uses a smart AI brain 🧠 (WebLLM) right in your browser to an
 ```
 
 Each folder includes its own README with additional details about the contents.
+
+## 🏗️ Architecture
+
+### Module Design
+- **main.js**: Application orchestration and initialization flow
+- **map.js**: Leaflet integration with country highlighting and geospatial event handling
+- **llm.js**: WebLLM model management and natural language to SQL conversion
+- **data.js**: AlaSQL database operations and country data management
+- **ui.js**: DOM manipulation and user interaction event handling
+- **utils.js**: Shared utility functions and helper methods
+
+### Data Flow
+```
+User Query → WebLLM (NL→SQL) → AlaSQL Database → Map Highlighting → UI Updates
+```
+
+### Testing Strategy
+- Comprehensive Jest test suite with jsdom environment
+- Mock implementations for external dependencies (WebLLM, Leaflet, fetch)
+- Module isolation testing with dependency injection patterns
 
 ## 🚀 Setup
 
@@ -105,14 +130,15 @@ npm test
 
 This will execute all tests in the `tests/` directory.
 
-## 🛠️ Tech Magic
+## 🛠️ Tech Stack
 
-- 🎨 HTML5 and CSS3 for that sleek look
-- 🧙‍♂️ JavaScript (ES6+) for interactive wizardry
-- 🗺️ Leaflet.js for map-tastic experiences
-- 🤖 WebLLM for AI superpowers
-- 🔍 AlaSQL for data-querying magic
-- 🐍 Python with requests for data update sorcery
+- **Frontend**: HTML5, CSS3, ES6+ JavaScript modules
+- **Mapping**: Leaflet.js with GeoJSON for interactive world visualization
+- **AI/ML**: WebLLM for browser-based language model inference
+- **Database**: AlaSQL for client-side SQL query processing
+- **Testing**: Jest with jsdom for comprehensive unit testing
+- **Data Pipeline**: Python with requests library for API integration
+- **Deployment**: GitHub Pages with automated CI/CD
 
 ## 📚 Data Sources
 
@@ -151,3 +177,35 @@ Feel free to experiment with different models to see how they perform!
 ## 📦 GitHub Pages CI/CD
 
 This repository automatically deploys to **GitHub Pages** when you push to the `main` branch. The workflow is simple and reliable - it takes your source code and publishes it directly to GitHub Pages without any complex build steps or preview deployments.
+
+## 🚀 Future Enhancements
+
+### Conversational AI Interface
+- **Multi-turn Conversations**: Implement conversation history and context retention for back-and-forth dialogue with the LLM
+- **Chat Interface**: Replace single-query input with a full chat UI supporting conversation threads
+- **Follow-up Questions**: Enable the AI to ask clarifying questions and provide more nuanced responses
+
+### Model Integration Options
+- **Remote API Integration**: Add support for external LLM APIs (OpenAI, Anthropic, Google Gemini) for more powerful models
+- **Hybrid Processing**: Implement intelligent routing between local WebLLM and remote APIs based on query complexity
+- **Model Performance Analytics**: Track and display model response times, accuracy metrics, and user satisfaction
+
+### Advanced Tool Integration
+- **MCP (Model Context Protocol)**: Integrate MCP servers to provide the LLM with real-time data access and external tool capabilities
+- **Dynamic Data Sources**: Connect to live APIs for real-time country statistics, weather data, and economic indicators
+- **Custom Tool Creation**: Allow users to define custom data analysis tools and queries
+
+### Enhanced User Experience
+- **Voice Interface**: Add speech-to-text input and text-to-speech responses for hands-free interaction
+- **Mobile Optimization**: Improve responsive design and touch interactions for mobile devices
+- **Collaboration Features**: Multi-user sessions with shared map views and query history
+
+### Data and Analytics
+- **Advanced Visualizations**: Add charts, graphs, and statistical overlays to the map interface
+- **Export Capabilities**: Allow users to export query results, maps, and conversation history
+- **Usage Analytics**: Track popular queries and optimize the system based on user behavior patterns
+
+### Technical Improvements
+- **Progressive Web App**: Add service workers for offline functionality and app-like experience
+- **Performance Optimization**: Implement lazy loading, caching strategies, and WebAssembly for faster processing
+- **Accessibility Enhancements**: Improve screen reader support and keyboard navigation
