@@ -554,6 +554,7 @@ function hideInfoPanel() {
 function updateHardwareInfo() {
 	try {
 		const hardware = detectHardwareCapabilities();
+		const recommendation = getModelRecommendation(hardware);
 		const hardwareInfoEl = document.getElementById('hardware-info');
 		
 		if (hardwareInfoEl) {
@@ -561,26 +562,70 @@ function updateHardwareInfo() {
 			const detected = Object.values(hardware).filter(val => val !== 'unknown').length;
 			const total = Object.keys(hardware).length;
 			
+			// Get model config for recommended model
+			const modelConfigs = getModelConfigs();
+			const recommendedConfig = Object.values(modelConfigs).find(c => c.model_id === recommendation.modelId);
+			const recommendedName = recommendedConfig ? recommendedConfig.description : recommendation.modelId;
+			
+			// Build strengths and limitations display
+			let analysisHtml = '';
+			if (recommendation.strengths.length > 0) {
+				analysisHtml += `
+					<div class="hardware-analysis-section">
+						<div class="analysis-label">✅ Detected Strengths:</div>
+						<div class="analysis-items">
+							${recommendation.strengths.map(strength => `<span class="analysis-item strength">${strength}</span>`).join('')}
+						</div>
+					</div>
+				`;
+			}
+			
+			if (recommendation.limitations.length > 0) {
+				analysisHtml += `
+					<div class="hardware-analysis-section">
+						<div class="analysis-label">⚠️ Potential Limitations:</div>
+						<div class="analysis-items">
+							${recommendation.limitations.map(limitation => `<span class="analysis-item limitation">${limitation}</span>`).join('')}
+						</div>
+					</div>
+				`;
+			}
+			
 			hardwareInfoEl.innerHTML = `
 				<div class="hardware-stats-header">
 					<small>Hardware Detection: ${detected}/${total} specs detected</small>
 				</div>
-				<div class="hardware-stat">
-					<span>RAM:</span>
-					<span>${hardware.ram !== 'unknown' ? hardware.ram + ' GB' : 'Unknown (Privacy Protected)'}</span>
+				
+				<div class="hardware-recommendation-card">
+					<div class="recommendation-header">
+						<strong>🎯 Recommended Model</strong>
+						<span class="confidence-badge confidence-${recommendation.confidence.toLowerCase().replace('-', '_')}">${recommendation.confidence} Confidence</span>
+					</div>
+					<div class="recommended-model">${recommendedName}</div>
+					<div class="recommendation-reason">${recommendation.reason}</div>
 				</div>
-				<div class="hardware-stat">
-					<span>CPU Cores:</span>
-					<span>${hardware.cores !== 'unknown' ? hardware.cores : 'Unknown'}</span>
+				
+				${analysisHtml}
+				
+				<div class="hardware-details">
+					<div class="hardware-stat">
+						<span>RAM:</span>
+						<span>${hardware.ram !== 'unknown' ? hardware.ram + ' GB' : 'Unknown (Privacy Protected)'}</span>
+					</div>
+					<div class="hardware-stat">
+						<span>CPU Cores:</span>
+						<span>${hardware.cores !== 'unknown' ? hardware.cores : 'Unknown'}</span>
+					</div>
+					<div class="hardware-stat">
+						<span>Connection:</span>
+						<span>${hardware.connection !== 'unknown' ? hardware.connection.toUpperCase() : 'Unknown'}</span>
+					</div>
+					<div class="hardware-stat">
+						<span>GPU:</span>
+						<span>${hardware.gpu !== 'unknown' ? (hardware.gpu.length > 30 ? hardware.gpu.substring(0, 30) + '...' : hardware.gpu) : 'WebGL Protected'}</span>
+					</div>
 				</div>
-				<div class="hardware-stat">
-					<span>Connection:</span>
-					<span>${hardware.connection !== 'unknown' ? hardware.connection.toUpperCase() : 'Unknown'}</span>
-				</div>
-				<div class="hardware-stat">
-					<span>GPU:</span>
-					<span>${hardware.gpu !== 'unknown' ? (hardware.gpu.length > 30 ? hardware.gpu.substring(0, 30) + '...' : hardware.gpu) : 'WebGL Protected'}</span>
-				</div>
+				
 				${detected === 0 ? '<div class="hardware-note"><small>💡 Most browsers limit hardware detection for privacy. Model recommendations use safe defaults.</small></div>' : ''}
 			`;
 		}
@@ -594,6 +639,10 @@ async function refreshModelList() {
 	const modelConfigs = getModelConfigs();
 	const activeModel = getCurrentActiveModel();
 	
+	// Get hardware recommendation
+	const hardware = detectHardwareCapabilities();
+	const recommendation = getModelRecommendation(hardware);
+	
 	// Show loading state
 	modelList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">Checking model status...</div>';
 	
@@ -603,6 +652,7 @@ async function refreshModelList() {
 		const modelId = config.model_id;
 		const isActive = modelId === activeModel;
 		const isCached = await checkModelCacheStatus(modelId);
+		const isRecommended = modelId === recommendation.modelId;
 		
 		// Get display name and size from config
 		const displayName = config.description || modelId;
@@ -610,6 +660,7 @@ async function refreshModelList() {
 		
 		const statusBadges = [];
 		if (isActive) statusBadges.push('<span class="status-badge status-active">Active</span>');
+		if (isRecommended) statusBadges.push('<span class="status-badge status-recommended">Recommended</span>');
 		if (isCached) {
 			statusBadges.push('<span class="status-badge status-cached">Downloaded</span>');
 		} else {
@@ -617,9 +668,12 @@ async function refreshModelList() {
 		}
 		
 		modelItems += `
-			<div class="model-item">
+			<div class="model-item ${isRecommended ? 'model-recommended' : ''}">
 				<div class="model-info">
-					<div class="model-name">${displayName}</div>
+					<div class="model-name">
+						${displayName}
+						${isRecommended ? ' 🎯' : ''}
+					</div>
 					<div class="model-size">${sizeText}</div>
 					<div class="model-status">
 						${statusBadges.join('')}
@@ -628,8 +682,8 @@ async function refreshModelList() {
 				<div class="model-actions">
 					${isCached ? `<button class="model-delete-btn" onclick="deleteIndividualModel('${modelId}')" ${isActive ? 'disabled title="Cannot delete active model"' : ''}>
 						🗑️ Delete
-					</button>` : `<button class="model-download-btn" onclick="showDownloadModal('${modelId}')">
-						📥 Download
+					</button>` : `<button class="model-download-btn ${isRecommended ? 'recommended' : ''}" onclick="showDownloadModal('${modelId}')">
+						📥 ${isRecommended ? 'Download (Recommended)' : 'Download'}
 					</button>`}
 				</div>
 			</div>

@@ -1513,3 +1513,130 @@ h3 {
     gap: var(--spacing-xs);
   }
 }
+
+/* Hardware Recommendation Styles */
+.hardware-recommendation-card {
+  background: linear-gradient(135deg, #f6f9fc 0%, #eef7ff 100%);
+  border: 2px solid #3498db;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.confidence-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.confidence-high {
+  background: #d4edda;
+  color: #155724;
+}
+
+.confidence-medium_high {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.confidence-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.confidence-conservative {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.confidence-connection_limited {
+  background: #e2e3e5;
+  color: #495057;
+}
+
+.recommended-model {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: var(--spacing-xs);
+}
+
+.recommendation-reason {
+  font-size: 13px;
+  color: #34495e;
+  line-height: 1.4;
+}
+
+.hardware-analysis-section {
+  margin-bottom: var(--spacing-sm);
+}
+
+.analysis-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.analysis-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.analysis-item {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.analysis-item.strength {
+  background: #d4edda;
+  color: #155724;
+}
+
+.analysis-item.limitation {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.hardware-details {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid #e0e0e0;
+}
+
+.model-item.model-recommended {
+  background: linear-gradient(135deg, #f8fcff 0%, #e8f5ff 100%);
+  border: 2px solid #3498db;
+  border-radius: var(--radius-md);
+}
+
+.status-badge.status-recommended {
+  background: #3498db;
+  color: white;
+  font-weight: 600;
+}
+
+.model-download-btn.recommended {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.model-download-btn.recommended:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+}

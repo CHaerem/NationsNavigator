@@ -528,32 +528,101 @@ export function detectHardwareCapabilities() {
 }
 
 export function getModelRecommendation(hardware) {
-        const { ram, cores, connection } = hardware;
+        const { ram, cores, connection, gpu } = hardware;
         
-        // Default to fastest model
-        let recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-        let reason = "Fastest model, good for all devices";
+        // Calculate a hardware score for better recommendations
+        let hardwareScore = 0;
+        let limitations = [];
+        let strengths = [];
         
-        if (ram && ram >= 8) {
-                if (ram >= 16) {
-                        recommended = "Llama-3.1-8B-Instruct-q4f16_1-MLC";
-                        reason = "Your device has plenty of RAM (16GB+) for the most powerful model";
-                } else {
-                        recommended = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
-                        reason = "Good balance of performance and memory usage for 8GB+ RAM";
-                }
+        // RAM scoring and analysis
+        if (ram && ram >= 16) {
+                hardwareScore += 40;
+                strengths.push(`${ram}GB RAM (Excellent)`);
+        } else if (ram && ram >= 8) {
+                hardwareScore += 25;
+                strengths.push(`${ram}GB RAM (Good)`);
         } else if (ram && ram >= 4) {
+                hardwareScore += 15;
+                limitations.push(`${ram}GB RAM (Limited)`);
+        } else if (ram) {
+                hardwareScore += 5;
+                limitations.push(`${ram}GB RAM (Very Limited)`);
+        } else {
+                limitations.push("RAM unknown (assume limited)");
+        }
+        
+        // CPU scoring
+        if (cores && cores >= 8) {
+                hardwareScore += 20;
+                strengths.push(`${cores} CPU cores (Excellent)`);
+        } else if (cores && cores >= 4) {
+                hardwareScore += 15;
+                strengths.push(`${cores} CPU cores (Good)`);
+        } else if (cores && cores >= 2) {
+                hardwareScore += 10;
+                limitations.push(`${cores} CPU cores (Basic)`);
+        } else if (cores) {
+                hardwareScore += 5;
+                limitations.push(`${cores} CPU core (Limited)`);
+        }
+        
+        // GPU detection bonus
+        if (gpu && gpu !== 'unknown' && !gpu.includes('Software')) {
+                hardwareScore += 10;
+                strengths.push("Hardware GPU detected");
+        }
+        
+        // Connection speed consideration
+        let connectionAdjustment = "";
+        if (connection === '4g' || connection === '5g') {
+                strengths.push(`${connection.toUpperCase()} connection (Fast)`);
+        } else if (connection === '3g') {
+                limitations.push("3G connection (Slow downloads)");
+                hardwareScore -= 10;
+                connectionAdjustment = " Consider starting with smaller model due to slow connection.";
+        } else if (connection === 'slow-2g' || connection === '2g') {
+                limitations.push("2G connection (Very slow downloads)");
+                hardwareScore -= 20;
+                connectionAdjustment = " Strongly recommend smallest model due to very slow connection.";
+        }
+        
+        // Determine recommendation based on score
+        let recommended, reason, confidence;
+        
+        if (hardwareScore >= 60) {
+                recommended = "Llama-3.1-8B-Instruct-q4f16_1-MLC";
+                confidence = "High";
+                reason = `🚀 Your hardware is excellent! The most powerful model should run smoothly.${connectionAdjustment}`;
+        } else if (hardwareScore >= 40) {
+                recommended = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
+                confidence = "Medium-High";
+                reason = `⚡ Good hardware detected. Balanced model offers great performance without overloading your system.${connectionAdjustment}`;
+        } else if (hardwareScore >= 25) {
                 recommended = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
-                reason = "Efficient model suitable for 4-8GB RAM devices";
-        }
-        
-        // Adjust for slow connections
-        if (connection === '3g' || connection === 'slow-2g' || connection === '2g') {
+                confidence = "Medium";
+                reason = `💡 Moderate hardware detected. Efficient model provides good results with reasonable resource usage.${connectionAdjustment}`;
+        } else {
                 recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-                reason = "Fastest download for slow connection";
+                confidence = "Conservative";
+                reason = `🔋 Optimized for your hardware. Fastest model ensures smooth operation on your device.${connectionAdjustment}`;
         }
         
-        return { modelId: recommended, reason };
+        // Override for very slow connections regardless of other hardware
+        if (connection === 'slow-2g' || connection === '2g') {
+                recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+                reason = "🐌 Very slow connection detected. Starting with smallest model (650MB) for faster download.";
+                confidence = "Connection-Limited";
+        }
+        
+        return { 
+                modelId: recommended, 
+                reason, 
+                confidence,
+                hardwareScore,
+                strengths,
+                limitations
+        };
 }
 
 // Debug function to inspect browser storage
