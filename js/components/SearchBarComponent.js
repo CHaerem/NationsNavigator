@@ -1,14 +1,16 @@
 import { BaseComponent } from './BaseComponent.js';
 
 export class SearchBarComponent extends BaseComponent {
-	constructor(onQuerySubmit) {
+	constructor(onQuerySubmit, onAdvancedQuerySubmit) {
 		super('#search-bar');
 		this.onQuerySubmit = onQuerySubmit;
+		this.onAdvancedQuerySubmit = onAdvancedQuerySubmit;
 		this.queryInput = document.getElementById('query-input');
 		this.searchBtn = document.getElementById('search-btn');
 		this.queryForm = document.getElementById('query-form');
 		this.currentSuggestionIndex = 0;
 		this.suggestionInterval = null;
+		this.isAdvancedMode = false;
 		
 		this.suggestions = [
 			"Countries in Europe",
@@ -79,13 +81,52 @@ export class SearchBarComponent extends BaseComponent {
 			if (event.key === 'Escape') {
 				this.queryInput.blur();
 				this.resetSearch();
+			} else if (event.key === 'Enter') {
+				event.preventDefault();
+				if (event.shiftKey) {
+					// Shift+Enter for advanced mode
+					this.isAdvancedMode = true;
+					this.updateSearchButtonMode();
+					this.handleSubmit();
+				} else {
+					// Regular Enter for standard mode
+					this.isAdvancedMode = false;
+					this.updateSearchButtonMode();
+					this.handleSubmit();
+				}
 			}
 		});
 	}
 
 	handleSubmit() {
-		if (this.searchBtn && !this.searchBtn.disabled && this.onQuerySubmit) {
-			this.onQuerySubmit();
+		if (this.searchBtn && !this.searchBtn.disabled) {
+			if (this.isAdvancedMode && this.onAdvancedQuerySubmit) {
+				this.onAdvancedQuerySubmit();
+			} else if (this.onQuerySubmit) {
+				this.onQuerySubmit();
+			}
+		}
+	}
+
+	toggleAdvancedMode() {
+		this.isAdvancedMode = !this.isAdvancedMode;
+		this.updateSearchButtonMode();
+	}
+
+	updateSearchButtonMode() {
+		if (!this.searchBtn) return;
+		
+		const btnIcon = this.searchBtn.querySelector('.btn-icon');
+		const btnText = this.searchBtn.querySelector('.btn-text');
+		
+		if (this.isAdvancedMode) {
+			if (btnIcon) btnIcon.textContent = "🔧";
+			if (btnText) btnText.textContent = "Advanced AI";
+			this.searchBtn.title = "Use advanced AI with function calling (Shift+Enter)";
+		} else {
+			if (btnIcon) btnIcon.textContent = "🔍";
+			if (btnText) btnText.textContent = "Ask AI";
+			this.searchBtn.title = "Standard AI query (Enter)";
 		}
 	}
 

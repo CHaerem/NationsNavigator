@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Performance Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; }
+        .header { border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 10px 0; }
+        .grade-a { color: #059669; font-weight: bold; }
+        .grade-b { color: #0891b2; font-weight: bold; }
+        .grade-c { color: #d97706; font-weight: bold; }
+        .grade-d { color: #dc2626; font-weight: bold; }
+        .grade-f { color: #dc2626; font-weight: bold; }
+        .status-pass { color: #059669; }
+        .status-fail { color: #dc2626; }
+        .priority-high { color: #dc2626; font-weight: bold; }
+        .priority-medium { color: #d97706; font-weight: bold; }
+        .priority-low { color: #059669; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 LLM Performance Evaluation Report</h1>
+        <p><strong>Generated:</strong> 2025-06-08T12:19:42.328Z</p>
+        <p><strong>Duration:</strong> 7ms</p>
+    </div>
+
+    <div class="metric-card">
+        <h2>🎯 Overall Performance</h2>
+        <p><strong>Grade:</strong> <span class="grade-d">D</span> (NEEDS_IMPROVEMENT)</p>
+        <p><strong>Accuracy:</strong> 67.8%</p>
+        <p><strong>Success Rate:</strong> 36.4%</p>
+        <p><strong>Response Time:</strong> 0.4ms</p>
+    </div>
+
+    <h2>🔍 Component Performance</h2>
+    <table>
+        <tr>
+            <th>Component</th>
+            <th>Accuracy</th>
+            <th>Grade</th>
+        </tr>
+        <tr>
+            <td>Intent Classification</td>
+            <td>55.6%</td>
+            <td><span class="grade-f">F</span></td>
+        </tr>
+        <tr>
+            <td>Complexity Assessment</td>
+            <td>55.6%</td>
+            <td><span class="grade-f">F</span></td>
+        </tr>
+        <tr>
+            <td>Entity Extraction</td>
+            <td>94.4%</td>
+            <td><span class="grade-a">A</span></td>
+        </tr>
+    </table>
+
+    <h2>📋 Query Results</h2>
+    <table>
+        <tr>
+            <th>Query</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Accuracy</th>
+            <th>Time (ms)</th>
+        </tr>
+        
+        <tr>
+            <td>Countries in Europe</td>
+            <td>simple_geographic</td>
+            <td><span class="status-pass">PASS</span></td>
+            <td>100.0%</td>
+            <td>0.5</td>
+        </tr>
+        
+        <tr>
+            <td>Countries in Asia</td>
+            <td>simple_geographic</td>
+            <td><span class="status-pass">PASS</span></td>
+            <td>100.0%</td>
+            <td>0.2</td>
+        </tr>
+        
+        <tr>
+            <td>Most populated countries</td>
+            <td>simple_population</td>
+            <td><span class="status-fail">FAIL</span></td>
+            <td>60.0%</td>
+            <td>0.4</td>
+        </tr>
+        
+        <tr>
+            <td>Countries with population over 100 million</td>
+            <td>complex_population</td>
+            <td><span class="status-error">ERROR</span></td>
+            <td>N/A</td>
+            <td>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Countries with red flags</td>
+            <td>simple_flag</td>
+            <td><span class="status-pass">PASS</span></td>
+            <td>100.0%</td>
+            <td>0.1</td>
+        </tr>
+        
+        <tr>
+            <td>European countries with crosses in their flags</td>
+            <td>complex_flag</td>
+            <td><span class="status-fail">FAIL</span></td>
+            <td>20.0%</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td>Spanish speaking countries</td>
+            <td>simple_language</td>
+            <td><span class="status-pass">PASS</span></td>
+            <td>100.0%</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td>Countries that speak French or German</td>
+            <td>complex_language</td>
+            <td><span class="status-fail">FAIL</span></td>
+            <td>70.0%</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td>Compare France, Germany, and Italy by population and area</td>
+            <td>comparison</td>
+            <td><span class="status-fail">FAIL</span></td>
+            <td>30.0%</td>
+            <td>0.1</td>
+        </tr>
+        
+        <tr>
+            <td>Island nations in the Pacific with population under 1 million</td>
+            <td>multi_criteria</td>
+            <td><span class="status-error">ERROR</span></td>
+            <td>N/A</td>
+            <td>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>What are the largest countries in Africa by area?</td>
+            <td>complex_geographic</td>
+            <td><span class="status-fail">FAIL</span></td>
+            <td>30.0%</td>
+            <td>2.6</td>
+        </tr>
+        
+    </table>
+
+    
+    <h2>💡 Recommendations</h2>
+    
+    <div class="metric-card">
+        <h3>1. Intent Classification</h3>
+        <p><strong>Priority:</strong> <span class="priority-high">HIGH</span></p>
+        <p><strong>Issue:</strong> Intent accuracy is 55.6% (target: 80%)</p>
+        <p><strong>Recommendation:</strong> Expand keyword patterns and improve intent classification logic</p>
+    </div>
+    
+    <div class="metric-card">
+        <h3>2. Complexity Assessment</h3>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Issue:</strong> Complexity accuracy is 55.6% (target: 80%)</p>
+        <p><strong>Recommendation:</strong> Refine complexity scoring algorithm and multi-criteria detection</p>
+    </div>
+    
+    <div class="metric-card">
+        <h3>3. simple_population queries</h3>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Issue:</strong> Category accuracy is 60.0% (target: 90%)</p>
+        <p><strong>Recommendation:</strong> Focus on improving simple population query patterns</p>
+    </div>
+    
+    <div class="metric-card">
+        <h3>4. complex_flag queries</h3>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Issue:</strong> Category accuracy is 20.0% (target: 80%)</p>
+        <p><strong>Recommendation:</strong> Focus on improving complex flag query patterns</p>
+    </div>
+    
+    <div class="metric-card">
+        <h3>5. complex_language queries</h3>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Issue:</strong> Category accuracy is 70.0% (target: 85%)</p>
+        <p><strong>Recommendation:</strong> Focus on improving complex language query patterns</p>
+    </div>
+    
+    <div class="metric-card">
+        <h3>6. comparison queries</h3>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Issue:</strong> Category accuracy is 30.0% (target: 75%)</p>
+        <p><strong>Recommendation:</strong> Focus on improving comparison query patterns</p>
+    </div>
+    
+    <div class="metric-card">
+        <h3>7. complex_geographic queries</h3>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Issue:</strong> Category accuracy is 30.0% (target: 80%)</p>
+        <p><strong>Recommendation:</strong> Focus on improving complex geographic query patterns</p>
+    </div>
+    
+    
+</body>
+</html>

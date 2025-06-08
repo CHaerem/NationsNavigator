@@ -1,0 +1,516 @@
+{
+  "metadata": {
+    "timestamp": "2025-06-08T12:20:10.749Z",
+    "version": {
+      "evaluator": "1.0.0",
+      "queryAnalyzer": "1.0.0",
+      "timestamp": "2025-06-08T12:20:10.750Z"
+    },
+    "duration": 4,
+    "options": {
+      "saveBaseline": true,
+      "verbose": false
+    }
+  },
+  "summary": {
+    "overall": {
+      "grade": "D",
+      "accuracy": 0.6777777777777777,
+      "successRate": 0.36363636363636365,
+      "responseTime": 0.20721766666666694,
+      "status": "NEEDS_IMPROVEMENT"
+    },
+    "components": {
+      "intentClassification": {
+        "accuracy": 0.5555555555555556,
+        "grade": "F"
+      },
+      "complexityAssessment": {
+        "accuracy": 0.5555555555555556,
+        "grade": "F"
+      },
+      "entityExtraction": {
+        "accuracy": 0.9444444444444444,
+        "grade": "A"
+      }
+    }
+  },
+  "detailed": {
+    "queryAnalysis": {
+      "totalQueries": 11,
+      "results": [
+        {
+          "id": "geo_simple_1",
+          "query": "Countries in Europe",
+          "category": "simple_geographic",
+          "weight": 1,
+          "duration": 0.46025000000000205,
+          "expected": {
+            "intent": "geographic",
+            "complexity": "low",
+            "entities": {
+              "regions": [
+                "europe"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "geographic",
+            "complexity": "low",
+            "entities": {
+              "regions": [
+                "europe"
+              ],
+              "countries": [],
+              "languages": [],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 1,
+            "complexityAccuracy": 1,
+            "entityScore": 1,
+            "overallAccuracy": 0.9999999999999999
+          },
+          "status": "PASS"
+        },
+        {
+          "id": "geo_simple_2",
+          "query": "Countries in Asia",
+          "category": "simple_geographic",
+          "weight": 1,
+          "duration": 0.16937499999999872,
+          "expected": {
+            "intent": "geographic",
+            "complexity": "low",
+            "entities": {
+              "regions": [
+                "asia"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "geographic",
+            "complexity": "low",
+            "entities": {
+              "regions": [
+                "asia"
+              ],
+              "countries": [],
+              "languages": [],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 1,
+            "complexityAccuracy": 1,
+            "entityScore": 1,
+            "overallAccuracy": 0.9999999999999999
+          },
+          "status": "PASS"
+        },
+        {
+          "id": "pop_simple_1",
+          "query": "Most populated countries",
+          "category": "simple_population",
+          "weight": 1,
+          "duration": 0.3414579999999994,
+          "expected": {
+            "intent": "population",
+            "complexity": "low",
+            "entities": {}
+          },
+          "actual": {
+            "intent": "general",
+            "complexity": "low",
+            "entities": {
+              "regions": [],
+              "countries": [],
+              "languages": [],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 0,
+            "complexityAccuracy": 1,
+            "entityScore": 1,
+            "overallAccuracy": 0.6
+          },
+          "status": "FAIL"
+        },
+        {
+          "id": "pop_complex_1",
+          "query": "Countries with population over 100 million",
+          "category": "complex_population",
+          "error": "actual.toLowerCase is not a function",
+          "status": "ERROR"
+        },
+        {
+          "id": "flag_simple_1",
+          "query": "Countries with red flags",
+          "category": "simple_flag",
+          "weight": 1,
+          "duration": 0.09175000000000111,
+          "expected": {
+            "intent": "flag",
+            "complexity": "low",
+            "entities": {
+              "colors": [
+                "red"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "flag",
+            "complexity": "low",
+            "entities": {
+              "regions": [],
+              "countries": [],
+              "languages": [],
+              "colors": [
+                "red"
+              ],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 1,
+            "complexityAccuracy": 1,
+            "entityScore": 1,
+            "overallAccuracy": 0.9999999999999999
+          },
+          "status": "PASS"
+        },
+        {
+          "id": "flag_complex_1",
+          "query": "European countries with crosses in their flags",
+          "category": "complex_flag",
+          "weight": 1.3,
+          "duration": 0.027833000000001107,
+          "expected": {
+            "intent": "complex",
+            "complexity": "medium",
+            "entities": {
+              "regions": [
+                "europe"
+              ],
+              "colors": [
+                "cross"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "flag",
+            "complexity": "low",
+            "entities": {
+              "regions": [
+                "europe"
+              ],
+              "countries": [],
+              "languages": [],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 0,
+            "complexityAccuracy": 0,
+            "entityScore": 0.5,
+            "overallAccuracy": 0.2
+          },
+          "status": "FAIL"
+        },
+        {
+          "id": "lang_simple_1",
+          "query": "Spanish speaking countries",
+          "category": "simple_language",
+          "weight": 1,
+          "duration": 0.0222920000000002,
+          "expected": {
+            "intent": "language",
+            "complexity": "low",
+            "entities": {
+              "languages": [
+                "spanish"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "language",
+            "complexity": "low",
+            "entities": {
+              "regions": [],
+              "countries": [],
+              "languages": [
+                "spanish"
+              ],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 1,
+            "complexityAccuracy": 1,
+            "entityScore": 1,
+            "overallAccuracy": 0.9999999999999999
+          },
+          "status": "PASS"
+        },
+        {
+          "id": "lang_complex_1",
+          "query": "Countries that speak French or German",
+          "category": "complex_language",
+          "weight": 1.2,
+          "duration": 0.02991699999999753,
+          "expected": {
+            "intent": "language",
+            "complexity": "medium",
+            "entities": {
+              "languages": [
+                "french",
+                "german"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "language",
+            "complexity": "low",
+            "entities": {
+              "regions": [],
+              "countries": [],
+              "languages": [
+                "french",
+                "german"
+              ],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 1,
+            "complexityAccuracy": 0,
+            "entityScore": 1,
+            "overallAccuracy": 0.7000000000000001
+          },
+          "status": "FAIL"
+        },
+        {
+          "id": "comparison_1",
+          "query": "Compare France, Germany, and Italy by population and area",
+          "category": "comparison",
+          "weight": 1.5,
+          "duration": 0.09704200000000185,
+          "expected": {
+            "intent": "complex",
+            "complexity": "high",
+            "entities": {
+              "countries": [
+                "france",
+                "germany",
+                "italy"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "population",
+            "complexity": "medium",
+            "entities": {
+              "regions": [],
+              "countries": [
+                "france",
+                "germany",
+                "italy"
+              ],
+              "languages": [
+                "german"
+              ],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 0,
+            "complexityAccuracy": 0,
+            "entityScore": 1,
+            "overallAccuracy": 0.30000000000000004
+          },
+          "status": "FAIL"
+        },
+        {
+          "id": "multi_criteria_1",
+          "query": "Island nations in the Pacific with population under 1 million",
+          "category": "multi_criteria",
+          "error": "actual.toLowerCase is not a function",
+          "status": "ERROR"
+        },
+        {
+          "id": "geo_complex_1",
+          "query": "What are the largest countries in Africa by area?",
+          "category": "complex_geographic",
+          "weight": 1.3,
+          "duration": 0.6250420000000005,
+          "expected": {
+            "intent": "size",
+            "complexity": "medium",
+            "entities": {
+              "regions": [
+                "africa"
+              ]
+            }
+          },
+          "actual": {
+            "intent": "geographic",
+            "complexity": "low",
+            "entities": {
+              "regions": [
+                "africa"
+              ],
+              "countries": [],
+              "languages": [],
+              "colors": [],
+              "numbers": [],
+              "comparisons": []
+            },
+            "confidence": 0.8
+          },
+          "scores": {
+            "intentAccuracy": 0,
+            "complexityAccuracy": 0,
+            "entityScore": 1,
+            "overallAccuracy": 0.30000000000000004
+          },
+          "status": "FAIL"
+        }
+      ],
+      "metrics": {
+        "successRate": 0.36363636363636365,
+        "averageAccuracy": 0.6777777777777777,
+        "averageResponseTime": 0.20721766666666694,
+        "intentAccuracy": 0.5555555555555556,
+        "complexityAccuracy": 0.5555555555555556,
+        "entityAccuracy": 0.9444444444444444,
+        "errorRate": 0.18181818181818182,
+        "byCategory": {
+          "simple_geographic": {
+            "count": 2,
+            "successRate": 1,
+            "averageAccuracy": 0.9999999999999999,
+            "averageResponseTime": 0.3148125000000004
+          },
+          "simple_population": {
+            "count": 1,
+            "successRate": 0,
+            "averageAccuracy": 0.6,
+            "averageResponseTime": 0.3414579999999994
+          },
+          "simple_flag": {
+            "count": 1,
+            "successRate": 1,
+            "averageAccuracy": 0.9999999999999999,
+            "averageResponseTime": 0.09175000000000111
+          },
+          "complex_flag": {
+            "count": 1,
+            "successRate": 0,
+            "averageAccuracy": 0.2,
+            "averageResponseTime": 0.027833000000001107
+          },
+          "simple_language": {
+            "count": 1,
+            "successRate": 1,
+            "averageAccuracy": 0.9999999999999999,
+            "averageResponseTime": 0.0222920000000002
+          },
+          "complex_language": {
+            "count": 1,
+            "successRate": 0,
+            "averageAccuracy": 0.7000000000000001,
+            "averageResponseTime": 0.02991699999999753
+          },
+          "comparison": {
+            "count": 1,
+            "successRate": 0,
+            "averageAccuracy": 0.30000000000000004,
+            "averageResponseTime": 0.09704200000000185
+          },
+          "complex_geographic": {
+            "count": 1,
+            "successRate": 0,
+            "averageAccuracy": 0.30000000000000004,
+            "averageResponseTime": 0.6250420000000005
+          }
+        }
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "type": "CRITICAL",
+      "component": "Intent Classification",
+      "issue": "Intent accuracy is 55.6% (target: 80%)",
+      "recommendation": "Expand keyword patterns and improve intent classification logic",
+      "priority": "HIGH"
+    },
+    {
+      "type": "IMPORTANT",
+      "component": "Complexity Assessment",
+      "issue": "Complexity accuracy is 55.6% (target: 80%)",
+      "recommendation": "Refine complexity scoring algorithm and multi-criteria detection",
+      "priority": "MEDIUM"
+    },
+    {
+      "type": "CATEGORY_SPECIFIC",
+      "component": "simple_population queries",
+      "issue": "Category accuracy is 60.0% (target: 90%)",
+      "recommendation": "Focus on improving simple population query patterns",
+      "priority": "MEDIUM"
+    },
+    {
+      "type": "CATEGORY_SPECIFIC",
+      "component": "complex_flag queries",
+      "issue": "Category accuracy is 20.0% (target: 80%)",
+      "recommendation": "Focus on improving complex flag query patterns",
+      "priority": "MEDIUM"
+    },
+    {
+      "type": "CATEGORY_SPECIFIC",
+      "component": "complex_language queries",
+      "issue": "Category accuracy is 70.0% (target: 85%)",
+      "recommendation": "Focus on improving complex language query patterns",
+      "priority": "MEDIUM"
+    },
+    {
+      "type": "CATEGORY_SPECIFIC",
+      "component": "comparison queries",
+      "issue": "Category accuracy is 30.0% (target: 75%)",
+      "recommendation": "Focus on improving comparison query patterns",
+      "priority": "MEDIUM"
+    },
+    {
+      "type": "CATEGORY_SPECIFIC",
+      "component": "complex_geographic queries",
+      "issue": "Category accuracy is 30.0% (target: 80%)",
+      "recommendation": "Focus on improving complex geographic query patterns",
+      "priority": "MEDIUM"
+    }
+  ]
+}

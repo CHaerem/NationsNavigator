@@ -3,6 +3,7 @@ import { MessageDisplayComponent } from './MessageDisplayComponent.js';
 import { SearchBarComponent } from './SearchBarComponent.js';
 import { SettingsModalComponent } from './SettingsModalComponent.js';
 import { DownloadModalComponent } from './DownloadModalComponent.js';
+import { PerformanceDashboard } from './PerformanceDashboard.js';
 import { resetMap } from '../main.js';
 
 export class UIManager {
@@ -11,16 +12,17 @@ export class UIManager {
 		this.isInitialized = false;
 	}
 
-	init(onQuerySubmit) {
+	init(onQuerySubmit, onAdvancedQuerySubmit) {
 		if (this.isInitialized) return;
 
 		try {
 			// Initialize all components
 			this.components.countryInfo = new CountryInfoComponent();
 			this.components.messageDisplay = new MessageDisplayComponent();
-			this.components.searchBar = new SearchBarComponent(onQuerySubmit);
+			this.components.searchBar = new SearchBarComponent(onQuerySubmit, onAdvancedQuerySubmit);
 			this.components.settingsModal = new SettingsModalComponent();
 			this.components.downloadModal = new DownloadModalComponent();
+			this.components.performanceDashboard = new PerformanceDashboard();
 
 			// Initialize all components
 			Object.values(this.components).forEach(component => {
@@ -65,6 +67,11 @@ export class UIManager {
 			if (event.key === 'Escape') {
 				this.components.settingsModal.hide();
 				this.components.downloadModal.hide();
+				this.components.performanceDashboard.hide();
+			} else if (event.ctrlKey && event.shiftKey && event.key === 'P') {
+				// Ctrl+Shift+P to open performance dashboard
+				event.preventDefault();
+				this.showPerformanceDashboard();
 			}
 		});
 	}
@@ -143,6 +150,18 @@ export class UIManager {
 	hideDownloadModal() {
 		if (this.isInitialized && this.components.downloadModal) {
 			this.components.downloadModal.hide();
+		}
+	}
+
+	showPerformanceDashboard() {
+		if (this.isInitialized && this.components.performanceDashboard) {
+			this.components.performanceDashboard.show();
+		}
+	}
+
+	hidePerformanceDashboard() {
+		if (this.isInitialized && this.components.performanceDashboard) {
+			this.components.performanceDashboard.hide();
 		}
 	}
 

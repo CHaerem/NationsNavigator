@@ -7,7 +7,11 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "perf:full": "node tests/performance/scripts/run-evaluation.js",
+    "perf:quick": "node tests/performance/scripts/run-evaluation.js --quick",
+    "perf:baseline": "node tests/performance/scripts/run-evaluation.js --baseline",
+    "perf:compare": "node tests/performance/scripts/compare-results.js"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

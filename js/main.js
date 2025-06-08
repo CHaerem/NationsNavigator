@@ -1,9 +1,10 @@
 import { initMap, resetMap, highlightCountry } from "./map.js";
 import { fetchCountryData } from "./data.js";
-import { initWebLLM, processQuery } from "./llm.js";
+import { initWebLLM, processQuery, processQueryWithTools } from "./llm.js";
 import { UIManager } from "./components/UIManager.js";
 import { addNetworkListeners, isOnline } from "./utils.js";
 import { uiService } from "./services/UIService.js";
+import { runQuickPerformanceTest } from "./PerformanceBenchmark.js";
 
 // Create UI manager instance
 const uiManager = new UIManager();
@@ -14,7 +15,7 @@ uiService.setUIManager(uiManager);
 async function init() {
 	try {
 		// Step 1: Initialize UI Manager first
-		uiManager.init(handleQuerySubmit);
+		uiManager.init(handleQuerySubmit, handleAdvancedQuerySubmit);
 		
 		// Step 2: Check network status at startup
 		if (!isOnline()) {
@@ -90,8 +91,27 @@ function handleQuerySubmit() {
 	}
 }
 
+function handleAdvancedQuerySubmit() {
+	const searchBtn = document.getElementById("search-btn");
+	if (!searchBtn.disabled) {
+		processQueryWithTools();
+	} else {
+		uiManager.updateMessage(`
+			<div class='error'>
+				🤖 AI model is still loading. Please wait a moment...
+				<br><small>Try a simpler model if this takes too long.</small>
+			</div>
+		`);
+	}
+}
+
 // Initialize the application
 init();
+
+// Global functions for browser console access
+window.showPerformanceDashboard = () => uiManager.showPerformanceDashboard();
+window.runQuickPerformanceTest = runQuickPerformanceTest;
+window.uiManager = uiManager;
 
 // Export functions that other modules need
 export { processQuery, resetMap, highlightCountry };
