@@ -13,10 +13,8 @@ jest.unstable_mockModule("../js/data.js", () => ({
 	executeQuery: jest.fn(() => [])
 }));
 
-// Mock the main module for UI functions
+// Mock the main module for core functions
 jest.unstable_mockModule("../js/main.js", () => ({
-	updateCountryInfo: jest.fn(),
-	updateMessage: jest.fn(),
 	processQuery: jest.fn(),
 	resetMap: jest.fn(),
 	highlightCountry: jest.fn(),

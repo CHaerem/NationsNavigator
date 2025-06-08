@@ -184,12 +184,7 @@ export class UIManager {
 		}
 	}
 
-	// Legacy function for backwards compatibility
-	toggleCountriesList(event) {
-		if (this.isInitialized && this.components.messageDisplay) {
-			this.components.messageDisplay.toggleCountriesList(event);
-		}
-	}
+	// Note: toggleCountriesList legacy function removed - use messageDisplay component directly
 
 	destroy() {
 		Object.values(this.components).forEach(component => {

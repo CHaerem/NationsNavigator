@@ -124,15 +124,4 @@ window.uiManager = uiManager;
 // Export functions that other modules need
 export { processQuery, resetMap, highlightCountry };
 
-// Export legacy functions for backwards compatibility
-export function updateCountryInfo(props) {
-	uiService.updateCountryInfo(props);
-}
-
-export function updateMessage(message) {
-	uiService.updateMessage(message);
-}
-
-export function updateLLMStatus(status) {
-	uiService.updateLLMStatus(status);
-}
+// Note: Legacy functions removed - use uiService directly

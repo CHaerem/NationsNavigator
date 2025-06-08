@@ -1,6 +1,6 @@
 // Performance Benchmarking System for LLM Capabilities
 import { debugLog } from "./debug.js";
-import { generateSQLQuery, generateEnhancedSQLQuery, processQueryWithTools } from "./llm.js";
+import { generateEnhancedSQLQuery, processQueryWithTools } from "./llm.js";
 import { executeQuery } from "./data.js";
 import { QueryAnalyzer } from "./QueryAnalyzer.js";
 import { PerformanceEvaluator } from "../tests/performance/performance-evaluator.js";
@@ -149,16 +149,16 @@ export class PerformanceBenchmark {
     }
 
     async benchmarkSQLGeneration() {
-        debugLog("Benchmarking standard SQL generation...");
+        debugLog("Benchmarking SQL generation...");
         const results = [];
 
-        // Test with simpler queries that should work well with standard approach
+        // Test with simpler queries 
         const simpleQueries = this.testQueries.filter(q => q.expectedComplexity === 'low');
 
         for (const testQuery of simpleQueries) {
             try {
                 const start = performance.now();
-                const sql = await generateSQLQuery(testQuery.query);
+                const sql = await generateEnhancedSQLQuery(testQuery.query);
                 const sqlEnd = performance.now();
                 
                 // Test SQL execution
@@ -310,10 +310,10 @@ export class PerformanceBenchmark {
                 enhanced: null
             };
 
-            // Test standard approach
+            // Test first run
             try {
                 const start = performance.now();
-                const sql = await generateSQLQuery(testQuery.query);
+                const sql = await generateEnhancedSQLQuery(testQuery.query);
                 const queryResult = executeQuery(sql);
                 const end = performance.now();
 
@@ -330,7 +330,7 @@ export class PerformanceBenchmark {
                 };
             }
 
-            // Test enhanced approach
+            // Test second run (for consistency)
             try {
                 const start = performance.now();
                 const enhanced = await generateEnhancedSQLQuery(testQuery.query);
@@ -486,14 +486,4 @@ export async function runQuickPerformanceTest() {
     }
 }
 
-// Legacy function for backward compatibility
-export async function runLegacyPerformanceTest() {
-    const benchmark = new PerformanceBenchmark();
-    const result = await benchmark.runFullBenchmark();
-    const report = benchmark.generatePerformanceReport(result);
-    
-    console.log(report);
-    debugLog("Legacy performance test completed", result);
-    
-    return { result, report };
-}
+// Note: Legacy performance test function removed - use new PerformanceEvaluator system instead

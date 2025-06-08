@@ -98,9 +98,12 @@ describe("LLM Module", () => {
 
 		// Import the functions we want to test
                 const llmModule = await import("../js/llm.js");
-                generateSQLQuery = llmModule.generateSQLQuery;
+                generateSQLQuery = llmModule.generateEnhancedSQLQuery; // Use enhanced function
                 processQuery = llmModule.processQuery;
                 clearAllModelCache = llmModule.clearAllModelCache;
+                
+                // Set the engine in the module scope for the enhanced function
+                llmModule.setEngineForTests(mockEngine);
 	});
 
 	test("should generate valid SQL query from natural language", async () => {
@@ -108,8 +111,12 @@ describe("LLM Module", () => {
 			choices: [
 				{
 					message: {
-						content:
-							"SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' AND flagDescription LIKE '%green%'",
+						content: JSON.stringify({
+							sql: "SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' AND flagDescription LIKE '%green%'",
+							explanation: "This query finds European countries with green flags",
+							confidence: 0.9,
+							queryType: "flag"
+						}),
 					},
 				},
 			],
@@ -119,9 +126,12 @@ describe("LLM Module", () => {
 			"countries in europe with green flag"
 		);
 
-		expect(result).toBe(
+		expect(result.sql).toBe(
 			"SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' AND flagDescription LIKE '%green%'"
 		);
+		expect(result.llmResponse).toBeDefined();
+		expect(result.llmResponse.explanation).toBeDefined();
+		expect(result.analysis).toBeDefined();
 		expect(mockEngine.chat.completions.create).toHaveBeenCalled();
 	});
 
@@ -130,8 +140,12 @@ describe("LLM Module", () => {
 			choices: [
 				{
 					message: {
-						content:
-							"Here's the SQL query you need:\n\nSELECT name, ISO_A3 FROM countries WHERE region = 'Europe'\n\nThis will find European countries.",
+						content: JSON.stringify({
+							sql: "SELECT name, ISO_A3 FROM countries WHERE region = 'Europe'",
+							explanation: "This query lists European countries",
+							confidence: 0.8,
+							queryType: "geographic"
+						}),
 					},
 				},
 			],
@@ -139,9 +153,11 @@ describe("LLM Module", () => {
 
 		const result = await generateSQLQuery("european countries");
 
-		expect(result).toBe(
+		expect(result.sql).toBe(
 			"SELECT name, ISO_A3 FROM countries WHERE region = 'Europe'"
 		);
+		expect(result.llmResponse).toBeDefined();
+		expect(result.llmResponse.queryType).toBe("geographic");
 	});
 
 	test("should handle LLM API errors", async () => {
@@ -150,7 +166,7 @@ describe("LLM Module", () => {
 		);
 
 		await expect(generateSQLQuery("test query")).rejects.toThrow(
-			"Failed to generate SQL query: API Error"
+			"Failed to generate enhanced SQL query: API Error"
 		);
 	});
 

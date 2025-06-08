@@ -191,159 +191,7 @@ Ensure the SQL query follows all guidelines above.`;
 	}
 }
 
-// Original function for backward compatibility
-export async function generateSQLQuery(query) {
-	const availableStats = getAvailableStats();
-	const exampleCountry = getExampleCountry();
-
-	// Analyze the query for better understanding
-	const queryAnalysis = QueryAnalyzer.analyzeQuery(query);
-	debugLog("Query analysis result:", queryAnalysis);
-
-        // Enhanced prompt with structured JSON output and analysis context
-        const prompt = `You are a SQL expert helping users explore world countries data. Generate a structured response for the user's request.
-
-QUERY ANALYSIS:
-Intent: ${queryAnalysis.intent}
-Complexity: ${queryAnalysis.complexity}
-Extracted entities: ${JSON.stringify(queryAnalysis.entities)}
-${queryAnalysis.suggestions.length > 0 ? `Suggestions: ${queryAnalysis.suggestions.join(', ')}` : ''}
-
-DATABASE SCHEMA:
-Table: countries
-Available fields: ${availableStats.join(", ")}
-
-SAMPLE DATA:
-${JSON.stringify(exampleCountry, null, 2)}
-
-IMPORTANT GUIDELINES:
-1. ALWAYS include 'name' and 'ISO_A3' in SELECT clause
-2. Use LIKE '%value%' for partial string matches (case-insensitive)
-3. Fields like 'languages', 'currencies', 'borders' contain comma-separated values
-4. For flag queries, use 'flagDescription' field (contains detailed flag descriptions)
-5. Population and area are numeric fields - use comparison operators (>, <, =)
-6. Common regions: Europe, Asia, Africa, Americas, Oceania
-7. Add ORDER BY name for consistent results
-
-QUERY PATTERNS & EXAMPLES:
-
-Geographic Queries:
-- "Countries in Europe" → SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' ORDER BY name
-- "Largest countries by area" → SELECT name, ISO_A3 FROM countries ORDER BY area DESC LIMIT 10
-- "Most populated countries" → SELECT name, ISO_A3 FROM countries ORDER BY population DESC LIMIT 10
-
-Language & Culture:
-- "Spanish speaking countries" → SELECT name, ISO_A3 FROM countries WHERE languages LIKE '%Spanish%' ORDER BY name
-- "Countries using Euro" → SELECT name, ISO_A3 FROM countries WHERE currencies LIKE '%Euro%' ORDER BY name
-
-Flag Descriptions:
-- "Countries with red flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%red%' ORDER BY name
-- "Countries with stars on flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%star%' ORDER BY name
-- "Countries with crosses in flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%cross%' ORDER BY name
-
-Complex Combinations:
-- "European countries with crosses" → SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' AND flagDescription LIKE '%cross%' ORDER BY name
-- "Island nations in Pacific" → SELECT name, ISO_A3 FROM countries WHERE (name LIKE '%island%' OR flagDescription LIKE '%island%') AND region = 'Oceania' ORDER BY name
-
-Border Queries:
-- "Countries bordering France" → SELECT name, ISO_A3 FROM countries WHERE borders LIKE '%France%' ORDER BY name
-
-Size & Population:
-- "Countries larger than 1 million km²" → SELECT name, ISO_A3 FROM countries WHERE area > 1000000 ORDER BY area DESC
-- "Countries with population over 100M" → SELECT name, ISO_A3 FROM countries WHERE population > 100000000 ORDER BY population DESC
-
-USER QUERY: "${query}"
-
-Respond with ONLY a JSON object in this exact format:
-{
-  "sql": "THE_SQL_QUERY_HERE",
-  "explanation": "Brief explanation of what this query does",
-  "queryType": "geographic|population|language|flag|complex|other",
-  "confidence": 0.95,
-  "intent": "${queryAnalysis.intent}",
-  "complexity": "${queryAnalysis.complexity}",
-  "suggestions": []
-}
-
-Ensure the SQL query follows all guidelines above.`;
-
-        debugLog("Prompt being sent to LLM:", prompt);
-
-        try {
-                debugLog("Sending query to WebLLM for structured SQL query generation");
-                const reply = await engine.chat.completions.create({
-                        messages: [{ role: "user", content: prompt }],
-                        temperature: 0.3,
-                        max_tokens: 400,
-                        response_format: { type: "json_object" }
-                });
-
-                const rawResponse = reply.choices[0].message.content.trim();
-                debugLog("Received structured response from WebLLM:", rawResponse);
-
-		try {
-			const structuredResponse = JSON.parse(rawResponse);
-			
-			// Validate the structured response
-			if (!structuredResponse.sql || typeof structuredResponse.sql !== 'string') {
-				throw new Error('Invalid structured response: missing or invalid SQL');
-			}
-
-			const sqlQuery = structuredResponse.sql.trim();
-			
-			if (!sqlQuery.toLowerCase().startsWith("select")) {
-				throw new Error(`Generated SQL does not start with SELECT: ${sqlQuery}`);
-			}
-
-			// Enhanced logging with analysis data
-			debugLog("Enhanced structured response:", {
-				explanation: structuredResponse.explanation,
-				queryType: structuredResponse.queryType,
-				confidence: structuredResponse.confidence,
-				intent: structuredResponse.intent,
-				complexity: structuredResponse.complexity,
-				suggestions: structuredResponse.suggestions,
-				originalAnalysis: queryAnalysis
-			});
-
-			// Store the enhanced response for potential future use
-			structuredResponse._originalQuery = query;
-			structuredResponse._analysis = queryAnalysis;
-
-			return sqlQuery;
-		} catch (parseError) {
-			debugLog("JSON parsing failed, falling back to text extraction:", parseError);
-			// Fallback to the original text parsing logic
-			let sqlQuery = rawResponse;
-
-			// Look for SELECT statement in the response
-			const selectMatch = rawResponse.match(/SELECT[\s\S]*?(?=\n\n|\n[A-Z]|$)/i);
-			if (selectMatch) {
-				sqlQuery = selectMatch[0].trim();
-			}
-
-			// Clean up common prefixes and suffixes
-			sqlQuery = sqlQuery.replace(
-				/^(Here's the SQL query you need:|SQL Query:|Query:)\s*/i,
-				""
-			);
-			sqlQuery = sqlQuery.replace(
-				/\s*(This will find.*|This query.*|The above query.*)$/i,
-				""
-			);
-			sqlQuery = sqlQuery.trim();
-
-			if (!sqlQuery.toLowerCase().startsWith("select")) {
-				throw new Error(`Failed to generate SQL query: ${rawResponse}`);
-			}
-
-			return sqlQuery;
-		}
-	} catch (error) {
-		console.error("Error generating SQL query:", error);
-		throw new Error(`Failed to generate SQL query: ${error.message}`);
-	}
-}
+// Note: Legacy generateSQLQuery function removed - use generateEnhancedSQLQuery instead
 
 // Function calling query processing
 export async function processQueryWithTools(query) {
@@ -504,7 +352,8 @@ export async function processQuery() {
 
         try {
                 performanceMonitor.start('sql-generation');
-                const sqlQuery = await generateSQLQuery(query);
+                const enhancedResult = await generateEnhancedSQLQuery(query);
+                const sqlQuery = enhancedResult.sql;
                 const sqlGenTime = performanceMonitor.end('sql-generation');
                 
                 performanceMonitor.start('sql-execution');
@@ -851,3 +700,8 @@ export async function debugBrowserStorage() {
         console.log('=== END DEBUG ===');
 }
 
+
+// Test helper function - only for testing
+export function setEngineForTests(testEngine) {
+	engine = testEngine;
+}
