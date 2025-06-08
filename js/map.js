@@ -1,5 +1,5 @@
 import { getCountryData } from "./data.js";
-import { updateCountryInfo, updateMessage } from "./ui.js";
+import { updateCountryInfo, updateMessage } from "./main.js";
 import { debugLog } from "./debug.js";
 
 let map, geojsonLayer;

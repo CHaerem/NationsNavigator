@@ -1,43 +1,51 @@
 import { initMap, resetMap, highlightCountry } from "./map.js";
 import { fetchCountryData } from "./data.js";
-import { initWebLLM, processQuery } from "./llm.js";
-import { setupEventListeners, updateMessage } from "./ui.js";
+import { initWebLLM, processQuery, processQueryWithTools } from "./llm.js";
+import { UIManager } from "./components/UIManager.js";
 import { addNetworkListeners, isOnline } from "./utils.js";
+import { uiService } from "./services/UIService.js";
+import { runQuickPerformanceTest } from "./PerformanceBenchmark.js";
+
+// Create UI manager instance
+const uiManager = new UIManager();
+
+// Connect UI service to manager
+uiService.setUIManager(uiManager);
 
 async function init() {
-	// Check network status at startup
-	if (!isOnline()) {
-		updateMessage("<div class='error'>⚠️ No internet connection detected. Some features may not work properly.</div>");
-	}
-	
-	// Add network status monitoring
-	addNetworkListeners((online) => {
-		if (online) {
-			updateMessage("🌐 Internet connection restored.");
-		} else {
-			updateMessage("<div class='error'>⚠️ Internet connection lost. Some features may not work properly.</div>");
-		}
-	});
-
 	try {
-		// Step 1: Load country data
-		updateMessage("<div class='processing'>📦 Loading country data...</div>");
+		// Step 1: Initialize UI Manager first
+		uiManager.init(handleQuerySubmit, handleAdvancedQuerySubmit);
+		
+		// Step 2: Check network status at startup
+		if (!isOnline()) {
+			uiManager.updateMessage("<div class='error'>⚠️ No internet connection detected. Some features may not work properly.</div>");
+		}
+		
+		// Step 3: Add network status monitoring
+		addNetworkListeners((online) => {
+			if (online) {
+				uiManager.updateMessage("🌐 Internet connection restored.");
+			} else {
+				uiManager.updateMessage("<div class='error'>⚠️ Internet connection lost. Some features may not work properly.</div>");
+			}
+		});
+
+		// Step 4: Load country data
+		uiManager.updateMessage("<div class='processing'>📦 Loading country data...</div>");
 		await fetchCountryData();
 		
-		// Step 2: Initialize map
-		updateMessage("<div class='processing'>🗺️ Initializing interactive map...</div>");
+		// Step 5: Initialize map
+		uiManager.updateMessage("<div class='processing'>🗺️ Initializing interactive map...</div>");
 		await initMap();
 		
-		updateMessage(
+		uiManager.updateMessage(
 			"✅ Map loaded successfully! You can click on countries while the AI model loads in the background."
 		);
 		
-		// Step 3: Initialize WebLLM (non-blocking)
+		// Step 6: Initialize WebLLM (non-blocking)
 		const selectedModel = document.getElementById("llm-select").value;
 		initWebLLM(selectedModel);
-		
-		// Step 4: Setup event listeners
-		setupEventListeners();
 		
 	} catch (error) {
 		console.error("Initialization error:", error);
@@ -56,18 +64,67 @@ async function init() {
 		}
 		errorMessage += "</div>";
 		
-		updateMessage(errorMessage);
+		uiManager.updateMessage(errorMessage);
 		
-		// Try to at least setup basic event listeners
+		// Try to at least setup basic event listeners if not already done
 		try {
-			setupEventListeners();
+			if (!uiManager.isInitialized) {
+				uiManager.init(handleQuerySubmit);
+			}
 		} catch (listenerError) {
 			console.error("Failed to setup event listeners:", listenerError);
 		}
 	}
 }
 
+function handleQuerySubmit() {
+	const searchBtn = document.getElementById("search-btn");
+	if (!searchBtn.disabled) {
+		processQuery();
+	} else {
+		uiManager.updateMessage(`
+			<div class='error'>
+				🤖 AI model is still loading. Please wait a moment...
+				<br><small>Try a simpler model if this takes too long.</small>
+			</div>
+		`);
+	}
+}
+
+function handleAdvancedQuerySubmit() {
+	const searchBtn = document.getElementById("search-btn");
+	if (!searchBtn.disabled) {
+		processQueryWithTools();
+	} else {
+		uiManager.updateMessage(`
+			<div class='error'>
+				🤖 AI model is still loading. Please wait a moment...
+				<br><small>Try a simpler model if this takes too long.</small>
+			</div>
+		`);
+	}
+}
+
 // Initialize the application
 init();
 
+// Global functions for browser console access
+window.showPerformanceDashboard = () => uiManager.showPerformanceDashboard();
+window.runQuickPerformanceTest = runQuickPerformanceTest;
+window.uiManager = uiManager;
+
+// Export functions that other modules need
 export { processQuery, resetMap, highlightCountry };
+
+// Export legacy functions for backwards compatibility
+export function updateCountryInfo(props) {
+	uiService.updateCountryInfo(props);
+}
+
+export function updateMessage(message) {
+	uiService.updateMessage(message);
+}
+
+export function updateLLMStatus(status) {
+	uiService.updateLLMStatus(status);
+}

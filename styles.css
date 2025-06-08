@@ -20,6 +20,10 @@
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
+  --status-excellent: #10b981;
+  --status-good: #059669;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
 }
 
 * {
@@ -1639,4 +1643,393 @@ h3 {
   background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+}
+
+/* Performance Dashboard Styles */
+.performance-dashboard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.performance-dashboard .dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+  color: white;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.performance-dashboard .dashboard-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.performance-dashboard .close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.performance-dashboard .close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.performance-dashboard .dashboard-content {
+  background: white;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  max-width: 90vw;
+  max-height: 80vh;
+  width: 1000px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.performance-dashboard .dashboard-controls {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.performance-dashboard .benchmark-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.performance-dashboard .benchmark-btn:not(.secondary) {
+  background: var(--primary-color);
+  color: white;
+}
+
+.performance-dashboard .benchmark-btn.secondary {
+  background: var(--background-gray);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.performance-dashboard .benchmark-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.performance-dashboard .benchmark-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.performance-dashboard .benchmark-status {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--background-gray);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.performance-dashboard .status-message {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.performance-dashboard .benchmark-results {
+  padding: var(--spacing-lg);
+}
+
+.performance-dashboard .metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.performance-dashboard .metric-card {
+  padding: var(--spacing-lg);
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.performance-dashboard .metric-card.status-excellent {
+  border-color: var(--status-excellent);
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+}
+
+.performance-dashboard .metric-card.status-good {
+  border-color: var(--status-good);
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+}
+
+.performance-dashboard .metric-card.status-warning {
+  border-color: var(--status-warning);
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
+
+.performance-dashboard .metric-card h5 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.performance-dashboard .metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.performance-dashboard .metric-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.performance-dashboard .metric-detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.performance-dashboard .result-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-lg);
+}
+
+.performance-dashboard .tab-btn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.performance-dashboard .tab-btn.active {
+  border-bottom-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.performance-dashboard .tab-btn:hover {
+  background: var(--background-gray);
+}
+
+.performance-dashboard .tab-panel {
+  display: none;
+}
+
+.performance-dashboard .tab-panel.active {
+  display: block;
+}
+
+.performance-dashboard .performance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--spacing-md);
+}
+
+.performance-dashboard .performance-table th,
+.performance-dashboard .performance-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.performance-dashboard .performance-table th {
+  background: var(--background-gray);
+  font-weight: 600;
+}
+
+.performance-dashboard .comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+.performance-dashboard .comparison-item {
+  padding: var(--spacing-lg);
+  background: var(--background-gray);
+  border-radius: var(--radius-md);
+}
+
+.performance-dashboard .comparison-item h6 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.performance-dashboard .comparison-item ul {
+  margin: 0;
+  padding-left: var(--spacing-lg);
+}
+
+.performance-dashboard .comparison-item li {
+  margin-bottom: var(--spacing-sm);
+}
+
+.performance-dashboard .recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.performance-dashboard .recommendation-item {
+  padding: var(--spacing-lg);
+  background: var(--background-gray);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-color);
+}
+
+.performance-dashboard .quick-results {
+  padding: var(--spacing-lg);
+  background: var(--background-gray);
+  border-radius: var(--radius-md);
+}
+
+.performance-dashboard .metrics-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.performance-dashboard .metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.performance-dashboard .metric-item .metric-value.good {
+  color: var(--status-good);
+  font-weight: 600;
+}
+
+.performance-dashboard .metric-item .metric-value.warning {
+  color: var(--status-warning);
+  font-weight: 600;
+}
+
+.performance-dashboard .quick-recommendation {
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Tool result formatting */
+.tool-result {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-color);
+}
+
+.tool-result h4 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--primary-color);
+  font-size: 16px;
+}
+
+.tool-result .country-tag {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: var(--spacing-xs);
+  background: var(--primary-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tool-result .comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--spacing-md);
+}
+
+.tool-result .comparison-table th,
+.tool-result .comparison-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border: 1px solid var(--border-color);
+}
+
+.tool-result .comparison-table th {
+  background: var(--background-gray);
+  font-weight: 600;
+}
+
+.tool-result .stat-item {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tool-result .country-detail {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.tool-performance {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.llm-response {
+  padding: var(--spacing-lg);
+  background: var(--background-gray);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-md) 0;
+}
+
+.highlight-info {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--success-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-align: center;
 }

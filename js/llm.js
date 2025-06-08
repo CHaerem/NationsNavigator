@@ -1,64 +1,39 @@
 import { CreateMLCEngine, deleteModelAllInfoInCache } from "https://esm.run/@mlc-ai/web-llm";
-import { updateLLMStatus, updateMessage } from "./ui.js";
+import { uiService } from "./services/UIService.js";
 import { highlightCountries } from "./map.js";
 import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 import { debugLog, debugTime, debugTimeEnd } from "./debug.js";
 import { retryOperation, createRetryButton, formatError, isOnline, QueryCache, PerformanceMonitor, debounce } from "./utils.js";
+import { MODEL_CONFIGS, DEFAULT_MODEL, HardwareRecommendation } from "./config/ModelConfig.js";
+import { QueryAnalyzer } from "./QueryAnalyzer.js";
+import { CountryTools, formatToolResult } from "./CountryTools.js";
 
 let engine;
 const queryCache = new QueryCache();
 const performanceMonitor = new PerformanceMonitor();
 
-const modelConfigs = {
-	"Llama-3.1-8B-Instruct-q4f16_1-MLC": {
-		model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 5100, // ~5.1 GB
-		description: "Llama-3.1-8B 💪 (Most Powerful)",
-	},
-	"Llama-3.2-3B-Instruct-q4f16_1-MLC": {
-		model_id: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 1800, // ~1.8 GB
-		description: "Llama-3.2-3B 🧠 (Balanced)",
-	},
-	"Llama-3.2-1B-Instruct-q4f16_1-MLC": {
-		model_id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 650, // ~650 MB
-		description: "Llama-3.2-1B ⚡ (Fastest)",
-	},
-	"Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
-		model_id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 950, // ~950 MB
-		description: "Qwen2.5-1.5B 🚀 (Efficient)",
-	},
-};
-
 export async function initWebLLM(selectedModel) {
 	// Provide default model if none selected (important for testing)
-	const defaultModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-	const modelKey = selectedModel || defaultModel;
-	const modelConfig = modelConfigs[modelKey];
+	const modelKey = selectedModel || DEFAULT_MODEL;
+	const modelConfig = MODEL_CONFIGS[modelKey];
 
 	if (!modelConfig) {
 		console.error(`Unknown model: ${modelKey}`);
-		updateLLMStatus("Failed to initialize WebLLM - Unknown model");
+		uiService.updateLLMStatus("Failed to initialize WebLLM - Unknown model");
 		return;
 	}
 
 	// Check network status and warn if offline (but still try to initialize)
 	if (!isOnline()) {
-		updateLLMStatus("⚠️ Offline mode - trying to use cached model files");
-		updateMessage("<div class='processing'>⚠️ No internet connection. Attempting to load model from browser cache...</div>");
+		uiService.updateLLMStatus("⚠️ Offline mode - trying to use cached model files");
+		uiService.updateMessage("<div class='processing'>⚠️ No internet connection. Attempting to load model from browser cache...</div>");
 	}
 
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
 		} (${progressObj.progress.toFixed(2)}%)`;
-		updateLLMStatus(progressText);
+		uiService.updateLLMStatus(progressText);
 	};
 
 	const initializeEngine = async () => {
@@ -73,9 +48,9 @@ export async function initWebLLM(selectedModel) {
 
         try {
                 await retryOperation(initializeEngine, 2, 2000);
-                updateLLMStatus("✅ WebLLM ready");
+                uiService.updateLLMStatus("✅ WebLLM ready");
                 if (!isOnline()) {
-                	updateMessage("✅ Model loaded successfully from cache! The app is fully functional offline.");
+                	uiService.updateMessage("✅ Model loaded successfully from cache! The app is fully functional offline.");
                 }
         } catch (error) {
                 console.error("Error initializing WebLLM:", error);
@@ -96,17 +71,28 @@ export async function initWebLLM(selectedModel) {
                 const retryBtn = createRetryButton(() => initWebLLM(selectedModel), "🔄 Retry WebLLM");
                 errorMessage += `<br>${retryBtn}`;
                 
-                updateLLMStatus("❌ WebLLM initialization failed");
-                updateMessage(`<div class='error'>${errorMessage}</div>`);
+                uiService.updateLLMStatus("❌ WebLLM initialization failed");
+                uiService.updateMessage(`<div class='error'>${errorMessage}</div>`);
         }
 }
 
-export async function generateSQLQuery(query) {
+// Enhanced function that returns both SQL and analysis
+export async function generateEnhancedSQLQuery(query) {
 	const availableStats = getAvailableStats();
 	const exampleCountry = getExampleCountry();
 
-        // Enhanced prompt with better guidance and examples
-        const prompt = `You are a SQL expert helping users explore world countries data. Generate a SQL query for the countries table based on the user's request.
+	// Analyze the query for better understanding
+	const queryAnalysis = QueryAnalyzer.analyzeQuery(query);
+	debugLog("Query analysis result:", queryAnalysis);
+
+        // Enhanced prompt with structured JSON output and analysis context
+        const prompt = `You are a SQL expert helping users explore world countries data. Generate a structured response for the user's request.
+
+QUERY ANALYSIS:
+Intent: ${queryAnalysis.intent}
+Complexity: ${queryAnalysis.complexity}
+Extracted entities: ${JSON.stringify(queryAnalysis.entities)}
+${queryAnalysis.suggestions.length > 0 ? `Suggestions: ${queryAnalysis.suggestions.join(', ')}` : ''}
 
 DATABASE SCHEMA:
 Table: countries
@@ -153,58 +139,341 @@ Size & Population:
 
 USER QUERY: "${query}"
 
-Generate ONLY the SQL query (no explanations). Ensure it follows the guidelines above.`;
+Respond with ONLY a JSON object in this exact format:
+{
+  "sql": "THE_SQL_QUERY_HERE",
+  "explanation": "Brief explanation of what this query does",
+  "queryType": "geographic|population|language|flag|complex|other",
+  "confidence": 0.95,
+  "intent": "${queryAnalysis.intent}",
+  "complexity": "${queryAnalysis.complexity}",
+  "suggestions": []
+}
+
+Ensure the SQL query follows all guidelines above.`;
 
         debugLog("Prompt being sent to LLM:", prompt);
 
         try {
-                debugLog("Sending query to WebLLM for SQL query generation");
+                debugLog("Sending query to WebLLM for enhanced SQL query generation");
                 const reply = await engine.chat.completions.create({
                         messages: [{ role: "user", content: prompt }],
                         temperature: 0.3,
-                        max_tokens: 300,
+                        max_tokens: 400,
+                        response_format: { type: "json_object" }
                 });
 
                 const rawResponse = reply.choices[0].message.content.trim();
-                debugLog("Received SQL query from WebLLM:", rawResponse);
+                debugLog("Received enhanced structured response from WebLLM:", rawResponse);
 
-		// Extract SQL query from response (handle extra text)
-		let sqlQuery = rawResponse;
-
-		// Look for SELECT statement in the response
-		const selectMatch = rawResponse.match(/SELECT[\s\S]*?(?=\n\n|\n[A-Z]|$)/i);
-		if (selectMatch) {
-			sqlQuery = selectMatch[0].trim();
+		const structuredResponse = JSON.parse(rawResponse);
+		
+		// Validate the structured response
+		if (!structuredResponse.sql || typeof structuredResponse.sql !== 'string') {
+			throw new Error('Invalid structured response: missing or invalid SQL');
 		}
 
-		// Clean up common prefixes and suffixes
-		sqlQuery = sqlQuery.replace(
-			/^(Here's the SQL query you need:|SQL Query:|Query:)\s*/i,
-			""
-		);
-		sqlQuery = sqlQuery.replace(
-			/\s*(This will find.*|This query.*|The above query.*)$/i,
-			""
-		);
-		sqlQuery = sqlQuery.trim();
-
+		const sqlQuery = structuredResponse.sql.trim();
+		
 		if (!sqlQuery.toLowerCase().startsWith("select")) {
-			throw new Error(`Failed to generate SQL query: ${rawResponse}`);
+			throw new Error(`Generated SQL does not start with SELECT: ${sqlQuery}`);
 		}
 
-		return sqlQuery;
+		// Return the full enhanced response
+		return {
+			sql: sqlQuery,
+			analysis: queryAnalysis,
+			llmResponse: structuredResponse
+		};
+	} catch (error) {
+		console.error("Error generating enhanced SQL query:", error);
+		throw new Error(`Failed to generate enhanced SQL query: ${error.message}`);
+	}
+}
+
+// Original function for backward compatibility
+export async function generateSQLQuery(query) {
+	const availableStats = getAvailableStats();
+	const exampleCountry = getExampleCountry();
+
+	// Analyze the query for better understanding
+	const queryAnalysis = QueryAnalyzer.analyzeQuery(query);
+	debugLog("Query analysis result:", queryAnalysis);
+
+        // Enhanced prompt with structured JSON output and analysis context
+        const prompt = `You are a SQL expert helping users explore world countries data. Generate a structured response for the user's request.
+
+QUERY ANALYSIS:
+Intent: ${queryAnalysis.intent}
+Complexity: ${queryAnalysis.complexity}
+Extracted entities: ${JSON.stringify(queryAnalysis.entities)}
+${queryAnalysis.suggestions.length > 0 ? `Suggestions: ${queryAnalysis.suggestions.join(', ')}` : ''}
+
+DATABASE SCHEMA:
+Table: countries
+Available fields: ${availableStats.join(", ")}
+
+SAMPLE DATA:
+${JSON.stringify(exampleCountry, null, 2)}
+
+IMPORTANT GUIDELINES:
+1. ALWAYS include 'name' and 'ISO_A3' in SELECT clause
+2. Use LIKE '%value%' for partial string matches (case-insensitive)
+3. Fields like 'languages', 'currencies', 'borders' contain comma-separated values
+4. For flag queries, use 'flagDescription' field (contains detailed flag descriptions)
+5. Population and area are numeric fields - use comparison operators (>, <, =)
+6. Common regions: Europe, Asia, Africa, Americas, Oceania
+7. Add ORDER BY name for consistent results
+
+QUERY PATTERNS & EXAMPLES:
+
+Geographic Queries:
+- "Countries in Europe" → SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' ORDER BY name
+- "Largest countries by area" → SELECT name, ISO_A3 FROM countries ORDER BY area DESC LIMIT 10
+- "Most populated countries" → SELECT name, ISO_A3 FROM countries ORDER BY population DESC LIMIT 10
+
+Language & Culture:
+- "Spanish speaking countries" → SELECT name, ISO_A3 FROM countries WHERE languages LIKE '%Spanish%' ORDER BY name
+- "Countries using Euro" → SELECT name, ISO_A3 FROM countries WHERE currencies LIKE '%Euro%' ORDER BY name
+
+Flag Descriptions:
+- "Countries with red flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%red%' ORDER BY name
+- "Countries with stars on flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%star%' ORDER BY name
+- "Countries with crosses in flags" → SELECT name, ISO_A3 FROM countries WHERE flagDescription LIKE '%cross%' ORDER BY name
+
+Complex Combinations:
+- "European countries with crosses" → SELECT name, ISO_A3 FROM countries WHERE region = 'Europe' AND flagDescription LIKE '%cross%' ORDER BY name
+- "Island nations in Pacific" → SELECT name, ISO_A3 FROM countries WHERE (name LIKE '%island%' OR flagDescription LIKE '%island%') AND region = 'Oceania' ORDER BY name
+
+Border Queries:
+- "Countries bordering France" → SELECT name, ISO_A3 FROM countries WHERE borders LIKE '%France%' ORDER BY name
+
+Size & Population:
+- "Countries larger than 1 million km²" → SELECT name, ISO_A3 FROM countries WHERE area > 1000000 ORDER BY area DESC
+- "Countries with population over 100M" → SELECT name, ISO_A3 FROM countries WHERE population > 100000000 ORDER BY population DESC
+
+USER QUERY: "${query}"
+
+Respond with ONLY a JSON object in this exact format:
+{
+  "sql": "THE_SQL_QUERY_HERE",
+  "explanation": "Brief explanation of what this query does",
+  "queryType": "geographic|population|language|flag|complex|other",
+  "confidence": 0.95,
+  "intent": "${queryAnalysis.intent}",
+  "complexity": "${queryAnalysis.complexity}",
+  "suggestions": []
+}
+
+Ensure the SQL query follows all guidelines above.`;
+
+        debugLog("Prompt being sent to LLM:", prompt);
+
+        try {
+                debugLog("Sending query to WebLLM for structured SQL query generation");
+                const reply = await engine.chat.completions.create({
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.3,
+                        max_tokens: 400,
+                        response_format: { type: "json_object" }
+                });
+
+                const rawResponse = reply.choices[0].message.content.trim();
+                debugLog("Received structured response from WebLLM:", rawResponse);
+
+		try {
+			const structuredResponse = JSON.parse(rawResponse);
+			
+			// Validate the structured response
+			if (!structuredResponse.sql || typeof structuredResponse.sql !== 'string') {
+				throw new Error('Invalid structured response: missing or invalid SQL');
+			}
+
+			const sqlQuery = structuredResponse.sql.trim();
+			
+			if (!sqlQuery.toLowerCase().startsWith("select")) {
+				throw new Error(`Generated SQL does not start with SELECT: ${sqlQuery}`);
+			}
+
+			// Enhanced logging with analysis data
+			debugLog("Enhanced structured response:", {
+				explanation: structuredResponse.explanation,
+				queryType: structuredResponse.queryType,
+				confidence: structuredResponse.confidence,
+				intent: structuredResponse.intent,
+				complexity: structuredResponse.complexity,
+				suggestions: structuredResponse.suggestions,
+				originalAnalysis: queryAnalysis
+			});
+
+			// Store the enhanced response for potential future use
+			structuredResponse._originalQuery = query;
+			structuredResponse._analysis = queryAnalysis;
+
+			return sqlQuery;
+		} catch (parseError) {
+			debugLog("JSON parsing failed, falling back to text extraction:", parseError);
+			// Fallback to the original text parsing logic
+			let sqlQuery = rawResponse;
+
+			// Look for SELECT statement in the response
+			const selectMatch = rawResponse.match(/SELECT[\s\S]*?(?=\n\n|\n[A-Z]|$)/i);
+			if (selectMatch) {
+				sqlQuery = selectMatch[0].trim();
+			}
+
+			// Clean up common prefixes and suffixes
+			sqlQuery = sqlQuery.replace(
+				/^(Here's the SQL query you need:|SQL Query:|Query:)\s*/i,
+				""
+			);
+			sqlQuery = sqlQuery.replace(
+				/\s*(This will find.*|This query.*|The above query.*)$/i,
+				""
+			);
+			sqlQuery = sqlQuery.trim();
+
+			if (!sqlQuery.toLowerCase().startsWith("select")) {
+				throw new Error(`Failed to generate SQL query: ${rawResponse}`);
+			}
+
+			return sqlQuery;
+		}
 	} catch (error) {
 		console.error("Error generating SQL query:", error);
 		throw new Error(`Failed to generate SQL query: ${error.message}`);
 	}
 }
 
+// Function calling query processing
+export async function processQueryWithTools(query) {
+	if (!engine) {
+		uiService.updateMessage(
+			"<div class='error'>WebLLM is not initialized. Please initialize it first.</div>"
+		);
+		return;
+	}
+
+	debugLog("Processing query with tools:", query);
+	
+	// Analyze the query first
+	const queryAnalysis = QueryAnalyzer.analyzeQuery(query);
+	
+	// Check if this query might benefit from function calling
+	const shouldUseFunctionCalling = queryAnalysis.complexity === 'medium' || 
+		queryAnalysis.complexity === 'high' || 
+		queryAnalysis.intent === 'complex';
+
+	if (!shouldUseFunctionCalling) {
+		// Fall back to regular SQL generation for simple queries
+		return await processQuery();
+	}
+
+	uiService.updateMessage("<div class='processing'>🔧 Processing query with advanced tools...</div>");
+	performanceMonitor.start('total-tool-processing');
+
+	try {
+		const tools = CountryTools.getToolDefinitions();
+		
+		const systemPrompt = `You are a country data expert assistant. You can use various tools to help answer questions about world countries. 
+
+Available tools:
+- search_countries: Find countries based on criteria
+- get_country_details: Get detailed information about specific countries  
+- compare_countries: Compare multiple countries
+- get_statistics: Get statistical information
+
+Use tools when appropriate to provide comprehensive answers. For simple queries, you can respond directly.`;
+
+		performanceMonitor.start('llm-tool-call');
+		const reply = await engine.chat.completions.create({
+			messages: [
+				{ role: "system", content: systemPrompt },
+				{ role: "user", content: query }
+			],
+			tools: tools,
+			tool_choice: "auto",
+			temperature: 0.3,
+			max_tokens: 500
+		});
+		const llmTime = performanceMonitor.end('llm-tool-call');
+
+		const message = reply.choices[0].message;
+		debugLog("LLM response with tools:", message);
+
+		let finalResponse = "";
+		let highlightCondition = null;
+
+		// Handle tool calls if any
+		if (message.tool_calls && message.tool_calls.length > 0) {
+			performanceMonitor.start('tool-execution');
+			
+			for (const toolCall of message.tool_calls) {
+				const { name, arguments: args } = toolCall.function;
+				
+				try {
+					const parsedArgs = JSON.parse(args);
+					const toolResult = await CountryTools.executeFunction(name, parsedArgs);
+					
+					// Format the result for display
+					const formattedResult = formatToolResult(name, toolResult);
+					finalResponse += formattedResult;
+					
+					// Create highlight condition if we have country results
+					if (toolResult.countries && toolResult.countries.length > 0) {
+						const countryIsos = toolResult.countries.map(c => c.ISO_A3);
+						highlightCondition = (layer) => {
+							const layerIso = layer.feature.properties.ISO_A3;
+							return countryIsos.includes(layerIso);
+						};
+					}
+					
+				} catch (error) {
+					debugLog(`Error executing tool ${name}:`, error);
+					finalResponse += `<div class="error">Tool ${name} failed: ${error.message}</div>`;
+				}
+			}
+			
+			const toolTime = performanceMonitor.end('tool-execution');
+			const totalTime = performanceMonitor.end('total-tool-processing');
+			
+			// Add performance info
+			finalResponse += `
+				<div class="tool-performance">
+					<small>⚡ LLM: ${llmTime.toFixed(0)}ms, Tools: ${toolTime.toFixed(0)}ms, Total: ${totalTime.toFixed(0)}ms</small>
+				</div>
+			`;
+			
+		} else {
+			// No tool calls, just return the LLM response
+			finalResponse = `<div class="llm-response">${message.content}</div>`;
+		}
+
+		// Apply highlighting if we have a condition
+		if (highlightCondition) {
+			const highlightedCount = highlightCountries(highlightCondition);
+			finalResponse += `<div class="highlight-info">${highlightedCount} countries highlighted on map</div>`;
+		}
+
+		uiService.updateMessage(finalResponse);
+
+	} catch (error) {
+		console.error("Error processing query with tools:", error);
+		const errorMessage = `<div class='error'>Error using advanced tools: ${error.message}<br><br>Falling back to standard query processing...</div>`;
+		uiService.updateMessage(errorMessage);
+		
+		// Fallback to regular processing
+		setTimeout(() => processQuery(), 1000);
+	}
+}
+
 // Create debounced version for input events
 export const debouncedProcessQuery = debounce(processQuery, 300);
+export const debouncedProcessQueryWithTools = debounce(processQueryWithTools, 300);
 
 export async function processQuery() {
 	if (!engine) {
-		updateMessage(
+		uiService.updateMessage(
 			"<div class='error'>WebLLM is not initialized. Please initialize it first.</div>"
 		);
 		return;
@@ -213,7 +482,7 @@ export async function processQuery() {
         const query = document.getElementById("query-input").value.trim();
         
         if (!query) {
-        	updateMessage("<div class='error'>Please enter a question about countries.</div>");
+        	uiService.updateMessage("<div class='error'>Please enter a question about countries.</div>");
         	return;
         }
         
@@ -225,12 +494,12 @@ export async function processQuery() {
         
         if (cachedResult) {
         	debugLog("Using cached result for query:", query);
-        	updateMessage(cachedResult.message);
+        	uiService.updateMessage(cachedResult.message);
         	highlightCountries(cachedResult.highlightCondition);
         	return;
         }
         
-        updateMessage("<div class='processing'>🔍 Processing query...</div>");
+        uiService.updateMessage("<div class='processing'>🔍 Processing query...</div>");
         performanceMonitor.start('total-query-processing');
 
         try {
@@ -290,7 +559,7 @@ export async function processQuery() {
                 });
                 
                 debugLog("Query result:", queryResult);
-                updateMessage(resultMessage);
+                uiService.updateMessage(resultMessage);
 
 	} catch (error) {
 		console.error("Error processing query:", error);
@@ -311,7 +580,7 @@ export async function processQuery() {
 			}
 		}
 		errorMessage += "</div>";
-		updateMessage(errorMessage);
+		uiService.updateMessage(errorMessage);
 	}
 }
 
@@ -387,15 +656,15 @@ function createResultMessage(
 }
 
 export async function clearAllModelCache() {
-        for (const key of Object.keys(modelConfigs)) {
-                const modelId = modelConfigs[key].model_id;
+        for (const key of Object.keys(MODEL_CONFIGS)) {
+                const modelId = MODEL_CONFIGS[key].model_id;
                 try {
                         await deleteModelAllInfoInCache(modelId);
                 } catch (err) {
                         console.error(`Failed to clear cache for ${modelId}:`, err);
                 }
         }
-        updateMessage("<div>✅ All model caches cleared</div>");
+        uiService.updateMessage("<div>✅ All model caches cleared</div>");
 }
 
 export async function deleteModelCache(modelId) {
@@ -443,7 +712,7 @@ export async function deleteModelCache(modelId) {
 }
 
 export function getModelConfigs() {
-        return modelConfigs;
+        return MODEL_CONFIGS;
 }
 
 export async function checkModelCacheStatus(modelId) {
@@ -488,142 +757,14 @@ export function setCurrentActiveModel(modelId) {
 
 // Hardware detection for model recommendations
 export function detectHardwareCapabilities() {
-        const capabilities = {
-                ram: 'unknown',
-                cores: 'unknown', 
-                gpu: 'unknown',
-                connection: 'unknown'
-        };
-        
-        // RAM detection (only available in some browsers with certain flags)
-        if ('deviceMemory' in navigator) {
-                capabilities.ram = navigator.deviceMemory;
-        }
-        
-        // CPU cores detection
-        if ('hardwareConcurrency' in navigator) {
-                capabilities.cores = navigator.hardwareConcurrency;
-        }
-        
-        // Connection detection
-        if ('connection' in navigator && navigator.connection) {
-                capabilities.connection = navigator.connection.effectiveType || 'unknown';
-        }
-        
-        // Try to detect GPU capabilities
-        try {
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                if (gl) {
-                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        if (debugInfo) {
-                                capabilities.gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-                        }
-                }
-        } catch (e) {
-                // GPU detection failed, keep as 'unknown'
-        }
-        
-        return capabilities;
+	return HardwareRecommendation.detectCapabilities();
 }
 
+
 export function getModelRecommendation(hardware) {
-        const { ram, cores, connection, gpu } = hardware;
-        
-        // Calculate a hardware score for better recommendations
-        let hardwareScore = 0;
-        let limitations = [];
-        let strengths = [];
-        
-        // RAM scoring and analysis
-        if (ram && ram >= 16) {
-                hardwareScore += 40;
-                strengths.push(`${ram}GB RAM (Excellent)`);
-        } else if (ram && ram >= 8) {
-                hardwareScore += 25;
-                strengths.push(`${ram}GB RAM (Good)`);
-        } else if (ram && ram >= 4) {
-                hardwareScore += 15;
-                limitations.push(`${ram}GB RAM (Limited)`);
-        } else if (ram) {
-                hardwareScore += 5;
-                limitations.push(`${ram}GB RAM (Very Limited)`);
-        } else {
-                limitations.push("RAM unknown (assume limited)");
-        }
-        
-        // CPU scoring
-        if (cores && cores >= 8) {
-                hardwareScore += 20;
-                strengths.push(`${cores} CPU cores (Excellent)`);
-        } else if (cores && cores >= 4) {
-                hardwareScore += 15;
-                strengths.push(`${cores} CPU cores (Good)`);
-        } else if (cores && cores >= 2) {
-                hardwareScore += 10;
-                limitations.push(`${cores} CPU cores (Basic)`);
-        } else if (cores) {
-                hardwareScore += 5;
-                limitations.push(`${cores} CPU core (Limited)`);
-        }
-        
-        // GPU detection bonus
-        if (gpu && gpu !== 'unknown' && !gpu.includes('Software')) {
-                hardwareScore += 10;
-                strengths.push("Hardware GPU detected");
-        }
-        
-        // Connection speed consideration
-        let connectionAdjustment = "";
-        if (connection === '4g' || connection === '5g') {
-                strengths.push(`${connection.toUpperCase()} connection (Fast)`);
-        } else if (connection === '3g') {
-                limitations.push("3G connection (Slow downloads)");
-                hardwareScore -= 10;
-                connectionAdjustment = " Consider starting with smaller model due to slow connection.";
-        } else if (connection === 'slow-2g' || connection === '2g') {
-                limitations.push("2G connection (Very slow downloads)");
-                hardwareScore -= 20;
-                connectionAdjustment = " Strongly recommend smallest model due to very slow connection.";
-        }
-        
-        // Determine recommendation based on score
-        let recommended, reason, confidence;
-        
-        if (hardwareScore >= 60) {
-                recommended = "Llama-3.1-8B-Instruct-q4f16_1-MLC";
-                confidence = "High";
-                reason = `🚀 Your hardware is excellent! The most powerful model should run smoothly.${connectionAdjustment}`;
-        } else if (hardwareScore >= 40) {
-                recommended = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
-                confidence = "Medium-High";
-                reason = `⚡ Good hardware detected. Balanced model offers great performance without overloading your system.${connectionAdjustment}`;
-        } else if (hardwareScore >= 25) {
-                recommended = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
-                confidence = "Medium";
-                reason = `💡 Moderate hardware detected. Efficient model provides good results with reasonable resource usage.${connectionAdjustment}`;
-        } else {
-                recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-                confidence = "Conservative";
-                reason = `🔋 Optimized for your hardware. Fastest model ensures smooth operation on your device.${connectionAdjustment}`;
-        }
-        
-        // Override for very slow connections regardless of other hardware
-        if (connection === 'slow-2g' || connection === '2g') {
-                recommended = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-                reason = "🐌 Very slow connection detected. Starting with smallest model (650MB) for faster download.";
-                confidence = "Connection-Limited";
-        }
-        
-        return { 
-                modelId: recommended, 
-                reason, 
-                confidence,
-                hardwareScore,
-                strengths,
-                limitations
-        };
+	return HardwareRecommendation.getRecommendation(hardware);
 }
+
 
 // Debug function to inspect browser storage
 export async function debugBrowserStorage() {
