@@ -24,3 +24,9 @@ build/
 # Temporary files
 *.tmp
 *.temp
+
+# GitHub Pages deployment
+github-pages-deploy-action-temp-deployment-folder/
+
+# Performance test results (exclude from deployment)
+tests/performance/results/

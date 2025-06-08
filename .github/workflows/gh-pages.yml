@@ -24,3 +24,4 @@ jobs:
           folder: ./
           clean-exclude: pr-preview/
           force: false
+          rsync-options: --exclude=tests/ --exclude=node_modules/ --exclude=scripts/ --exclude=coverage/ --exclude=.github/ --exclude=.gitignore --exclude=package.json --exclude=package-lock.json --exclude=CLAUDE.md
