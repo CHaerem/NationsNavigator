@@ -13,7 +13,8 @@ js/
 │   ├── MessageDisplayComponent.js
 │   ├── SearchBarComponent.js
 │   ├── SettingsModalComponent.js
-│   └── DownloadModalComponent.js
+│   ├── DownloadModalComponent.js
+│   └── PerformanceDashboard.js     # Performance measurement interface
 ├── services/           # Service Layer
 │   └── UIService.js
 ├── config/            # Configuration Modules
@@ -21,9 +22,12 @@ js/
 ├── main.js            # Application Bootstrap
 ├── map.js             # Geospatial Visualization
 ├── data.js            # Data Management Layer
-├── llm.js             # AI Integration
+├── llm.js             # Enhanced AI Integration
 ├── utils.js           # Utility Functions
-└── debug.js           # Development Utilities
+├── debug.js           # Development Utilities
+├── QueryAnalyzer.js   # Query analysis and intent classification
+├── CountryTools.js    # Function calling tools for advanced operations
+└── PerformanceBenchmark.js  # Performance measurement and validation
 ```
 
 ## Core Modules
@@ -47,12 +51,15 @@ js/
 - Implements data validation and error handling for country lookups
 - Manages country data caching and statistics
 
-### `llm.js` - AI Integration
+### `llm.js` - Enhanced AI Integration
 - Manages WebLLM model lifecycle (loading, inference, cleanup)
-- Converts natural language queries to SQL using advanced prompt engineering
+- **JSON Mode**: Structured outputs with metadata and confidence scores
+- **Enhanced SQL Generation**: Advanced prompt engineering with query analysis integration
+- **Function Calling**: processQueryWithTools for complex multi-step operations
 - Supports multiple LLM models with configurable context windows
 - Handles model switching, caching, and performance optimization
 - Provides hardware capability detection and model recommendations
+- Implements graceful fallbacks and error handling for reliability
 
 ### `utils.js` - Utility Functions
 - Shared utility functions and helper methods
@@ -88,8 +95,10 @@ js/
 - Provides consistent messaging interface across the application
 
 ### `components/SearchBarComponent.js`
-- Handles search input field and query submission
-- Manages search state and user interactions
+- Handles search input field and query submission with **dual query modes**
+- **Standard Mode** (Enter): Fast SQL-based queries for simple questions
+- **Advanced Mode** (Shift+Enter): Function calling with tools for complex analysis
+- Manages search state and user interactions with keyboard shortcuts
 - Provides input validation and query preprocessing
 
 ### `components/SettingsModalComponent.js`
@@ -101,6 +110,12 @@ js/
 - Controls model download interface and workflow
 - Provides hardware recommendations and model information
 - Manages download progress and status updates
+
+### `components/PerformanceDashboard.js`
+- Interactive performance measurement and benchmarking interface
+- Real-time testing of query analysis accuracy and response times
+- Export capabilities for detailed performance analysis
+- Visual analytics with charts and metrics for optimization insights
 
 ## Service Layer
 
@@ -117,6 +132,29 @@ js/
 - Hardware recommendation algorithms and model specifications
 - Performance optimization settings and model parameters
 
+## 🚀 Advanced LLM Modules
+
+### `QueryAnalyzer.js` - Query Analysis and Intent Classification
+- **Intent Classification**: Categorizes queries (geographic, population, language, flag, complex)
+- **Entity Extraction**: Identifies regions, countries, languages, colors, and numerical values
+- **Complexity Assessment**: Routes simple vs complex queries to optimal processing methods
+- **Confidence Scoring**: Provides reliability metrics for query understanding
+- **Suggestion System**: Offers query improvement recommendations
+
+### `CountryTools.js` - Function Calling Tools
+Advanced tools for complex country data operations:
+- **search_countries**: Filter by region, population, language, flag colors, currency
+- **get_country_details**: Retrieve comprehensive information for specific countries
+- **compare_countries**: Side-by-side analysis of multiple countries across metrics
+- **get_statistics**: Calculate rankings, totals, and statistical summaries
+- **Result Formatting**: Structured output formatting for UI display
+
+### `PerformanceBenchmark.js` - Performance Measurement and Validation
+- **Comprehensive Benchmarking**: Test query analysis, SQL generation, and tool usage
+- **Before/After Comparisons**: Measure improvements from standard vs enhanced processing
+- **Legacy Compatibility**: Maintains backward compatibility with existing performance tests
+- **Integration with New System**: Connects to structured performance evaluation framework
+
 ## Architecture Patterns
 
 - **Component-Based Architecture**: Modular UI components with clear responsibilities
@@ -125,7 +163,7 @@ js/
 - **Service Layer Pattern**: Abstraction layer for cross-module communication
 - **Dependency Injection**: UIManager and services coordinate component initialization
 - **Graceful Degradation**: Fallback behavior when components aren't initialized
-- **Legacy Compatibility**: Maintains backwards compatibility through function exports
+- **Clean Architecture**: Legacy code removed, modern patterns throughout
 
 ## Testing Strategy
 
