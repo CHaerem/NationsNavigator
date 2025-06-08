@@ -3,7 +3,7 @@ import { MessageDisplayComponent } from './MessageDisplayComponent.js';
 import { SearchBarComponent } from './SearchBarComponent.js';
 import { SettingsModalComponent } from './SettingsModalComponent.js';
 import { DownloadModalComponent } from './DownloadModalComponent.js';
-import { PerformanceDashboard } from './PerformanceDashboard.js';
+// Dynamic import for development-only performance dashboard
 import { resetMap } from '../main.js';
 
 export class UIManager {
@@ -22,12 +22,17 @@ export class UIManager {
 			this.components.searchBar = new SearchBarComponent(onQuerySubmit, onAdvancedQuerySubmit);
 			this.components.settingsModal = new SettingsModalComponent();
 			this.components.downloadModal = new DownloadModalComponent();
-			this.components.performanceDashboard = new PerformanceDashboard();
+			
+			// Performance dashboard will be initialized later if available
+			this.components.performanceDashboard = null;
 
-			// Initialize all components
-			Object.values(this.components).forEach(component => {
+			// Initialize all components (except performance dashboard)
+			Object.values(this.components).filter(c => c !== null).forEach(component => {
 				component.init();
 			});
+			
+			// Try to load performance dashboard asynchronously
+			this.initPerformanceDashboard();
 
 			// Store component instances on DOM elements for global access
 			this.storeComponentInstances();
@@ -153,9 +158,23 @@ export class UIManager {
 		}
 	}
 
+	async initPerformanceDashboard() {
+		try {
+			// Dynamic import to avoid 404 in production
+			const { PerformanceDashboard } = await import('./PerformanceDashboard.js');
+			this.components.performanceDashboard = new PerformanceDashboard();
+			this.components.performanceDashboard.init();
+		} catch (e) {
+			// Performance dashboard not available in production - silently continue
+			this.components.performanceDashboard = null;
+		}
+	}
+
 	showPerformanceDashboard() {
 		if (this.isInitialized && this.components.performanceDashboard) {
 			this.components.performanceDashboard.show();
+		} else {
+			console.log("Performance dashboard not available in production build");
 		}
 	}
 
