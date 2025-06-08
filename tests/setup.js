@@ -1,5 +1,10 @@
 // Test setup file
 import { jest } from "@jest/globals";
+import { TextEncoder, TextDecoder } from "util";
+
+// Polyfill TextEncoder and TextDecoder for jsdom environment
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Mock fetch globally with proper responses
 global.fetch = jest.fn((url) => {

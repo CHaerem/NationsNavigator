@@ -1,33 +1,82 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
-import {
-	highlightCountries,
-	resetMap,
-	highlightCountry,
-	_setGeojsonLayerForTesting,
-} from "../js/map.js";
 
 // Mock the data module
-jest.mock("../js/data.js", () => ({
+jest.unstable_mockModule("../js/data.js", () => ({
 	getCountryData: jest.fn(() => ({
 		USA: { name: "United States", ISO_A3: "USA", region: "Americas" },
 		GBR: { name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
 		IRL: { name: "Ireland", ISO_A3: "IRL", region: "Europe" },
 		FRA: { name: "France", ISO_A3: "FRA", region: "Europe" },
 	})),
+	fetchCountryData: jest.fn(() => Promise.resolve()),
+	isDataLoaded: jest.fn(() => true),
+	executeQuery: jest.fn(() => [])
 }));
 
-// Mock the ui module
-jest.mock("../js/ui.js", () => ({
+// Mock the main module for UI functions
+jest.unstable_mockModule("../js/main.js", () => ({
 	updateCountryInfo: jest.fn(),
 	updateMessage: jest.fn(),
+	processQuery: jest.fn(),
+	resetMap: jest.fn(),
+	highlightCountry: jest.fn(),
+}));
+
+// Mock the UIService to prevent circular dependency issues
+jest.unstable_mockModule("../js/services/UIService.js", () => ({
+	uiService: {
+		updateMessage: jest.fn(),
+		updateLLMStatus: jest.fn(),
+		updateCountryInfo: jest.fn(),
+		setUIManager: jest.fn()
+	}
 }));
 
 describe("Map Module", () => {
 	let mockLayers;
 	let mockGeojsonLayer;
+	let highlightCountries, resetMap, highlightCountry, _setGeojsonLayerForTesting;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		jest.clearAllMocks();
+		
+		// Mock Leaflet
+		global.L = {
+			map: jest.fn(() => ({
+				center: jest.fn(),
+				zoom: jest.fn(),
+				setView: jest.fn(),
+				fitBounds: jest.fn(),
+				on: jest.fn(), // Add the missing on method
+				off: jest.fn(),
+				addLayer: jest.fn(),
+				removeLayer: jest.fn()
+			})),
+			tileLayer: jest.fn(() => ({
+				addTo: jest.fn()
+			})),
+			geoJSON: jest.fn(() => ({
+				addTo: jest.fn(),
+				eachLayer: jest.fn(),
+				getLayers: jest.fn(() => [])
+			}))
+		};
+		
+		// Mock fetch for GeoJSON data
+		global.fetch = jest.fn(() => Promise.resolve({
+			ok: true,
+			json: () => Promise.resolve({
+				type: "FeatureCollection",
+				features: []
+			})
+		}));
+		
+		// Import the functions we want to test
+		const mapModule = await import("../js/map.js");
+		highlightCountries = mapModule.highlightCountries;
+		resetMap = mapModule.resetMap;
+		highlightCountry = mapModule.highlightCountry;
+		_setGeojsonLayerForTesting = mapModule._setGeojsonLayerForTesting;
 
 		// Create mock layers with different countries
 		mockLayers = [
@@ -89,9 +138,6 @@ describe("Map Module", () => {
 	});
 
 	test("should highlight countries based on condition function", async () => {
-		// Import map module after setting up mocks
-		const { highlightCountries } = await import("../js/map.js");
-
 		// Condition to highlight European countries
 		const condition = (layer) => {
 			const iso = layer.feature.properties.ISO_A3;
@@ -122,8 +168,6 @@ describe("Map Module", () => {
 	});
 
 	test("should return 0 when no countries match condition", async () => {
-		const { highlightCountries } = await import("../js/map.js");
-
 		// Condition that matches no countries
 		const condition = (layer) => {
 			const iso = layer.feature.properties.ISO_A3;
@@ -146,8 +190,6 @@ describe("Map Module", () => {
 	});
 
 	test("should handle countries with no data gracefully", async () => {
-		const { highlightCountries } = await import("../js/map.js");
-
 		// Condition that would match unknown country
 		const condition = (layer) => {
 			const iso = layer.feature.properties.ISO_A3;
@@ -164,8 +206,6 @@ describe("Map Module", () => {
 		// Use the test helper to set geojsonLayer to null
 		_setGeojsonLayerForTesting(null);
 
-		const { highlightCountries } = await import("../js/map.js");
-
 		const condition = () => true;
 		const highlightedCount = highlightCountries(condition);
 
@@ -175,8 +215,6 @@ describe("Map Module", () => {
 	});
 
 	test("should reset map by clearing all highlights", async () => {
-		const { resetMap } = await import("../js/map.js");
-
 		resetMap();
 
 		expect(mockGeojsonLayer.eachLayer).toHaveBeenCalled();
@@ -188,10 +226,8 @@ describe("Map Module", () => {
 
 	test("should highlight specific country by ISO code", async () => {
 		// Reset the map state first
-		const { _resetForTesting, _setGeojsonLayerForTesting } = await import(
-			"../js/map.js"
-		);
-		_resetForTesting();
+		const mapModule = await import("../js/map.js");
+		mapModule._resetForTesting();
 
 		// Create a specific mock for the map instance with fitBounds
 		const mockMapInstance = {
@@ -205,13 +241,12 @@ describe("Map Module", () => {
 		global.L.map.mockReturnValue(mockMapInstance);
 
 		// Import and initialize map to get the mockMapInstance as the local map
-		const { initMap, highlightCountry } = await import("../js/map.js");
-		await initMap(); // This will create the map with our mock
+		await mapModule.initMap(); // This will create the map with our mock
 
 		// Set the geojsonLayer mock
 		_setGeojsonLayerForTesting(mockGeojsonLayer);
 
-		highlightCountry("GBR");
+		mapModule.highlightCountry("GBR");
 
 		expect(mockGeojsonLayer.eachLayer).toHaveBeenCalled();
 		expect(mockLayers[1].bringToFront).toHaveBeenCalled();
@@ -224,8 +259,6 @@ describe("Map Module", () => {
 	});
 
 	test("should preserve selected country color when highlighting others", async () => {
-		const { highlightCountries } = await import("../js/map.js");
-
 		// Set one country as selected
 		mockLayers[0].options.fillColor = "#0ea5e9"; // SELECTED color
 
@@ -254,8 +287,8 @@ describe("Map Module", () => {
 	});
 
 	test("should configure map with proper world wrapping settings", async () => {
-		const { _resetForTesting } = await import("../js/map.js");
-		_resetForTesting();
+		const mapModule = await import("../js/map.js");
+		mapModule._resetForTesting();
 
 		// Mock L.map to capture configuration
 		const mockMapInstance = {
@@ -277,8 +310,7 @@ describe("Map Module", () => {
 		};
 		global.L.tileLayer.mockReturnValue(mockTileLayer);
 
-		const { initMap } = await import("../js/map.js");
-		await initMap();
+		await mapModule.initMap();
 
 		// Verify map configuration supports world wrapping
 		expect(mapConfig).toHaveProperty('worldCopyJump');

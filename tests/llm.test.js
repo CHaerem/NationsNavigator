@@ -1,6 +1,41 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
 import { mockEngine } from "./__mocks__/webllm.js";
 
+// Mock WebLLM module before any imports
+jest.unstable_mockModule("https://esm.run/@mlc-ai/web-llm", () => ({
+	CreateMLCEngine: jest.fn(),
+	deleteModelAllInfoInCache: jest.fn(() => Promise.resolve()),
+	hasModelInCache: jest.fn(() => Promise.resolve(true))
+}));
+
+// Mock the data module to prevent AlaSQL initialization
+jest.unstable_mockModule("../js/data.js", () => ({
+	executeQuery: jest.fn(() => []),
+	fetchCountryData: jest.fn(() => Promise.resolve()),
+	isDataLoaded: jest.fn(() => true),
+	getAvailableStats: jest.fn(() => ["name", "ISO_A3", "region", "population"]),
+	getExampleCountry: jest.fn(() => ({ name: "France", ISO_A3: "FRA", region: "Europe" })),
+	getCountryData: jest.fn(() => ({})),
+	clearCountryData: jest.fn()
+}));
+
+// Mock the map module to prevent Leaflet initialization
+jest.unstable_mockModule("../js/map.js", () => ({
+	highlightCountries: jest.fn(),
+	clearHighlights: jest.fn(),
+	initMap: jest.fn(() => Promise.resolve())
+}));
+
+// Mock the UIService to prevent circular dependency issues
+jest.unstable_mockModule("../js/services/UIService.js", () => ({
+	uiService: {
+		updateMessage: jest.fn(),
+		updateLLMStatus: jest.fn(),
+		updateCountryInfo: jest.fn(),
+		setUIManager: jest.fn()
+	}
+}));
+
 describe("LLM Module", () => {
         let generateSQLQuery, processQuery, clearAllModelCache;
 
@@ -39,6 +74,14 @@ describe("LLM Module", () => {
 		// Mock performance
 		global.performance = {
 			now: jest.fn(() => 1000),
+		};
+
+		// Mock caches API for model cache tests
+		global.caches = {
+			keys: jest.fn(() => Promise.resolve([])),
+			open: jest.fn(() => Promise.resolve({
+				keys: jest.fn(() => Promise.resolve([]))
+			}))
 		};
 
 		// Reset WebLLM mock

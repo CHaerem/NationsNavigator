@@ -1,64 +1,37 @@
 import { CreateMLCEngine, deleteModelAllInfoInCache } from "https://esm.run/@mlc-ai/web-llm";
-import { updateLLMStatus, updateMessage } from "./ui.js";
+import { uiService } from "./services/UIService.js";
 import { highlightCountries } from "./map.js";
 import { getAvailableStats, getExampleCountry, executeQuery } from "./data.js";
 import { debugLog, debugTime, debugTimeEnd } from "./debug.js";
 import { retryOperation, createRetryButton, formatError, isOnline, QueryCache, PerformanceMonitor, debounce } from "./utils.js";
+import { MODEL_CONFIGS, DEFAULT_MODEL, HardwareRecommendation } from "./config/ModelConfig.js";
 
 let engine;
 const queryCache = new QueryCache();
 const performanceMonitor = new PerformanceMonitor();
 
-const modelConfigs = {
-	"Llama-3.1-8B-Instruct-q4f16_1-MLC": {
-		model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 5100, // ~5.1 GB
-		description: "Llama-3.1-8B 💪 (Most Powerful)",
-	},
-	"Llama-3.2-3B-Instruct-q4f16_1-MLC": {
-		model_id: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 1800, // ~1.8 GB
-		description: "Llama-3.2-3B 🧠 (Balanced)",
-	},
-	"Llama-3.2-1B-Instruct-q4f16_1-MLC": {
-		model_id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 650, // ~650 MB
-		description: "Llama-3.2-1B ⚡ (Fastest)",
-	},
-	"Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
-		model_id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-		context_window_size: 2048,
-		size_mb: 950, // ~950 MB
-		description: "Qwen2.5-1.5B 🚀 (Efficient)",
-	},
-};
-
 export async function initWebLLM(selectedModel) {
 	// Provide default model if none selected (important for testing)
-	const defaultModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-	const modelKey = selectedModel || defaultModel;
-	const modelConfig = modelConfigs[modelKey];
+	const modelKey = selectedModel || DEFAULT_MODEL;
+	const modelConfig = MODEL_CONFIGS[modelKey];
 
 	if (!modelConfig) {
 		console.error(`Unknown model: ${modelKey}`);
-		updateLLMStatus("Failed to initialize WebLLM - Unknown model");
+		uiService.updateLLMStatus("Failed to initialize WebLLM - Unknown model");
 		return;
 	}
 
 	// Check network status and warn if offline (but still try to initialize)
 	if (!isOnline()) {
-		updateLLMStatus("⚠️ Offline mode - trying to use cached model files");
-		updateMessage("<div class='processing'>⚠️ No internet connection. Attempting to load model from browser cache...</div>");
+		uiService.updateLLMStatus("⚠️ Offline mode - trying to use cached model files");
+		uiService.updateMessage("<div class='processing'>⚠️ No internet connection. Attempting to load model from browser cache...</div>");
 	}
 
 	const initProgressCallback = (progressObj) => {
 		const progressText = `Initializing WebLLM: ${
 			progressObj.text
 		} (${progressObj.progress.toFixed(2)}%)`;
-		updateLLMStatus(progressText);
+		uiService.updateLLMStatus(progressText);
 	};
 
 	const initializeEngine = async () => {
@@ -73,9 +46,9 @@ export async function initWebLLM(selectedModel) {
 
         try {
                 await retryOperation(initializeEngine, 2, 2000);
-                updateLLMStatus("✅ WebLLM ready");
+                uiService.updateLLMStatus("✅ WebLLM ready");
                 if (!isOnline()) {
-                	updateMessage("✅ Model loaded successfully from cache! The app is fully functional offline.");
+                	uiService.updateMessage("✅ Model loaded successfully from cache! The app is fully functional offline.");
                 }
         } catch (error) {
                 console.error("Error initializing WebLLM:", error);
@@ -96,8 +69,8 @@ export async function initWebLLM(selectedModel) {
                 const retryBtn = createRetryButton(() => initWebLLM(selectedModel), "🔄 Retry WebLLM");
                 errorMessage += `<br>${retryBtn}`;
                 
-                updateLLMStatus("❌ WebLLM initialization failed");
-                updateMessage(`<div class='error'>${errorMessage}</div>`);
+                uiService.updateLLMStatus("❌ WebLLM initialization failed");
+                uiService.updateMessage(`<div class='error'>${errorMessage}</div>`);
         }
 }
 
@@ -204,7 +177,7 @@ export const debouncedProcessQuery = debounce(processQuery, 300);
 
 export async function processQuery() {
 	if (!engine) {
-		updateMessage(
+		uiService.updateMessage(
 			"<div class='error'>WebLLM is not initialized. Please initialize it first.</div>"
 		);
 		return;
@@ -213,7 +186,7 @@ export async function processQuery() {
         const query = document.getElementById("query-input").value.trim();
         
         if (!query) {
-        	updateMessage("<div class='error'>Please enter a question about countries.</div>");
+        	uiService.updateMessage("<div class='error'>Please enter a question about countries.</div>");
         	return;
         }
         
@@ -225,12 +198,12 @@ export async function processQuery() {
         
         if (cachedResult) {
         	debugLog("Using cached result for query:", query);
-        	updateMessage(cachedResult.message);
+        	uiService.updateMessage(cachedResult.message);
         	highlightCountries(cachedResult.highlightCondition);
         	return;
         }
         
-        updateMessage("<div class='processing'>🔍 Processing query...</div>");
+        uiService.updateMessage("<div class='processing'>🔍 Processing query...</div>");
         performanceMonitor.start('total-query-processing');
 
         try {
@@ -290,7 +263,7 @@ export async function processQuery() {
                 });
                 
                 debugLog("Query result:", queryResult);
-                updateMessage(resultMessage);
+                uiService.updateMessage(resultMessage);
 
 	} catch (error) {
 		console.error("Error processing query:", error);
@@ -311,7 +284,7 @@ export async function processQuery() {
 			}
 		}
 		errorMessage += "</div>";
-		updateMessage(errorMessage);
+		uiService.updateMessage(errorMessage);
 	}
 }
 
@@ -387,15 +360,15 @@ function createResultMessage(
 }
 
 export async function clearAllModelCache() {
-        for (const key of Object.keys(modelConfigs)) {
-                const modelId = modelConfigs[key].model_id;
+        for (const key of Object.keys(MODEL_CONFIGS)) {
+                const modelId = MODEL_CONFIGS[key].model_id;
                 try {
                         await deleteModelAllInfoInCache(modelId);
                 } catch (err) {
                         console.error(`Failed to clear cache for ${modelId}:`, err);
                 }
         }
-        updateMessage("<div>✅ All model caches cleared</div>");
+        uiService.updateMessage("<div>✅ All model caches cleared</div>");
 }
 
 export async function deleteModelCache(modelId) {
@@ -443,7 +416,7 @@ export async function deleteModelCache(modelId) {
 }
 
 export function getModelConfigs() {
-        return modelConfigs;
+        return MODEL_CONFIGS;
 }
 
 export async function checkModelCacheStatus(modelId) {
@@ -488,6 +461,10 @@ export function setCurrentActiveModel(modelId) {
 
 // Hardware detection for model recommendations
 export function detectHardwareCapabilities() {
+	return HardwareRecommendation.detectCapabilities();
+}
+
+function _legacyDetectHardwareCapabilities() {
         const capabilities = {
                 ram: 'unknown',
                 cores: 'unknown', 
@@ -528,6 +505,10 @@ export function detectHardwareCapabilities() {
 }
 
 export function getModelRecommendation(hardware) {
+	return HardwareRecommendation.getRecommendation(hardware);
+}
+
+function _legacyGetModelRecommendation(hardware) {
         const { ram, cores, connection, gpu } = hardware;
         
         // Calculate a hardware score for better recommendations
