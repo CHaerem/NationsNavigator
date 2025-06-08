@@ -1,5 +1,5 @@
 import { getCountryData } from "./data.js";
-import { updateCountryInfo, updateMessage } from "./main.js";
+import { uiService } from "./services/UIService.js";
 import { debugLog } from "./debug.js";
 
 let map, geojsonLayer;
@@ -227,7 +227,7 @@ function handleCountryClick(iso, layer) {
 	if (layer.options.fillColor === COLORS.SELECTED) {
 		// Deselect all copies of this country
 		deselectAllCopiesOfCountry(originalISO);
-		updateCountryInfo(null);
+		uiService.updateCountryInfo(null);
 	} else {
 		// Deselect any currently selected countries (including all their copies)
 		geojsonLayer.eachLayer((l) => {
@@ -239,7 +239,7 @@ function handleCountryClick(iso, layer) {
 		});
 		// Select all copies of the new country
 		selectAllCopiesOfCountry(originalISO);
-		updateCountryInfo(props);
+		uiService.updateCountryInfo(props);
 	}
 }
 
@@ -331,8 +331,8 @@ export function resetMap() {
 		});
 	});
 	
-	updateCountryInfo(null);
-	updateMessage("");
+	uiService.updateCountryInfo(null);
+	uiService.updateMessage("");
 	
 	// Clear search input
 	const queryInput = document.getElementById("query-input");
