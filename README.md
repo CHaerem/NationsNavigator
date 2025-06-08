@@ -30,10 +30,13 @@ The entire AI processing happens in-browser without external API calls, ensuring
 .
 ├── index.html       # Main HTML entry point
 ├── styles.css       # Global styling
-├── js/              # JavaScript modules
+├── js/              # Core JavaScript modules
+│   ├── components/  # UI component classes
+│   ├── services/    # Service layer modules
+│   └── config/      # Configuration modules
 ├── data/            # Country data JSON
 ├── scripts/         # Python utilities
-├── tests/           # Jest test suite
+├── tests/           # Jest test suite with mocks
 ├── package.json     # npm configuration
 └── README.md        # Project overview
 ```
@@ -42,13 +45,27 @@ Each folder includes its own README with additional details about the contents.
 
 ## 🏗️ Architecture
 
-### Module Design
+### Component-Based Architecture
+NationsNavigator uses a modern component-based architecture for maintainable and scalable code:
+
+#### Core Modules
 - **main.js**: Application orchestration and initialization flow
 - **map.js**: Leaflet integration with country highlighting and geospatial event handling
 - **llm.js**: WebLLM model management and natural language to SQL conversion
 - **data.js**: AlaSQL database operations and country data management
-- **ui.js**: DOM manipulation and user interaction event handling
 - **utils.js**: Shared utility functions and helper methods
+
+#### UI Components
+- **UIManager.js**: Central coordinator for all UI components and lifecycle management
+- **BaseComponent.js**: Base class providing common functionality for all UI components
+- **CountryInfoComponent.js**: Country information display and interaction
+- **MessageDisplayComponent.js**: Status messages and user feedback display
+- **SearchBarComponent.js**: Search input handling and query submission
+- **SettingsModalComponent.js**: Settings modal management and configuration
+- **DownloadModalComponent.js**: Model download interface and hardware recommendations
+
+#### Service Layer
+- **UIService.js**: Service layer for UI operations, resolving circular dependencies between modules
 
 ### Data Flow
 ```

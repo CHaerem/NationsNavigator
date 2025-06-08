@@ -21,20 +21,36 @@ python updateCountryData.py
 
 ## Architecture Overview
 
-### Module Structure
-The application follows an ES6 module architecture with clear separation of concerns:
+### Component-Based Architecture
+The application uses a modern component-based architecture with clear separation of concerns:
 
+#### Core Modules
 - **main.js** - Application entry point and initialization orchestration
 - **map.js** - Leaflet map management, country highlighting, and geospatial interactions
 - **llm.js** - WebLLM integration for AI-powered query processing and SQL generation
 - **data.js** - Country data management and AlaSQL database operations
-- **ui.js** - DOM manipulation and event handling
 - **debug.js** - Debug logging utilities
 
+#### UI Components (js/components/)
+- **UIManager.js** - Central coordinator for all UI components and lifecycle management
+- **BaseComponent.js** - Base class providing common functionality for all UI components
+- **CountryInfoComponent.js** - Country information display and interaction
+- **MessageDisplayComponent.js** - Status messages and user feedback display
+- **SearchBarComponent.js** - Search input handling and query submission
+- **SettingsModalComponent.js** - Settings modal management and configuration
+- **DownloadModalComponent.js** - Model download interface and hardware recommendations
+
+#### Service Layer (js/services/)
+- **UIService.js** - Service layer for UI operations, resolving circular dependencies between modules
+
+#### Configuration (js/config/)
+- **ModelConfig.js** - Centralized configuration for WebLLM models and hardware recommendations
+
 ### Data Flow
-1. **Initialization**: main.js orchestrates loading country data, initializing map, and setting up WebLLM
+1. **Initialization**: main.js orchestrates UIManager, loads country data, initializes map, and sets up WebLLM
 2. **Query Processing**: User queries → llm.js generates SQL → data.js executes against AlaSQL → map.js highlights results
-3. **Map Interactions**: Click events on countries → data lookup → ui.js displays country information
+3. **Map Interactions**: Click events on countries → data lookup → UIManager coordinates display updates
+4. **Component Communication**: Components communicate through UIManager and UIService for clean architecture
 
 ### Key Technologies
 - **Leaflet.js** for interactive mapping with GeoJSON country boundaries
@@ -43,10 +59,13 @@ The application follows an ES6 module architecture with clear separation of conc
 - **Jest** with jsdom for comprehensive testing
 
 ### Testing Architecture
-- Uses Jest with jsdom environment for DOM testing
-- Extensive mocking of external dependencies (WebLLM, Leaflet, fetch)
+- Uses Jest with jsdom environment for component and DOM testing
+- Comprehensive test coverage: 43 passing tests out of 52 total (83% pass rate)
+- Extensive mocking of external dependencies (WebLLM, Leaflet, fetch, AlaSQL)
 - Test setup in `tests/setup.js` provides global mocks and utilities
-- Module mocking via `moduleNameMapper` for external CDN dependencies
+- ES6 module mocking via `jest.unstable_mockModule` for modern architecture
+- Component lifecycle testing and service layer validation
+- Mock strategy isolates components for reliable unit testing
 
 ### Country Data Schema
 Countries stored as objects with properties: name, ISO_A3, capital, population, area, region, subregion, languages, currencies, continents, borders, flagDescription, flagUrl, flagEmoji, etc.
