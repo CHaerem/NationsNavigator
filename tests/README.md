@@ -23,29 +23,36 @@ npm run test:coverage
 
 ## Test Coverage
 
-Current test coverage: **43 passing tests out of 52 total (83% pass rate)**
+Current test coverage: **47 passing tests out of 60 total (78% pass rate)**
 
 ### Test Breakdown by Module
 
 - ✅ **Data Operations**: 9/9 passing (100%)
-- ✅ **Map Functionality**: 10/10 passing (100%) 
-- ✅ **UI Legacy Functions**: 6/6 passing (100%)
-- ✅ **Model Cache Detection**: 8/8 passing (100%)
-- ✅ **Edge Cases Handling**: 7/7 passing (100%)
-- 🔧 **Advanced Modal Behavior**: 3/9 passing (in progress)
+- ✅ **Map Functionality**: 5/5 passing (100%) 
+- ✅ **Enhanced LLM Module**: 6/6 passing (100%)
+- ✅ **Model Cache Detection**: 5/5 passing (100%)
+- ✅ **Edge Cases Handling**: 9/9 passing (100%)
+- ✅ **Performance Benchmarking**: 1/1 passing (100%)
+- 🔧 **UI Components**: 8/12 passing (in progress)
+- 🔧 **Advanced Modal Behavior**: 4/13 passing (in progress)
 
 ## Test Files
 
 ### Core Module Tests
 - **`data.test.js`** - Country data loading, AlaSQL operations, error handling
 - **`map.test.js`** - Leaflet integration, country highlighting, geospatial interactions
-- **`llm.test.js`** - WebLLM integration, SQL generation, model management
-- **`ui.test.js`** - Legacy UI function delegation and component integration
+- **`llm.test.js`** - Enhanced WebLLM integration, structured outputs, function calling
+- **`ui.test.js`** - Component integration and modern UI patterns
 
 ### Specialized Tests  
 - **`model-cache.test.js`** - Model caching detection and WebLLM cache management
 - **`download-modal.test.js`** - Modal behavior, hardware recommendations, error handling
 - **`edge-cases-fixed.test.js`** - Regression tests for previously fixed edge cases
+- **`performance-benchmark.test.js`** - Performance measurement system validation
+
+### Performance Evaluation Tests
+- **`performance/integration-test.js`** - Structured performance evaluation system testing
+- Located in `tests/performance/` - comprehensive performance measurement framework
 
 ## Mock Strategy
 

@@ -190,13 +190,24 @@ Remember to run this magical update regularly to keep your world data sparkling!
 
 ## 🧪 Running Tests
 
-NationsNavigator includes a Jest test suite. Install dependencies once with `npm install` and then run:
+NationsNavigator includes a comprehensive Jest test suite and performance evaluation system:
 
+### Unit Tests
 ```bash
-npm test
+npm test                 # Run all tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage report
 ```
 
-This will execute all tests in the `tests/` directory.
+### Performance Testing
+```bash
+npm run perf:full        # Complete performance evaluation with all reports
+npm run perf:quick       # Quick performance test for development
+npm run perf:baseline    # Create baseline for comparison tracking
+npm run perf:compare     # Compare performance results between runs
+```
+
+All tests are located in the `tests/` directory, with performance evaluation in `tests/performance/`.
 
 ## 🛠️ Tech Stack
 
