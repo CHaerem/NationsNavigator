@@ -4,7 +4,7 @@ import { initWebLLM, processQuery, processQueryWithTools } from "./llm.js";
 import { UIManager } from "./components/UIManager.js";
 import { addNetworkListeners, isOnline } from "./utils.js";
 import { uiService } from "./services/UIService.js";
-import { runQuickPerformanceTest } from "./PerformanceBenchmark.js";
+// Dynamic import for development-only performance testing
 
 // Create UI manager instance
 const uiManager = new UIManager();
@@ -110,7 +110,15 @@ init();
 
 // Global functions for browser console access
 window.showPerformanceDashboard = () => uiManager.showPerformanceDashboard();
-window.runQuickPerformanceTest = runQuickPerformanceTest;
+window.runQuickPerformanceTest = async () => {
+	try {
+		const performanceModule = await import("./PerformanceBenchmark.js");
+		return performanceModule.runQuickPerformanceTest();
+	} catch (e) {
+		console.log("Performance testing not available in production build");
+		return null;
+	}
+};
 window.uiManager = uiManager;
 
 // Export functions that other modules need
