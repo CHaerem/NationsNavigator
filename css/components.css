@@ -371,17 +371,40 @@
   overflow-y: auto;
   overflow-x: hidden;
   touch-action: pan-y; /* Allow vertical scrolling on touch devices */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch !important; /* Force smooth scrolling on iOS */
   overscroll-behavior: contain; /* Prevent overscroll effects from propagating */
   min-height: 0; /* Important for flex children to allow shrinking */
   max-height: 300px; /* Force maximum height to enable scrolling */
+  /* iOS Safari specific fixes */
+  -webkit-transform: translateZ(0); /* Force hardware acceleration */
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: scroll-position; /* Optimize for scrolling */
 }
 
 /* Touch device specific styles */
 #info-panel.touch-device .panel-content {
-  touch-action: pan-y; /* Ensure vertical scrolling works on touch devices */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important; /* Ensure vertical scrolling works on touch devices */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  /* Additional iOS Safari fixes */
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  position: relative; /* Required for iOS hardware acceleration */
+  z-index: 1; /* Ensure proper layering */
+}
+
+/* iOS Safari specific momentum scrolling fix */
+@supports (-webkit-overflow-scrolling: touch) {
+  #info-panel.touch-device .panel-content {
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* Force iOS Safari momentum scrolling with vendor prefix variations */
+#info-panel.touch-device .panel-content,
+#info-panel.touch-device .panel-content::-webkit-scrollbar {
+  -webkit-overflow-scrolling: touch !important;
+  overflow-scrolling: touch !important;
 }
 
 /* Desktop mode - allow header dragging */
