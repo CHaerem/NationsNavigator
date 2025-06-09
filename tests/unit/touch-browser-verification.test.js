@@ -1,7 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
 
 // Import the global test setup
-import "./setup.js";
+import "../setup.js";
 
 // Browser Touch Verification Tests - Simplified and focused
 describe("Touch Browser Verification Tests", () => {

@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir -p deploy
           cp index.html deploy/
-          cp styles.css deploy/
+          cp -r css deploy/
           cp -r js deploy/
           cp -r data deploy/
           find deploy -name "PerformanceBenchmark.js" -delete

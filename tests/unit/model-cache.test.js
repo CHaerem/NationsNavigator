@@ -13,7 +13,7 @@ describe("Model Cache Detection", () => {
 		};
 
 		// Import the functions we want to test
-		const llmModule = await import("../js/llm.js");
+		const llmModule = await import("../../js/llm.js");
 		checkModelCacheStatus = llmModule.checkModelCacheStatus;
 		getModelConfigs = llmModule.getModelConfigs;
 	});

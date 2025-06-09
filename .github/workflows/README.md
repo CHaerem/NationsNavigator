@@ -15,7 +15,9 @@ This directory contains GitHub Actions workflows that automate deployment and pr
 **What it does**:
 
 - Checks out the repository code
-- Deploys the entire project folder to the `gh-pages` branch
+- Prepares deployment folder with production files (HTML, CSS, JS, data)
+- Excludes development and performance files from deployment
+- Deploys to the `gh-pages` branch with modular CSS structure
 - Preserves the `pr-preview/` directory to maintain pull request previews
 - Makes the application available at your GitHub Pages URL
 

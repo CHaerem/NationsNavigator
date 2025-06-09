@@ -44,14 +44,22 @@ The entire AI processing happens in-browser without external API calls, ensuring
 ```
 .
 ├── index.html       # Main HTML entry point
-├── styles.css       # Global styling
+├── css/             # Modular CSS architecture
+│   ├── base.css     # Base styles and typography
+│   ├── map.css      # Map-specific styling
+│   ├── components.css # UI component styles
+│   └── responsive.css # Mobile and touch optimizations
 ├── js/              # Core JavaScript modules
 │   ├── components/  # UI component classes
 │   ├── services/    # Service layer modules
 │   └── config/      # Configuration modules
 ├── data/            # Country data JSON
 ├── scripts/         # Python utilities
-├── tests/           # Jest test suite with mocks
+├── tests/           # Comprehensive test suite
+│   ├── unit/        # Fast unit tests (Jest)
+│   ├── integration/ # Complex integration tests (Jest)
+│   ├── e2e/         # End-to-end browser tests (Playwright)
+│   └── performance/ # Performance benchmarking
 ├── package.json     # npm configuration
 └── README.md        # Project overview
 ```
@@ -106,9 +114,11 @@ Test Queries → Benchmark Suite → Analysis & Validation → Performance Dashb
 ```
 
 ### Testing Strategy
-- Comprehensive Jest test suite with jsdom environment
-- Mock implementations for external dependencies (WebLLM, Leaflet, fetch)
-- Module isolation testing with dependency injection patterns
+- **Dual Testing Framework**: Jest (unit/integration) + Playwright (e2e)
+- **Organized Test Structure**: Unit tests for fast feedback, integration tests for workflows, e2e tests for real browser validation
+- **Comprehensive Coverage**: 34.78% overall coverage with 59% for core map.js module
+- **Touch Interface Testing**: Dedicated tests for mobile and tablet compatibility
+- **Performance Validation**: Automated benchmarking and measurement systems
 
 ## 🚀 Setup
 
@@ -192,11 +202,21 @@ Remember to run this magical update regularly to keep your world data sparkling!
 
 NationsNavigator includes a comprehensive Jest test suite and performance evaluation system:
 
-### Unit Tests
+### Unit & Integration Tests (Jest)
 ```bash
-npm test                 # Run all tests
+npm test                 # Run all Jest tests
+npm run test:unit        # Run unit tests only
+npm run test:integration # Run integration tests only
 npm run test:watch       # Run tests in watch mode
 npm run test:coverage    # Run tests with coverage report
+```
+
+### End-to-End Tests (Playwright)
+```bash
+npm run test:e2e         # Run all browser tests
+npm run test:touch       # Run touch interface tests
+npm run test:cross-device # Run cross-device compatibility tests
+npm run test:performance # Run e2e performance tests
 ```
 
 ### Performance Testing

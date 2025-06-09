@@ -1,6 +1,51 @@
-# Test Suite
+# Test Suite Organization
 
-Comprehensive automated test suite for NationsNavigator using [Jest](https://jestjs.io/) with ES6 modules support. The tests ensure reliability and maintainability of the component-based architecture.
+This directory contains a comprehensive test suite organized by testing strategy and complexity, using both Jest and Playwright for complete coverage.
+
+## Directory Structure
+
+```
+tests/
+├── unit/              # Fast unit tests (Jest)
+├── integration/       # Complex integration tests (Jest)
+├── e2e/              # End-to-end browser tests (Playwright)
+├── performance/       # Performance benchmarking
+├── services/         # Service layer tests
+├── __mocks__/        # Shared mock objects
+└── setup.js          # Global Jest configuration
+```
+
+## Test Categories
+
+### Unit Tests (`tests/unit/`)
+- **Purpose**: Fast, isolated component testing
+- **Framework**: Jest with jsdom
+- **Coverage**: Individual functions, components, modules
+- **Files**: 
+  - `country-selection-touch.test.js` - Touch interface validation
+  - `touch-device.test.js` - Device detection logic
+  - `floating-panel.test.js` - FloatingPanel component
+  - `edge-cases.test.js` - Edge case handling
+  - `data.test.js`, `llm.test.js`, `map.test.js` - Core module tests
+
+### Integration Tests (`tests/integration/`)
+- **Purpose**: Complex multi-module interactions
+- **Framework**: Jest with comprehensive mocking
+- **Coverage**: Module integration, workflows
+- **Files**:
+  - `map-integration.test.js` - Comprehensive map functionality
+  - `performance-benchmark.test.js` - Performance validation
+
+### E2E Tests (`tests/e2e/`)
+- **Purpose**: Real browser testing across devices
+- **Framework**: Playwright
+- **Coverage**: User workflows, cross-browser compatibility
+- **Files**:
+  - `touch-basic.spec.js` - Essential touch interactions
+  - `touch-interface.spec.js` - Complete touch interface
+  - `cross-device.spec.js` - Multi-device compatibility
+  - `performance.spec.js` - Runtime performance
+  - `touch-performance.spec.js` - Touch-specific performance
 
 ## Running Tests
 

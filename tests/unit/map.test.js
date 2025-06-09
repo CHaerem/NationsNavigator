@@ -1,7 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
 
 // Mock the data module
-jest.unstable_mockModule("../js/data.js", () => ({
+jest.unstable_mockModule("../../js/data.js", () => ({
 	getCountryData: jest.fn(() => ({
 		USA: { name: "United States", ISO_A3: "USA", region: "Americas" },
 		GBR: { name: "United Kingdom", ISO_A3: "GBR", region: "Europe" },
@@ -14,14 +14,14 @@ jest.unstable_mockModule("../js/data.js", () => ({
 }));
 
 // Mock the main module for core functions
-jest.unstable_mockModule("../js/main.js", () => ({
+jest.unstable_mockModule("../../js/main.js", () => ({
 	processQuery: jest.fn(),
 	resetMap: jest.fn(),
 	highlightCountry: jest.fn(),
 }));
 
 // Mock the UIService to prevent circular dependency issues
-jest.unstable_mockModule("../js/services/UIService.js", () => ({
+jest.unstable_mockModule("../../js/services/UIService.js", () => ({
 	uiService: {
 		updateMessage: jest.fn(),
 		updateLLMStatus: jest.fn(),
@@ -70,7 +70,7 @@ describe("Map Module", () => {
 		}));
 		
 		// Import the functions we want to test
-		const mapModule = await import("../js/map.js");
+		const mapModule = await import("../../js/map.js");
 		highlightCountries = mapModule.highlightCountries;
 		resetMap = mapModule.resetMap;
 		highlightCountry = mapModule.highlightCountry;
@@ -224,7 +224,7 @@ describe("Map Module", () => {
 
 	test("should highlight specific country by ISO code", async () => {
 		// Reset the map state first
-		const mapModule = await import("../js/map.js");
+		const mapModule = await import("../../js/map.js");
 		mapModule._resetForTesting();
 
 		// Create a specific mock for the map instance with fitBounds
@@ -285,7 +285,7 @@ describe("Map Module", () => {
 	});
 
 	test("should configure map with proper world wrapping settings", async () => {
-		const mapModule = await import("../js/map.js");
+		const mapModule = await import("../../js/map.js");
 		mapModule._resetForTesting();
 
 		// Mock L.map to capture configuration

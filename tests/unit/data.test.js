@@ -5,7 +5,7 @@ import {
 	executeQuery,
 	getAvailableStats,
 	clearCountryData,
-} from "../js/data.js";
+} from "../../js/data.js";
 
 // Mock country data
 const mockCountryData = {
@@ -122,7 +122,7 @@ describe("Data Module", () => {
 
 	test("should handle fetch errors gracefully", async () => {
 		// Clear any existing data first
-		const { clearCountryData } = await import("../js/data.js");
+		const { clearCountryData } = await import("../../js/data.js");
 		clearCountryData();
 
 		global.fetch.mockRejectedValue(new Error("Network error"));
@@ -166,7 +166,7 @@ describe("Data Module", () => {
 
 	test("should return empty array for stats when no data loaded", async () => {
 		// Clear data first to ensure empty state
-		const { clearCountryData } = await import("../js/data.js");
+		const { clearCountryData } = await import("../../js/data.js");
 		clearCountryData();
 
 		const stats = getAvailableStats();
