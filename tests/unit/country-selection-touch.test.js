@@ -106,12 +106,12 @@ describe("Country Selection Touch Device Tests", () => {
         });
 
         // Use dynamic import and mock approach that works with ES6 modules
-        jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/data.js", () => ({
+        jest.unstable_mockModule(`${process.cwd()}/js/data.js`, () => ({
             getCountryData: jest.fn(() => mockCountryData)
         }));
 
         // Import map module after setting up mocks
-        mapModule = await import("../../js/map.js");
+        mapModule = await import(`${process.cwd()}/js/map.js`);
         
         // Set up test geojson layer using the test helper
         if (mapModule._setGeojsonLayerForTesting) {

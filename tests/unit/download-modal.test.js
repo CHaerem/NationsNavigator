@@ -1,7 +1,7 @@
 import { describe, test, expect, jest, beforeEach, afterEach } from "@jest/globals";
 
 // Mock all modules to prevent initialization issues
-jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/data.js", () => ({
+jest.unstable_mockModule(`${process.cwd()}/js/data.js`, () => ({
 	executeQuery: jest.fn(() => []),
 	fetchCountryData: jest.fn(() => Promise.resolve()),
 	getAvailableStats: jest.fn(() => ["name", "ISO_A3", "region"]),
@@ -10,13 +10,13 @@ jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/da
 	clearCountryData: jest.fn()
 }));
 
-jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/map.js", () => ({
+jest.unstable_mockModule(`${process.cwd()}/js/map.js`, () => ({
 	highlightCountries: jest.fn(),
 	clearHighlights: jest.fn(),
 	initMap: jest.fn(() => Promise.resolve())
 }));
 
-jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js", () => ({
+jest.unstable_mockModule(`${process.cwd()}/js/services/UIService.js`, () => ({
 	uiService: {
 		updateMessage: jest.fn(),
 		updateLLMStatus: jest.fn(),

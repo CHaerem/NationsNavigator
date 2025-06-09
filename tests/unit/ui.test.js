@@ -1,7 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
 
 // Mock the UIService module before any imports  
-jest.doMock("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js", () => ({
+jest.doMock(`${process.cwd()}/js/services/UIService.js`, () => ({
 	uiService: {
 		updateMessage: jest.fn(),
 		updateLLMStatus: jest.fn(),
@@ -10,7 +10,7 @@ jest.doMock("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIServ
 	}
 }));
 
-const { updateLLMStatus, updateCountryInfo, updateMessage } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/main.js");
+const { updateLLMStatus, updateCountryInfo, updateMessage } = await import(`${process.cwd()}/js/main.js`);
 
 describe("Legacy UI Functions (main.js exports)", () => {
 	beforeEach(() => {
@@ -19,7 +19,7 @@ describe("Legacy UI Functions (main.js exports)", () => {
 
 	describe("updateLLMStatus", () => {
 		test("should call uiService.updateLLMStatus", async () => {
-			const { uiService } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js");
+			const { uiService } = await import(`${process.cwd()}/js/services/UIService.js`);
 			
 			updateLLMStatus("WebLLM ready");
 
@@ -27,7 +27,7 @@ describe("Legacy UI Functions (main.js exports)", () => {
 		});
 
 		test("should handle various status messages", async () => {
-			const { uiService } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js");
+			const { uiService } = await import(`${process.cwd()}/js/services/UIService.js`);
 			
 			updateLLMStatus("✅ WebLLM ready");
 			updateLLMStatus("❌ WebLLM initialization failed");
@@ -39,7 +39,7 @@ describe("Legacy UI Functions (main.js exports)", () => {
 
 	describe("updateCountryInfo", () => {
 		test("should call uiService.updateCountryInfo", async () => {
-			const { uiService } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js");
+			const { uiService } = await import(`${process.cwd()}/js/services/UIService.js`);
 			
 			const countryProps = {
 				name: "France",
@@ -53,7 +53,7 @@ describe("Legacy UI Functions (main.js exports)", () => {
 		});
 
 		test("should handle null country data", async () => {
-			const { uiService } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js");
+			const { uiService } = await import(`${process.cwd()}/js/services/UIService.js`);
 			
 			updateCountryInfo(null);
 
@@ -63,7 +63,7 @@ describe("Legacy UI Functions (main.js exports)", () => {
 
 	describe("updateMessage", () => {
 		test("should call uiService.updateMessage", async () => {
-			const { uiService } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js");
+			const { uiService } = await import(`${process.cwd()}/js/services/UIService.js`);
 			
 			const message = "<div>Test message</div>";
 			updateMessage(message);
@@ -72,7 +72,7 @@ describe("Legacy UI Functions (main.js exports)", () => {
 		});
 
 		test("should handle various message types", async () => {
-			const { uiService } = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js");
+			const { uiService } = await import(`${process.cwd()}/js/services/UIService.js`);
 			
 			updateMessage("<div class='processing'>Processing...</div>");
 			updateMessage("<div class='error'>Error occurred</div>");

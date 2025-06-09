@@ -135,10 +135,18 @@ if (typeof window !== "undefined" && window.document) {
 	window.document.getElementById = jest.fn((id) => {
 		const mockElement = {
 			id,
-			value: "",
+			value: id === "llm-select" ? "Llama-3.2-1B-Instruct-q4f16_1-MLC" : "",
 			innerHTML: "",
 			textContent: "",
-			style: {},
+			style: {
+				left: "100px",
+				top: "100px",
+				right: "auto",
+				bottom: "auto",
+				transform: "none",
+				display: "block",
+				cursor: "grab"
+			},
 			classList: {
 				add: jest.fn(),
 				remove: jest.fn(),
@@ -148,6 +156,20 @@ if (typeof window !== "undefined" && window.document) {
 			removeEventListener: jest.fn(),
 			querySelectorAll: jest.fn(() => []),
 			querySelector: jest.fn(() => null),
+			getBoundingClientRect: jest.fn(() => ({
+				left: 100,
+				top: 100,
+				right: 500,
+				bottom: 400,
+				width: 400,
+				height: 300,
+				x: 100,
+				y: 100
+			})),
+			offsetWidth: 400,
+			offsetHeight: 300,
+			setAttribute: jest.fn(),
+			getAttribute: jest.fn(() => null),
 		};
 		return mockElement;
 	});
@@ -162,7 +184,15 @@ if (typeof global.document === "undefined") {
 				value: id === "llm-select" ? "Llama-3.2-1B-Instruct-q4f16_1-MLC" : "",
 				innerHTML: "",
 				textContent: "",
-				style: {},
+				style: {
+					left: "100px",
+					top: "100px",
+					right: "auto",
+					bottom: "auto",
+					transform: "none",
+					display: "block",
+					cursor: "grab"
+				},
 				classList: {
 					add: jest.fn(),
 					remove: jest.fn(),
@@ -172,6 +202,18 @@ if (typeof global.document === "undefined") {
 				removeEventListener: jest.fn(),
 				querySelectorAll: jest.fn(() => []),
 				querySelector: jest.fn(() => null),
+				getBoundingClientRect: jest.fn(() => ({
+					left: 100,
+					top: 100,
+					right: 500,
+					bottom: 400,
+					width: 400,
+					height: 300,
+					x: 100,
+					y: 100
+				})),
+				offsetWidth: 400,
+				offsetHeight: 300,
 				setAttribute: jest.fn(),
 				getAttribute: jest.fn(() => null),
 			};
@@ -181,8 +223,30 @@ if (typeof global.document === "undefined") {
 		removeEventListener: jest.fn(),
 		querySelectorAll: jest.fn(() => []),
 		querySelector: jest.fn(() => null),
+		createElement: jest.fn(() => ({
+			classList: { add: jest.fn(), remove: jest.fn() },
+			style: {},
+			addEventListener: jest.fn(),
+			appendChild: jest.fn()
+		})),
+		body: {
+			appendChild: jest.fn()
+		}
 	};
 }
+
+// Mock window properties for tests
+global.window = global.window || {
+	...global.window,
+	addEventListener: jest.fn(),
+	removeEventListener: jest.fn(),
+	innerWidth: 1024,
+	innerHeight: 768,
+	navigator: {
+		maxTouchPoints: 0,
+		userAgent: "test-browser"
+	}
+};
 
 // Store original layers for access in tests
 global.mockLayers = mockLayers;
