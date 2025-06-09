@@ -103,7 +103,41 @@ test.describe('Touch Performance - Fast Tests', () => {
     // Should not have errors
     expect(errors.length).toBe(0);
   });
-});
+
+  test('should maintain smooth frame rate during drag operations', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Performance tests only on Chromium');
+    
+    await page.setViewportSize({ width: 375, height: 667 });
+    
+    // Simulate touch device
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'maxTouchPoints', { value: 5 });
+      
+      // Setup performance monitoring
+      window.performanceData = {
+        startTime: performance.now(),
+        frames: []
+      };
+      
+      // Monitor frame rate
+      function recordFrame() {
+        window.performanceData.frames.push(performance.now());
+        requestAnimationFrame(recordFrame);
+      }
+      requestAnimationFrame(recordFrame);
+    });
+    
+    await page.reload();
+    await page.waitForSelector('#map');
+    await page.waitForFunction(() => window.map && window.map._loaded);
+    
+    // Perform drag operations
+    const mapElement = page.locator('#map');
+    const box = await mapElement.boundingBox();
+    
+    for (let i = 0; i < 10; i++) {
+      const startX = box.x + Math.random() * box.width;
+      const startY = box.y + Math.random() * box.height;
       const endX = startX + 100;
       const endY = startY + 100;
       
