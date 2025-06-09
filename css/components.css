@@ -175,6 +175,7 @@
   border: 1px solid var(--border-color);
   max-width: 400px;
   width: 90%;
+  height: 400px; /* Fixed height to force scrolling */
   max-height: calc(100vh - 120px);
   overflow: hidden;
   transition: all 0.3s ease;
@@ -182,8 +183,10 @@
   background: rgba(255, 255, 255, 0.95);
   resize: both;
   min-width: 280px;
-  min-height: 200px;
+  min-height: 260px; /* Ensure minimum height for scrollable content */
   touch-action: auto; /* Allow default touch behavior, override in specific areas */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Enhanced drag state */
@@ -307,6 +310,7 @@
   user-select: none;
   border-radius: 12px 12px 0 0;
   touch-action: none; /* Allow custom drag handling on header */
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .panel-header:active {
@@ -363,11 +367,14 @@
 
 .panel-content {
   padding: var(--spacing-md);
-  height: calc(100% - 60px);
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   touch-action: pan-y; /* Allow vertical scrolling on touch devices */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   overscroll-behavior: contain; /* Prevent overscroll effects from propagating */
+  min-height: 0; /* Important for flex children to allow shrinking */
+  max-height: 300px; /* Force maximum height to enable scrolling */
 }
 
 /* Touch device specific styles */
