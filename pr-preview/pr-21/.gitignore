@@ -1,0 +1,46 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# GitHub Pages deployment
+github-pages-deploy-action-temp-deployment-folder/
+
+# Performance test results (exclude from deployment)
+tests/performance/results/
+
+# Test output and reports
+test-results/
+playwright-report/
+coverage/
+
+# Backup files
+*.backup
+*.bak
+
+# Debug and development tools
+debug-*.html
+*-test.html
+validate-*.html

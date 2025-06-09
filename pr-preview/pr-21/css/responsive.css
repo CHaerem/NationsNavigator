@@ -1,0 +1,263 @@
+/* Responsive Design and Touch Optimizations */
+
+/* Touch devices and mobile - simplified positioning */
+#info-panel.touch-device {
+  position: fixed;
+  top: auto;
+  bottom: var(--spacing-md);
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  max-width: none;
+  width: auto;
+  max-height: 50vh;
+  min-height: 200px;
+}
+
+/* Touch device optimizations - SIMPLIFIED */
+#info-panel.touch-device .panel-header {
+  cursor: default !important;
+}
+
+#info-panel.touch-device .drag-indicator {
+  display: none;
+}
+
+/* Hide snap indicators on touch devices */
+@media (pointer: coarse) {
+  .snap-zone-indicator {
+    display: none;
+  }
+}
+
+/* Enhanced Mobile Responsive Design */
+@media (max-width: 1024px) {
+  #info-panel {
+    max-width: 360px;
+  }
+}
+
+/* Tablet optimizations - no dragging, just positioning */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #info-panel:not(.touch-device) {
+    max-width: 400px;
+    min-height: 300px;
+  }
+
+  /* Touch target improvements for tablets */
+  .panel-control-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 768px) {
+  #search-bar {
+    width: 95%;
+    max-width: none;
+    top: var(--spacing-xs);
+  }
+
+  #info-panel {
+    max-height: 45vh;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .panel-control-btn {
+    font-size: 18px;
+    padding: var(--spacing-sm);
+  }
+
+  .country-essentials {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .examples-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  #search-bar {
+    width: 98%;
+    padding: var(--spacing-xs);
+    gap: var(--spacing-xs);
+  }
+
+  #query-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: var(--spacing-sm);
+  }
+
+  #search-btn, #settings-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  #info-panel {
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+    bottom: var(--spacing-xs);
+    max-height: 45vh;
+    border-radius: 8px;
+  }
+
+  .panel-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .panel-header h3 {
+    font-size: 14px;
+  }
+
+  .panel-control-btn {
+    font-size: 16px;
+    padding: var(--spacing-xs);
+  }
+
+  .panel-content {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .country-essentials {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  .essential-item {
+    padding: var(--spacing-xs);
+  }
+
+  .flag-simple {
+    width: 32px;
+  }
+
+  .country-title h3 {
+    font-size: 14px;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: var(--spacing-md);
+    max-height: 85vh;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .button-group button {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .country-essentials {
+    grid-template-columns: 1fr;
+  }
+  
+  .country-title h3 {
+    font-size: 16px;
+  }
+  
+  .flag-simple {
+    width: 40px;
+  }
+  
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  #close-btn {
+    width: auto;
+    float: right;
+  }
+
+  .flag {
+    width: 48px;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  #info-panel {
+    max-height: 60vh;
+    bottom: var(--spacing-xs);
+  }
+}
+
+/* Large desktop screens */
+@media (min-width: 1440px) {
+  #info-panel {
+    max-width: 450px;
+  }
+
+  .snap-zone-left,
+  .snap-zone-right,
+  .snap-zone-bottom,
+  .snap-zone-center {
+    width: min(450px, calc(50vw - 32px));
+    height: min(350px, calc(40vh));
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1920px) {
+  #info-panel {
+    max-width: 500px;
+  }
+
+  .panel-content {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* Very small screens */
+@media (max-width: 320px) {
+  #search-bar {
+    width: 99%;
+    top: var(--spacing-xs);
+  }
+
+  #info-panel {
+    max-height: 40vh;
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+  }
+
+  .country-title h3 {
+    font-size: 13px;
+  }
+
+  .essential-value, .essential-label {
+    font-size: 11px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .snap-zone-indicator {
+    border-width: 1px; /* Thinner borders on high DPI */
+  }
+
+  #info-panel {
+    border-width: 0.5px;
+  }
+}

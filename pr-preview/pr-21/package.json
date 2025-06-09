@@ -1,0 +1,90 @@
+{
+  "name": "nations-navigator",
+  "version": "1.0.0",
+  "description": "Interactive world map with AI-powered country queries",
+  "type": "module",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:e2e": "playwright test --workers=4",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:fast": "playwright test --workers=4 --reporter=line",
+    "test:touch": "playwright test tests/e2e/touch-basic.spec.js --workers=2",
+    "test:cross-device": "playwright test tests/e2e/cross-device.spec.js --workers=2",
+    "test:performance": "playwright test tests/e2e/performance.spec.js --workers=1",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest tests/unit",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest tests/integration",
+    "test:quick": "playwright test --grep='Quick|Essential|Fast' --workers=4 --reporter=line",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:ci": "npm run test:unit && npm run test:integration && npm run test:coverage && npm run test:e2e",
+    "lint": "echo 'Checking code quality...' && node scripts/lint-check.js",
+    "audit:security": "npm audit --audit-level=moderate",
+    "validate:build": "node scripts/build-validator.js",
+    "serve": "python3 -m http.server 8000",
+    "perf:full": "node tests/performance/scripts/run-evaluation.js",
+    "perf:quick": "node tests/performance/scripts/run-evaluation.js --quick",
+    "perf:baseline": "node tests/performance/scripts/run-evaluation.js --baseline",
+    "perf:compare": "node tests/performance/scripts/compare-results.js"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@playwright/test": "^1.52.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "playwright": "^1.52.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "globals": {
+      "NODE_OPTIONS": "--experimental-vm-modules"
+    },
+    "transform": {},
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "testEnvironmentOptions": {
+      "url": "http://localhost"
+    },
+    "maxWorkers": "50%",
+    "detectOpenHandles": true,
+    "forceExit": true,
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/e2e/",
+      "<rootDir>/tests/playwright/",
+      "<rootDir>/node_modules/"
+    ],
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/**/*.test.js",
+      "!tests/**/*",
+      "!**/node_modules/**"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "coverageDirectory": "coverage",
+    "moduleNameMapper": {
+      "^https://esm.run/@mlc-ai/web-llm$": "<rootDir>/tests/__mocks__/webllm.js"
+    },
+    "testTimeout": 30000
+  },
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CHaerem/NationsNavigator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CHaerem/NationsNavigator/issues"
+  },
+  "homepage": "https://github.com/CHaerem/NationsNavigator#readme"
+}
