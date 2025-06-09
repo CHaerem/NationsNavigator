@@ -183,6 +183,7 @@
   resize: both;
   min-width: 280px;
   min-height: 200px;
+  touch-action: auto; /* Allow default touch behavior, override in specific areas */
 }
 
 /* Enhanced drag state */
@@ -305,6 +306,7 @@
   cursor: grab;
   user-select: none;
   border-radius: 12px 12px 0 0;
+  touch-action: none; /* Allow custom drag handling on header */
 }
 
 .panel-header:active {
@@ -363,6 +365,50 @@
   padding: var(--spacing-md);
   height: calc(100% - 60px);
   overflow-y: auto;
+  touch-action: pan-y; /* Allow vertical scrolling on touch devices */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  overscroll-behavior: contain; /* Prevent overscroll effects from propagating */
+}
+
+/* Touch device specific styles */
+#info-panel.touch-device .panel-content {
+  touch-action: pan-y; /* Ensure vertical scrolling works on touch devices */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Desktop mode - allow header dragging */
+#info-panel.desktop-mode .panel-header {
+  touch-action: none;
+}
+
+/* Touch device mode - disable header dragging */
+#info-panel.touch-device .panel-header {
+  touch-action: auto;
+  cursor: default;
+}
+
+/* Ensure text content is selectable and scrollable on touch devices */
+#info-panel.touch-device .panel-content * {
+  touch-action: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Make sure scrollable areas work properly on touch */
+#info-panel.touch-device .panel-content {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+/* Fix for potential touch interference */
+#info-panel.touch-device {
+  pointer-events: auto;
+}
+
+#info-panel.touch-device .panel-content {
+  pointer-events: auto;
 }
 
 #message {
