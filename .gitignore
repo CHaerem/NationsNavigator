@@ -30,3 +30,17 @@ github-pages-deploy-action-temp-deployment-folder/
 
 # Performance test results (exclude from deployment)
 tests/performance/results/
+
+# Test output and reports
+test-results/
+playwright-report/
+coverage/
+
+# Backup files
+*.backup
+*.bak
+
+# Debug and development tools
+debug-*.html
+*-test.html
+validate-*.html

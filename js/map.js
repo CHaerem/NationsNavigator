@@ -73,6 +73,25 @@ export async function initMap() {
 			inertiaMaxSpeed: Infinity,
 			zoomControl: true,
 			attributionControl: true,
+			// Optimized touch settings that don't interfere with pan/zoom
+			tap: true,
+			tapTolerance: 15, // Balanced setting - not too sensitive, not too restrictive
+			touchZoom: true,
+			doubleClickZoom: true,
+			scrollWheelZoom: true,
+			boxZoom: true,
+			keyboard: true,
+			dragging: true,
+			zoomAnimation: true,
+			closePopupOnClick: false,
+			// Touch timing optimized for both selection and navigation
+			tapHoldDelay: 500, // Longer delay to clearly distinguish taps from drags
+			touchDebounceDelay: 64, // Standard setting for good responsiveness
+			clickTimeout: 300, // Allow time for double-tap zoom detection
+			// Smooth zoom behavior
+			bounceAtZoomLimits: true,
+			zoomSnap: 0.25,
+			zoomDelta: 0.5,
 		});
 
 		L.tileLayer(
@@ -143,6 +162,14 @@ export async function initMap() {
 		map.on("moveend", checkAndAddCopies);
 		map.on("zoomend", checkAndAddCopies);
 
+		// Set the _loaded flag for tests
+		if (window.map) {
+			window.map._loaded = true;
+		} else {
+			window.map = map;
+			window.map._loaded = true;
+		}
+
 		debugLog("Map and geojsonLayer loaded successfully");
 		isInitialized = true;
 	} catch (error) {
@@ -177,52 +204,174 @@ function getCountryStyle(feature) {
 function onEachFeature(feature, layer) {
 	const originalISO =
 		feature.properties._originalISO || feature.properties.ISO_A3;
-	layer.on("click", () => handleCountryClick(originalISO, layer));
 
-	// Add hover effects
-	layer.on("mouseover", () => {
-		// Don't hover if country is selected or highlighted
+	// Detect touch device once
+	const isTouchDevice =
+		"ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+	// Single unified event handler
+	const countryClickHandler = (e) => {
+		debugLog(
+			`Country interaction: ${originalISO}, event type: ${e.type}, touch device: ${isTouchDevice}`
+		);
+
+		// Prevent double firing on touch devices
 		if (
-			layer.options.fillColor !== COLORS.SELECTED &&
-			layer.options.fillColor !== COLORS.HIGHLIGHTED
+			e.type === "click" &&
+			isTouchDevice &&
+			e.originalEvent?.sourceCapabilities
 		) {
-			layer.setStyle({
-				fillColor: COLORS.HOVER,
-				weight: 2,
-				color: "#1e293b",
-				fillOpacity: 1,
-			});
-			layer.bringToFront();
+			// This is a synthetic click from a touch event, ignore it
+			debugLog(`Ignoring synthetic click event for ${originalISO}`);
+			return;
 		}
-	});
 
-	layer.on("mouseout", () => {
-		if (layer.options.fillColor === COLORS.HOVER) {
-			// Restore original country color
-			const iso = originalISO;
-			let colorIndex = 0;
-			if (iso) {
-				for (let i = 0; i < iso.length; i++) {
-					colorIndex += iso.charCodeAt(i);
-				}
-				colorIndex = colorIndex % COUNTRY_COLORS.length;
+		// Handle the country selection
+		handleCountryClick(originalISO, layer);
+	};
+
+	// Set up appropriate event handlers based on device type
+	if (isTouchDevice) {
+		// On touch devices, rely primarily on Leaflet's built-in tap handling
+		// which is better integrated with pan/zoom gestures
+		layer.on("click", countryClickHandler);
+
+		// Add a single tap event as backup, but let Leaflet handle the heavy lifting
+		layer.on("tap", (e) => {
+			// Only handle if this wasn't already handled by click
+			if (!e.originalEvent?.synthetic) {
+				countryClickHandler(e);
 			}
-			layer.setStyle({
-				fillColor: COUNTRY_COLORS[colorIndex],
-				weight: 1.2,
-				color: COLORS.BORDER,
-				fillOpacity: 0.85,
-			});
-		}
-	});
+		});
+	} else {
+		// On non-touch devices, use standard click events
+		layer.on("click", countryClickHandler);
+	}
+
+	// Add hover effects (only on non-touch devices)
+	if (!isTouchDevice) {
+		layer.on("mouseover", () => {
+			// Don't hover if country is selected or highlighted
+			if (
+				layer.options.fillColor !== COLORS.SELECTED &&
+				layer.options.fillColor !== COLORS.HIGHLIGHTED
+			) {
+				layer.setStyle({
+					fillColor: COLORS.HOVER,
+					weight: 2,
+					color: "#1e293b",
+					fillOpacity: 1,
+				});
+				layer.bringToFront();
+			}
+		});
+
+		layer.on("mouseout", () => {
+			if (layer.options.fillColor === COLORS.HOVER) {
+				// Restore original country color
+				const iso = originalISO;
+				let colorIndex = 0;
+				if (iso) {
+					for (let i = 0; i < iso.length; i++) {
+						colorIndex += iso.charCodeAt(i);
+					}
+					colorIndex = colorIndex % COUNTRY_COLORS.length;
+				}
+				layer.setStyle({
+					fillColor: COUNTRY_COLORS[colorIndex],
+					weight: 1.2,
+					color: COLORS.BORDER,
+					fillOpacity: 0.85,
+				});
+			}
+		});
+	}
+}
+
+// Helper function to provide immediate visual feedback for touch interactions
+function provideTouchFeedback(layer, originalISO) {
+	// Provide immediate visual feedback for touch devices
+	if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
+		// Brief highlight to confirm tap was registered
+		const originalStyle = {
+			fillColor: layer.options.fillColor,
+			fillOpacity: layer.options.fillOpacity,
+			weight: layer.options.weight,
+			color: layer.options.color,
+		};
+
+		// Quick flash effect
+		layer.setStyle({
+			fillColor: "#22d3ee", // Cyan flash
+			fillOpacity: 0.9,
+			weight: 3,
+			color: "#0891b2",
+		});
+
+		// Restore style after brief feedback
+		setTimeout(() => {
+			if (layer.options.fillColor !== COLORS.SELECTED) {
+				layer.setStyle(originalStyle);
+			}
+		}, 150);
+
+		debugLog(`Touch feedback provided for ${originalISO}`);
+	}
 }
 
 function handleCountryClick(iso, layer) {
+	// Enhanced debug logging
+	debugLog(
+		`Country clicked: ${iso}, touch device: ${
+			"ontouchstart" in window
+		}, layer exists: ${!!layer}`
+	);
+
 	// Use the original ISO code for data lookup (remove copy suffix if present)
 	const originalISO = layer.feature.properties._originalISO || iso;
+
+	// Provide immediate touch feedback on touch devices
+	provideTouchFeedback(layer, originalISO);
 	const countryData = getCountryData();
+
+	debugLog(
+		`Looking up country data for: ${originalISO}, data available: ${!!countryData}, country count: ${
+			Object.keys(countryData || {}).length
+		}`
+	);
+
 	const props = countryData[originalISO];
-	if (!props) return;
+	if (!props) {
+		debugLog(
+			`No data found for country: ${originalISO}, available countries: ${Object.keys(
+				countryData || {}
+			)
+				.slice(0, 5)
+				.join(", ")}...`
+		);
+
+		// Try to still show something - at least highlight the country
+		if (layer && layer.setStyle) {
+			layer.setStyle({
+				fillColor: COLORS.SELECTED,
+				fillOpacity: 1,
+				weight: 2.5,
+				color: COLORS.BORDER_SELECTED,
+			});
+			layer.bringToFront();
+
+			// Show basic info even without full data
+			uiService.updateCountryInfo({
+				name: originalISO,
+				ISO_A3: originalISO,
+				population: "Data not available",
+				area: "Data not available",
+			});
+		}
+		return;
+	}
+
+	debugLog(`Country data found for ${originalISO}: ${props.name}`);
 
 	if (layer.options.fillColor === COLORS.SELECTED) {
 		// Deselect all copies of this country
@@ -305,15 +454,15 @@ export function resetMap() {
 		console.error("geojsonLayer is not initialized");
 		return;
 	}
-	
+
 	// Clear filtered countries first
 	filteredCountries.clear();
-	
+
 	// Reset all countries to their original style
 	geojsonLayer.eachLayer((layer) => {
 		const originalISO =
 			layer.feature.properties._originalISO || layer.feature.properties.ISO_A3;
-		
+
 		// Restore original country color based on ISO
 		let colorIndex = 0;
 		if (originalISO) {
@@ -322,7 +471,7 @@ export function resetMap() {
 			}
 			colorIndex = colorIndex % COUNTRY_COLORS.length;
 		}
-		
+
 		layer.setStyle({
 			fillColor: COUNTRY_COLORS[colorIndex],
 			fillOpacity: 0.85,
@@ -330,16 +479,16 @@ export function resetMap() {
 			color: COLORS.BORDER,
 		});
 	});
-	
+
 	uiService.updateCountryInfo(null);
 	uiService.updateMessage("");
-	
+
 	// Clear search input
 	const queryInput = document.getElementById("query-input");
 	if (queryInput) {
 		queryInput.value = "";
 	}
-	
+
 	// Recenter map to world view with better zoom level
 	if (map) {
 		map.setView([20, 0], 3);
@@ -497,6 +646,10 @@ export function _resetForTesting() {
 	currentCopies.clear();
 	worldData = null;
 	isAddingCopies = false;
+	if (window.map) {
+		window.map._loaded = false;
+		window.map = null;
+	}
 }
 
 // Function to check if we need to add more world copies
@@ -582,7 +735,9 @@ function addWorldCopies(copyNumbers) {
 			// Apply current highlighting state to newly added copies
 			if (filteredCountries.size > 0) {
 				newLayer.eachLayer((layer) => {
-					const originalISO = layer.feature.properties._originalISO || layer.feature.properties.ISO_A3;
+					const originalISO =
+						layer.feature.properties._originalISO ||
+						layer.feature.properties.ISO_A3;
 					if (filteredCountries.has(originalISO)) {
 						layer.setStyle({
 							fillColor: COLORS.HIGHLIGHTED,

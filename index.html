@@ -4,7 +4,17 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>🌍 NationsNavigator - Interactive World Map Explorer</title>
-		<link rel="stylesheet" href="styles.css" />
+		<!-- Modular CSS Files -->
+		<link rel="stylesheet" href="css/base.css" />
+		<link rel="stylesheet" href="css/map.css" />
+		<link rel="stylesheet" href="css/components.css" />
+		<link rel="stylesheet" href="css/buttons.css" />
+		<link rel="stylesheet" href="css/forms.css" />
+		<link rel="stylesheet" href="css/country-info.css" />
+		<link rel="stylesheet" href="css/models.css" />
+		<link rel="stylesheet" href="css/results.css" />
+		<link rel="stylesheet" href="css/performance.css" />
+		<link rel="stylesheet" href="css/responsive.css" />
 		<link
 			rel="stylesheet"
 			href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -124,11 +134,17 @@
 
 		<main id="map" role="main" aria-label="Interactive world map"></main>
 		
-		<!-- Info Panel -->
+		<!-- Enhanced Floating Info Panel -->
 		<aside id="info-panel">
-			<div class="panel-header">
-				<h3 id="panel-title">Country Information</h3>
-				<button id="close-btn" style="display: none">×</button>
+			<div class="panel-header" id="panel-header">
+				<div class="panel-title-container">
+					<h3 id="panel-title">Country Information</h3>
+					<span class="drag-indicator">⋮⋮</span>
+				</div>
+				<div class="panel-controls">
+					<button class="panel-control-btn" id="maximize-btn" title="Toggle maximize">⛶</button>
+					<button id="close-btn" class="panel-control-btn" style="display: none">×</button>
+				</div>
 			</div>
 			
 			<div class="panel-content">

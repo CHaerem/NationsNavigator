@@ -3,6 +3,7 @@ import { MessageDisplayComponent } from './MessageDisplayComponent.js';
 import { SearchBarComponent } from './SearchBarComponent.js';
 import { SettingsModalComponent } from './SettingsModalComponent.js';
 import { DownloadModalComponent } from './DownloadModalComponent.js';
+import { FloatingPanelComponent } from './FloatingPanelComponent.js';
 // Dynamic import for development-only performance dashboard
 import { resetMap } from '../main.js';
 
@@ -22,6 +23,7 @@ export class UIManager {
 			this.components.searchBar = new SearchBarComponent(onQuerySubmit, onAdvancedQuerySubmit);
 			this.components.settingsModal = new SettingsModalComponent();
 			this.components.downloadModal = new DownloadModalComponent();
+			this.components.floatingPanel = new FloatingPanelComponent();
 			
 			// Performance dashboard will be initialized later if available
 			this.components.performanceDashboard = null;
@@ -85,6 +87,10 @@ export class UIManager {
 	updateCountryInfo(props) {
 		if (this.isInitialized && this.components.countryInfo) {
 			this.components.countryInfo.update(props);
+			// Show the floating panel when country info is updated
+			if (this.components.floatingPanel && props) {
+				this.components.floatingPanel.show();
+			}
 		}
 	}
 

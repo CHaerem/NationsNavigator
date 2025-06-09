@@ -1,0 +1,293 @@
+/* Query Results and Status Display Styles */
+
+#message, #llm-status {
+  margin-top: var(--spacing-md);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+#llm-status {
+  padding: var(--spacing-sm);
+  background-color: var(--background-gray);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-weight: 500;
+}
+
+.query-results {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.query-results h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  color: var(--primary-color);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sql-query {
+  margin-bottom: var(--spacing-md);
+}
+
+.sql-query pre {
+  background-color: var(--background-gray);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.results-summary, .countries-list, .processing-time, .highlight-info {
+  margin-bottom: var(--spacing-sm);
+  font-size: 13px;
+}
+
+.results-summary strong, .countries-list strong, .processing-time strong, .highlight-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.countries-list {
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.processing {
+  color: var(--primary-color);
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.processing::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--primary-color);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.toggle-countries {
+  cursor: pointer;
+  color: var(--primary-color);
+  text-decoration: none;
+  margin-left: var(--spacing-xs);
+  font-weight: 500;
+  font-size: 12px;
+  transition: color 0.2s ease-in-out;
+}
+
+.toggle-countries:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.full-countries-list {
+  display: none;
+  margin-top: var(--spacing-sm);
+}
+
+/* Simplified Results Display */
+.query-results-simple {
+  background: var(--background-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.results-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.results-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--background-gray);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.countries-list-simple {
+  margin-bottom: var(--spacing-md);
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.results-actions {
+  margin-bottom: var(--spacing-md);
+}
+
+.sql-icon {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.sql-details {
+  margin-top: var(--spacing-sm);
+  background: var(--background-gray);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.sql-details pre {
+  background: var(--background-gray);
+  border: none;
+  padding: var(--spacing-sm);
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.perf-details {
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.highlight-status {
+  text-align: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--primary-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.highlight-info {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--success-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Tool result formatting */
+.tool-result {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-color);
+}
+
+.tool-result h4 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--primary-color);
+  font-size: 16px;
+}
+
+.tool-result .country-tag {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: var(--spacing-xs);
+  background: var(--primary-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tool-result .comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--spacing-md);
+}
+
+.tool-result .comparison-table th,
+.tool-result .comparison-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border: 1px solid var(--border-color);
+}
+
+.tool-result .comparison-table th {
+  background: var(--background-gray);
+  font-weight: 600;
+}
+
+.tool-result .stat-item {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tool-result .country-detail {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.tool-performance {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.llm-response {
+  padding: var(--spacing-lg);
+  background: var(--background-gray);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-md) 0;
+}
