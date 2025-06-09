@@ -62,11 +62,11 @@ export class FloatingPanelComponent extends BaseComponent {
 			this.panel.classList.add('touch-device');
 			this.panel.classList.remove('desktop-mode');
 			
-			// Ensure content area can scroll on touch devices
+			// Ensure content area can scroll on touch devices with iOS Safari fixes
 			const content = this.panel.querySelector('.panel-content');
 			if (content) {
-				content.style.touchAction = 'pan-y';
-				content.style.webkitOverflowScrolling = 'touch';
+				// Force iOS Safari scrolling properties
+				this.applyiOSScrollingFixes(content);
 			}
 		} else {
 			// Enable dragging only on desktop with mouse
@@ -331,10 +331,81 @@ export class FloatingPanelComponent extends BaseComponent {
 		}
 	}
 
+	// iOS Safari specific scrolling fixes
+	applyiOSScrollingFixes(content) {
+		// Force iOS Safari scrolling properties using setProperty
+		content.style.setProperty('touch-action', 'pan-y', 'important');
+		content.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+		content.style.setProperty('overflow-y', 'auto', 'important');
+		
+		// iOS Safari specific hardware acceleration fixes
+		content.style.setProperty('-webkit-transform', 'translateZ(0)', 'important');
+		content.style.setProperty('transform', 'translateZ(0)', 'important');
+		content.style.setProperty('position', 'relative', 'important');
+		content.style.setProperty('z-index', '1', 'important');
+		content.style.setProperty('will-change', 'scroll-position', 'important');
+		
+		// Force iOS to recognize scrollable area
+		if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+			content.style.setProperty('height', '300px', 'important');
+			content.style.setProperty('max-height', '300px', 'important');
+			content.style.setProperty('overflow', 'auto', 'important');
+			
+			// Create and inject iOS-specific CSS dynamically
+			this.injectIOSScrollingCSS(content);
+		}
+	}
+
+	// Inject iOS-specific CSS that forces momentum scrolling
+	injectIOSScrollingCSS(content) {
+		const contentId = content.id || 'panel-content-ios';
+		if (!content.id) content.id = contentId;
+		
+		// Remove existing iOS style if present
+		const existingStyle = document.getElementById('ios-scroll-fix');
+		if (existingStyle) existingStyle.remove();
+		
+		// Create new style element with iOS Safari specific rules
+		const style = document.createElement('style');
+		style.id = 'ios-scroll-fix';
+		style.textContent = `
+			/* iOS Safari momentum scrolling fix */
+			#${contentId} {
+				-webkit-overflow-scrolling: touch !important;
+				overflow-scrolling: touch !important;
+				-webkit-transform: translateZ(0) !important;
+				transform: translateZ(0) !important;
+				backface-visibility: hidden !important;
+				-webkit-backface-visibility: hidden !important;
+			}
+			
+			/* Force iOS Safari to recognize touch scrolling */
+			#${contentId}::-webkit-scrollbar {
+				display: none;
+			}
+			
+			/* iOS Safari specific touch handling */
+			#${contentId} * {
+				-webkit-overflow-scrolling: inherit;
+				overflow-scrolling: inherit;
+			}
+		`;
+		document.head.appendChild(style);
+	}
+
 	// Public method to show/hide panel
 	show() {
 		this.panel.style.display = 'block';
 		this.avoidSearchBarCollision();
+		
+		// Reapply iOS fixes when showing panel
+		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		if (isTouchDevice) {
+			const content = this.panel.querySelector('.panel-content');
+			if (content) {
+				this.applyiOSScrollingFixes(content);
+			}
+		}
 	}
 
 	hide() {
