@@ -61,6 +61,13 @@ export class FloatingPanelComponent extends BaseComponent {
 			this.header.style.cursor = 'default';
 			this.panel.classList.add('touch-device');
 			this.panel.classList.remove('desktop-mode');
+			
+			// Ensure content area can scroll on touch devices
+			const content = this.panel.querySelector('.panel-content');
+			if (content) {
+				content.style.touchAction = 'pan-y';
+				content.style.webkitOverflowScrolling = 'touch';
+			}
 		} else {
 			// Enable dragging only on desktop with mouse
 			this.header.style.cursor = 'grab';
