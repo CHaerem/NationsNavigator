@@ -1,19 +1,19 @@
 import { jest } from '@jest/globals';
 
 // Mock external dependencies
-jest.unstable_mockModule('../js/llm.js', () => ({
+jest.unstable_mockModule('/Users/christopherhaerem/Privat/NationsNavigator/js/llm.js', () => ({
     generateSQLQuery: jest.fn(),
     generateEnhancedSQLQuery: jest.fn(),
     processQueryWithTools: jest.fn()
 }));
 
-jest.unstable_mockModule('../js/data.js', () => ({
+jest.unstable_mockModule('/Users/christopherhaerem/Privat/NationsNavigator/js/data.js', () => ({
     executeQuery: jest.fn(),
     getAvailableStats: jest.fn(() => ['name', 'ISO_A3', 'region', 'population']),
     getExampleCountry: jest.fn(() => ({ name: 'France', ISO_A3: 'FRA', region: 'Europe' }))
 }));
 
-jest.unstable_mockModule('../js/debug.js', () => ({
+jest.unstable_mockModule('/Users/christopherhaerem/Privat/NationsNavigator/js/debug.js', () => ({
     debugLog: jest.fn()
 }));
 

@@ -17,6 +17,11 @@
     "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest tests/unit",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest tests/integration",
     "test:quick": "playwright test --grep='Quick|Essential|Fast' --workers=4 --reporter=line",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:ci": "npm run test:unit && npm run test:integration && npm run test:coverage && npm run test:e2e",
+    "lint": "echo 'Checking code quality...' && node scripts/lint-check.js",
+    "audit:security": "npm audit --audit-level=moderate",
+    "validate:build": "node scripts/build-validator.js",
     "serve": "python3 -m http.server 8000",
     "perf:full": "node tests/performance/scripts/run-evaluation.js",
     "perf:quick": "node tests/performance/scripts/run-evaluation.js --quick",
@@ -42,10 +47,25 @@
     "testEnvironmentOptions": {
       "url": "http://localhost"
     },
-    "maxWorkers": 1,
+    "maxWorkers": "50%",
+    "detectOpenHandles": true,
+    "forceExit": true,
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/**/*.test.js",
+      "!tests/**/*",
+      "!**/node_modules/**"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "coverageDirectory": "coverage",
     "moduleNameMapper": {
       "^https://esm.run/@mlc-ai/web-llm$": "<rootDir>/tests/__mocks__/webllm.js"
-    }
+    },
+    "testTimeout": 30000
   },
   "main": "index.js",
   "directories": {

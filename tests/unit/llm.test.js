@@ -9,7 +9,7 @@ jest.unstable_mockModule("https://esm.run/@mlc-ai/web-llm", () => ({
 }));
 
 // Mock the data module to prevent AlaSQL initialization
-jest.unstable_mockModule("../../js/data.js", () => ({
+jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/data.js", () => ({
 	executeQuery: jest.fn(() => []),
 	fetchCountryData: jest.fn(() => Promise.resolve()),
 	isDataLoaded: jest.fn(() => true),
@@ -20,14 +20,14 @@ jest.unstable_mockModule("../../js/data.js", () => ({
 }));
 
 // Mock the map module to prevent Leaflet initialization
-jest.unstable_mockModule("../../js/map.js", () => ({
+jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/map.js", () => ({
 	highlightCountries: jest.fn(),
 	clearHighlights: jest.fn(),
 	initMap: jest.fn(() => Promise.resolve())
 }));
 
 // Mock the UIService to prevent circular dependency issues
-jest.unstable_mockModule("../../js/services/UIService.js", () => ({
+jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/services/UIService.js", () => ({
 	uiService: {
 		updateMessage: jest.fn(),
 		updateLLMStatus: jest.fn(),
@@ -97,7 +97,7 @@ describe("LLM Module", () => {
 		});
 
 		// Import the functions we want to test
-                const llmModule = await import("../../js/llm.js");
+                const llmModule = await import("/Users/christopherhaerem/Privat/NationsNavigator/js/llm.js");
                 generateSQLQuery = llmModule.generateEnhancedSQLQuery; // Use enhanced function
                 processQuery = llmModule.processQuery;
                 clearAllModelCache = llmModule.clearAllModelCache;

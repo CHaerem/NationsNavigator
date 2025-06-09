@@ -1,5 +1,9 @@
 # 🌍 NationsNavigator
 
+[![CI](https://github.com/CHaerem/NationsNavigator/actions/workflows/ci.yml/badge.svg)](https://github.com/CHaerem/NationsNavigator/actions/workflows/ci.yml)
+[![Deploy](https://github.com/CHaerem/NationsNavigator/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/CHaerem/NationsNavigator/actions/workflows/gh-pages.yml)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+
 Embark on a global adventure with NationsNavigator! 🚀 This innovative web app combines the power of AI 🧠 with interactive maps 🗺️ to create a unique world exploration experience. Discover fascinating facts about countries, answer geographical queries, and watch as the world lights up with knowledge! 💡
 
 ## 🌐 Live Demo
@@ -119,6 +123,34 @@ Test Queries → Benchmark Suite → Analysis & Validation → Performance Dashb
 - **Comprehensive Coverage**: 34.78% overall coverage with 59% for core map.js module
 - **Touch Interface Testing**: Dedicated tests for mobile and tablet compatibility
 - **Performance Validation**: Automated benchmarking and measurement systems
+
+### 🔄 CI/CD Pipeline
+Our robust CI/CD pipeline ensures only tested, quality code reaches production:
+
+#### Continuous Integration (CI)
+- **Multi-Node Testing**: Tests run on Node.js 18.x and 20.x
+- **Comprehensive Test Suite**: Unit, integration, and e2e tests with coverage reporting
+- **Code Quality Checks**: Automated linting, syntax validation, and security audits
+- **Performance Testing**: Automated performance regression detection
+- **Build Validation**: Simulates deployment process to catch issues early
+
+#### Continuous Deployment (CD)
+- **Test-Dependent Deployment**: Deployment only occurs after all CI checks pass
+- **GitHub Pages**: Automatic deployment to production on successful CI runs
+- **PR Previews**: Temporary preview deployments for pull requests
+- **Safe Deployments**: Failed tests block deployment, ensuring stability
+
+#### Available Test Commands
+```bash
+npm run test:ci          # Full CI test suite
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration tests only  
+npm run test:e2e         # End-to-end tests only
+npm run test:coverage    # Coverage reports
+npm run lint             # Code quality checks
+npm run validate:build   # Build validation
+npm run audit:security   # Security audit
+```
 
 ## 🚀 Setup
 

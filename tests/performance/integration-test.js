@@ -2,7 +2,7 @@
 import { jest } from '@jest/globals';
 
 // Mock dependencies for isolated testing
-jest.unstable_mockModule('../../js/debug.js', () => ({
+jest.unstable_mockModule('/Users/christopherhaerem/Privat/NationsNavigator/js/debug.js', () => ({
     debugLog: jest.fn()
 }));
 

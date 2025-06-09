@@ -106,7 +106,7 @@ describe("Country Selection Touch Device Tests", () => {
         });
 
         // Use dynamic import and mock approach that works with ES6 modules
-        jest.unstable_mockModule("../../js/data.js", () => ({
+        jest.unstable_mockModule("/Users/christopherhaerem/Privat/NationsNavigator/js/data.js", () => ({
             getCountryData: jest.fn(() => mockCountryData)
         }));
 
