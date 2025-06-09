@@ -50,6 +50,11 @@
     "maxWorkers": "50%",
     "detectOpenHandles": true,
     "forceExit": true,
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/e2e/",
+      "<rootDir>/tests/playwright/",
+      "<rootDir>/node_modules/"
+    ],
     "collectCoverageFrom": [
       "js/**/*.js",
       "!js/**/*.test.js",

@@ -145,7 +145,8 @@ if (typeof window !== "undefined" && window.document) {
 				bottom: "auto",
 				transform: "none",
 				display: "block",
-				cursor: "grab"
+				cursor: "grab",
+				setProperty: jest.fn()
 			},
 			classList: {
 				add: jest.fn(),
@@ -155,7 +156,21 @@ if (typeof window !== "undefined" && window.document) {
 			addEventListener: jest.fn(),
 			removeEventListener: jest.fn(),
 			querySelectorAll: jest.fn(() => []),
-			querySelector: jest.fn(() => null),
+			querySelector: jest.fn((selector) => {
+				if (selector === '.panel-content') {
+					return {
+						style: {
+							setProperty: jest.fn(),
+							touchAction: '',
+							webkitOverflowScrolling: '',
+							overflowY: ''
+						},
+						id: '',
+						offsetHeight: 0
+					};
+				}
+				return null;
+			}),
 			getBoundingClientRect: jest.fn(() => ({
 				left: 100,
 				top: 100,
@@ -172,6 +187,15 @@ if (typeof window !== "undefined" && window.document) {
 			getAttribute: jest.fn(() => null),
 		};
 		return mockElement;
+	});
+
+	// Mock document.querySelector to match getElementById behavior
+	window.document.querySelector = jest.fn((selector) => {
+		// Convert selector to ID for getElementById lookup
+		if (selector.startsWith('#')) {
+			return window.document.getElementById(selector.substring(1));
+		}
+		return null;
 	});
 }
 
@@ -191,7 +215,8 @@ if (typeof global.document === "undefined") {
 					bottom: "auto",
 					transform: "none",
 					display: "block",
-					cursor: "grab"
+					cursor: "grab",
+					setProperty: jest.fn()
 				},
 				classList: {
 					add: jest.fn(),
@@ -201,7 +226,21 @@ if (typeof global.document === "undefined") {
 				addEventListener: jest.fn(),
 				removeEventListener: jest.fn(),
 				querySelectorAll: jest.fn(() => []),
-				querySelector: jest.fn(() => null),
+				querySelector: jest.fn((selector) => {
+					if (selector === '.panel-content') {
+						return {
+							style: {
+								setProperty: jest.fn(),
+								touchAction: '',
+								webkitOverflowScrolling: '',
+								overflowY: ''
+							},
+							id: '',
+							offsetHeight: 0
+						};
+					}
+					return null;
+				}),
 				getBoundingClientRect: jest.fn(() => ({
 					left: 100,
 					top: 100,
@@ -222,14 +261,25 @@ if (typeof global.document === "undefined") {
 		addEventListener: jest.fn(),
 		removeEventListener: jest.fn(),
 		querySelectorAll: jest.fn(() => []),
-		querySelector: jest.fn(() => null),
+		querySelector: jest.fn((selector) => {
+			// Convert selector to ID for getElementById lookup
+			if (selector.startsWith('#')) {
+				return global.document.getElementById(selector.substring(1));
+			}
+			return null;
+		}),
 		createElement: jest.fn(() => ({
+			className: '',
 			classList: { add: jest.fn(), remove: jest.fn() },
 			style: {},
 			addEventListener: jest.fn(),
-			appendChild: jest.fn()
+			appendChild: jest.fn(),
+			textContent: ''
 		})),
 		body: {
+			appendChild: jest.fn()
+		},
+		head: {
 			appendChild: jest.fn()
 		}
 	};
