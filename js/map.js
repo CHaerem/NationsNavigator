@@ -1,6 +1,7 @@
 import { getCountryData } from "./data.js";
 import { uiService } from "./services/UIService.js";
 import { debugLog } from "./debug.js";
+import { debounce } from "./utils.js";
 
 let map, geojsonLayer;
 let filteredCountries = new Set(); // Use a Set for faster lookups
@@ -158,9 +159,10 @@ export async function initMap() {
 			onEachFeature: onEachFeature,
 		}).addTo(map);
 
-		// Add event listener for dynamic copy management
-		map.on("moveend", checkAndAddCopies);
-		map.on("zoomend", checkAndAddCopies);
+                // Add event listeners for dynamic copy management
+                map.on("moveend", checkAndAddCopies);
+                map.on("zoomend", checkAndAddCopies);
+                map.on("move", debounce(checkAndAddCopies, 100));
 
 		// Set the _loaded flag for tests
 		if (window.map) {
