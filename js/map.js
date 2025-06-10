@@ -164,6 +164,9 @@ export async function initMap() {
                 map.on("zoomend", checkAndAddCopies);
                 map.on("move", debounce(checkAndAddCopies, 100));
 
+                // Ensure enough world copies from the start
+                checkAndAddCopies();
+
 		// Set the _loaded flag for tests
 		if (window.map) {
 			window.map._loaded = true;
@@ -787,3 +790,6 @@ function removeDistantCopies(currentCopyNumber) {
 		debugLog(`Removed distant copies: ${copiesToRemove.join(", ")}`);
 	}
 }
+
+// Expose for testing
+export { checkAndAddCopies as _checkAndAddCopiesForTesting };
