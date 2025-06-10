@@ -3,7 +3,6 @@
   height: 100vh;
   width: 100%;
   background: radial-gradient(ellipse at center, #e1f5fe 0%, #81d4fa 30%, #4fc3f7 60%, #29b6f6 100%);
-  transition: all 0.3s ease;
   position: relative;
   z-index: 1;
 }
