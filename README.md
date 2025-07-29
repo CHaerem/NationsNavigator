@@ -138,6 +138,7 @@ Our robust CI/CD pipeline ensures only tested, quality code reaches production:
 - **Test-Dependent Deployment**: Deployment only occurs after all CI checks pass
 - **GitHub Pages**: Automatic deployment to production on successful CI runs
 - **PR Previews**: Temporary preview deployments for pull requests
+- **Server Page Preview**: Automatic screenshot posted when the server page is updated
 - **Safe Deployments**: Failed tests block deployment, ensuring stability
 
 #### Available Test Commands
