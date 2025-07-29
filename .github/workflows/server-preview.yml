@@ -1,0 +1,47 @@
+---
+name: Server Page Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'index.html'
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate server page screenshot
+        run: node scripts/generate-preview.js
+
+      - name: Encode screenshot
+        id: encode
+        run: |
+          echo "base64=$(base64 -w0 preview.png)" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR with preview
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Server Page Preview
+            ![Preview](data:image/png;base64,${{ steps.encode.outputs.base64 }})
+
+      - name: Cleanup
+        run: rm -f preview.png
