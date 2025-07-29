@@ -1,0 +1,303 @@
+/* Model Management and Hardware Recommendation Styles */
+
+/* Model Management Styles */
+#model-list {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: var(--spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.model-item:last-child {
+  border-bottom: none;
+}
+
+.model-info {
+  flex: 1;
+}
+
+.model-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.model-size {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.model-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.status-badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-cached {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-not-cached {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-recommended {
+  background: #3498db;
+  color: white;
+  font-weight: 600;
+}
+
+.model-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.model-item.model-recommended {
+  background: linear-gradient(135deg, #f8fcff 0%, #e8f5ff 100%);
+  border: 2px solid #3498db;
+  border-radius: var(--radius-md);
+}
+
+/* Download Modal Styles */
+.download-info {
+  margin-bottom: var(--spacing-lg);
+}
+
+.model-card {
+  background: var(--background-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.model-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.model-card h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.size-badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.hardware-recommendation {
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 6px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.hardware-recommendation.warning {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.hardware-recommendation.optimal {
+  background: #dcfce7;
+  border-color: #10b981;
+}
+
+.download-warning {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: var(--spacing-md);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.download-warning ul {
+  margin: var(--spacing-xs) 0 0 var(--spacing-md);
+  padding: 0;
+}
+
+.download-warning li {
+  margin-bottom: var(--spacing-xs);
+}
+
+#hardware-info {
+  background: var(--background-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: var(--spacing-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hardware-stat {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.hardware-stat:last-child {
+  margin-bottom: 0;
+}
+
+.hardware-stats-header {
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hardware-stats-header small {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.hardware-note {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  background: #f0f9ff;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--primary-color);
+}
+
+.hardware-note small {
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Hardware Recommendation Card Styles */
+.hardware-recommendation-card {
+  background: linear-gradient(135deg, #f6f9fc 0%, #eef7ff 100%);
+  border: 2px solid #3498db;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.confidence-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.confidence-high {
+  background: #d4edda;
+  color: #155724;
+}
+
+.confidence-medium_high {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.confidence-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.confidence-conservative {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.confidence-connection_limited {
+  background: #e2e3e5;
+  color: #495057;
+}
+
+.recommended-model {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: var(--spacing-xs);
+}
+
+.recommendation-reason {
+  font-size: 13px;
+  color: #34495e;
+  line-height: 1.4;
+}
+
+.hardware-analysis-section {
+  margin-bottom: var(--spacing-sm);
+}
+
+.analysis-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.analysis-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.analysis-item {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.analysis-item.strength {
+  background: #d4edda;
+  color: #155724;
+}
+
+.analysis-item.limitation {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.hardware-details {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid #e0e0e0;
+}
